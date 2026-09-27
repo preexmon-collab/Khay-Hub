@@ -1,0 +1,1116 @@
+repeat
+    task.wait()
+until game:IsLoaded()
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local v6 = gethui and gethui()
+if not v6 then
+    v6 = game:GetService("CoreGui")
+    if not v6 then
+        v6 = LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+for _, child in ipairs(v6:GetChildren()) do
+    if child.Name:find("KHAY_HUB_") then
+        child:Destroy()
+    end
+end
+local ScreenGui = Instance.new("ScreenGui", v6)
+ScreenGui.Name = "KHAY_HUB_" .. HttpService:GenerateGUID(false)
+ScreenGui.ResetOnSpawn = false
+local t1 = {
+	[1] = "17504881745",
+	[2] = "8003103632",
+	[3] = "7556198569"
+}
+local color3 = Color3.fromRGB(138, 43, 226)
+local color3_2 = Color3.fromRGB(90, 25, 160)
+local color3_3 = Color3.fromRGB(180, 100, 255)
+local color3_4 = Color3.fromRGB(220, 150, 255)
+local colorSequence = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+	ColorSequenceKeypoint.new(0.25, Color3.fromRGB(90, 25, 160)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+	ColorSequenceKeypoint.new(0.75, Color3.fromRGB(90, 25, 160)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(138, 43, 226))
+})
+local function v16(p1, p2)
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, p2)
+    UICorner.Parent = p1
+end
+local function v17(p3, p4, _)
+    local UIStroke = Instance.new("UIStroke", p3)
+    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    UIStroke.LineJoinMode = Enum.LineJoinMode.Round
+    UIStroke.Thickness = p4 or 2
+    UIStroke.Transparency = 0
+    UIStroke.Color = color3
+    local UIGradient = Instance.new("UIGradient", UIStroke)
+    UIGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 65, 70)),
+		ColorSequenceKeypoint.new(0.4, Color3.fromRGB(60, 65, 70)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.6, Color3.fromRGB(60, 65, 70)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 65, 70))
+	})
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if not p3.Parent then
+            connection:Disconnect()
+            return
+        end
+        local timestamp = tick()
+        UIGradient.Rotation = timestamp * 40 % 360
+        UIStroke.Transparency = 0.25 * (1 - (math.sin(timestamp * 0.8 * 3.141592653589793 * 2) + 1) / 2)
+    end)
+    return UIStroke, UIGradient, connection
+end
+local TextButton = Instance.new("TextButton", ScreenGui)
+TextButton.Size = UDim2.new(0, 52, 0, 52)
+TextButton.Position = UDim2.new(0, 10, 0, 10)
+TextButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TextButton.BorderSizePixel = 0
+TextButton.Text = ""
+TextButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton.Font = Enum.Font.GothamBlack
+TextButton.TextSize = 13
+TextButton.ZIndex = 20
+TextButton.Visible = false
+TextButton.Active = true
+TextButton.Draggable = true
+v16(TextButton, 12)
+local ImageLabel = Instance.new("ImageLabel", TextButton)
+ImageLabel.Size = UDim2.new(1, 0, 1, 0)
+ImageLabel.Position = UDim2.new(0, 0, 0, 0)
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Image = "rbxassetid://111331179075915"
+ImageLabel.ScaleType = Enum.ScaleType.Crop
+ImageLabel.ZIndex = 21
+v16(ImageLabel, 12)
+v17(TextButton, 2)
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 520, 0, 320)
+Frame.Position = UDim2.new(0.5, -260, 0.5, -160)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Visible = false
+Frame.BorderSizePixel = 0
+v16(Frame, 12)
+v17(Frame, 2)
+Instance.new("UIScale", Frame).Scale = 1
+local Frame2 = Instance.new("Frame", Frame)
+Frame2.Size = UDim2.new(1, 0, 0, 40)
+Frame2.BackgroundTransparency = 1
+local TextButton2 = Instance.new("TextButton", Frame)
+TextButton2.Size = UDim2.new(0, 28, 0, 28)
+TextButton2.Position = UDim2.new(1, -34, 0, 6)
+TextButton2.BackgroundTransparency = 1
+TextButton2.BorderSizePixel = 0
+TextButton2.Text = "-"
+TextButton2.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton2.TextSize = 22
+TextButton2.Font = Enum.Font.GothamBold
+TextButton2.ZIndex = 10
+local TextLabel = Instance.new("TextLabel", Frame)
+TextLabel.Name = "FpsPingLabel"
+TextLabel.Size = UDim2.new(0, 190, 0, 28)
+TextLabel.Position = UDim2.new(1, -230, 0, 6)
+TextLabel.BackgroundTransparency = 1
+TextLabel.Text = "Fps: -- Ping: --"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.Font = Enum.Font.GothamBlack
+TextLabel.TextSize = 10
+TextLabel.TextXAlignment = Enum.TextXAlignment.Right
+TextLabel.ZIndex = 10
+local UIGradient = Instance.new("UIGradient", TextLabel)
+UIGradient.Color = colorSequence
+local ImageLabel2 = Instance.new("ImageLabel", Frame2)
+ImageLabel2.Size = UDim2.new(0, 30, 0, 30)
+ImageLabel2.Position = UDim2.new(0, 10, 0, 5)
+ImageLabel2.BackgroundTransparency = 1
+ImageLabel2.Image = "rbxassetid://111331179075915"
+ImageLabel2.ScaleType = Enum.ScaleType.Crop
+ImageLabel2.ZIndex = 3
+v16(ImageLabel2, 15)
+local TextLabel2 = Instance.new("TextLabel", Frame2)
+TextLabel2.Size = UDim2.new(0, 180, 0, 20)
+TextLabel2.Position = UDim2.new(0, 48, 0, 6)
+TextLabel2.BackgroundTransparency = 1
+TextLabel2.Text = "KHAY HUB"
+TextLabel2.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel2.Font = Enum.Font.GothamBlack
+TextLabel2.TextSize = 16
+TextLabel2.TextXAlignment = Enum.TextXAlignment.Left
+local UIGradient2 = Instance.new("UIGradient", TextLabel2)
+UIGradient2.Color = colorSequence
+local TextLabel3 = Instance.new("TextLabel", Frame2)
+TextLabel3.Size = UDim2.new(0, 180, 0, 14)
+TextLabel3.Position = UDim2.new(0, 48, 0, 27)
+TextLabel3.BackgroundTransparency = 1
+TextLabel3.Text = "discord.gg/6UmaGDv4J"
+TextLabel3.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel3.Font = Enum.Font.GothamBlack
+TextLabel3.TextSize = 8
+TextLabel3.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel3.TextYAlignment = Enum.TextYAlignment.Top
+local UIGradient3 = Instance.new("UIGradient", TextLabel3)
+UIGradient3.Color = colorSequence
+local n1 = 0
+local n2 = 0
+local timestamp = tick()
+local n3 = 0
+RunService.RenderStepped:Connect(function(dt)
+    n1 += dt
+    n2 += 1
+    if tick() - timestamp >= 0.5 and n2 > 0 then
+        local v118 = n1 / n2
+        local v119 = v118 > 0
+        if v119 then
+            v119 = math.floor(1 / v118 + 0.5)
+        end
+        n3 = v119 or 0
+        local v120 = TextLabel
+        if v120 then
+            v120 = TextLabel.Parent
+        end
+        if v120 then
+            local v121 = TextLabel
+            local str = tostring(n3)
+            local v123 = false
+            if v123 then
+                v123 = tostring(0) .. "ms"
+            end
+            if not v123 then
+                v123 = "--"
+            end
+            v121.Text = "Fps: " .. str .. " Ping: " .. v123
+        end
+    end
+end)
+task.spawn(function()
+    local Stats = game:GetService("Stats")
+    local ok, result = pcall(function()
+        return game:GetService("NetworkClient")
+    end)
+    local u127 = result
+    if not ok then
+        u127 = nil
+    end
+    while task.wait(1) do
+        pcall(function()
+            local u194
+            pcall(function()
+                u194 = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue() + 0.5)
+            end)
+            if not u194 and u127 then
+                pcall(function()
+                    local ClientReplicator = u127:FindFirstChildOfClass("ClientReplicator")
+                    if ClientReplicator then
+                        u194 = math.floor(ClientReplicator.Ping * 1000 + 0.5)
+                    end
+                end)
+            end
+            if u194 then
+                local v195 = TextLabel
+                if v195 then
+                    v195 = TextLabel.Parent
+                end
+                if v195 then
+                    TextLabel.Text = "Fps: " .. tostring(n3) .. " Ping: " .. tostring(u194) .. "ms"
+                end
+            end
+        end)
+    end
+end)
+local Frame3 = Instance.new("Frame", Frame)
+Frame3.Size = UDim2.new(1, -16, 1, -46)
+Frame3.Position = UDim2.new(0, 8, 0, 44)
+Frame3.BackgroundTransparency = 1
+Frame3.ClipsDescendants = true
+local Frame4 = Instance.new("Frame", Frame3)
+Frame4.Size = UDim2.new(0, 130, 1, 0)
+Frame4.Position = UDim2.new(0, 0, 0, 0)
+Frame4.BackgroundTransparency = 1
+local UIListLayout = Instance.new("UIListLayout", Frame4)
+UIListLayout.FillDirection = Enum.FillDirection.Vertical
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Padding = UDim.new(0, 4)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local Frame5 = Instance.new("Frame", Frame3)
+Frame5.Size = UDim2.new(1, -140, 1, 0)
+Frame5.Position = UDim2.new(0, 140, 0, 0)
+Frame5.BackgroundTransparency = 1
+Frame5.ClipsDescendants = true
+local Frame6 = Instance.new("Frame", Frame3)
+Frame6.Size = UDim2.new(0, 1, 1, 0)
+Frame6.Position = UDim2.new(0, 135, 0, 0)
+Frame6.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame6.BorderSizePixel = 0
+local UIGradient4 = Instance.new("UIGradient", Frame)
+UIGradient4.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, color3),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+})
+UIGradient4.Rotation = 45
+UIGradient4.Offset = Vector2.new(-1, -1)
+task.spawn(function()
+    local n4 = 0
+    while true do
+        local v129 = UIGradient4
+        if v129 then
+            v129 = UIGradient4.Parent
+        end
+        if not v129 then
+            break
+        end
+        n4 += 0.03
+        local vector2 = Vector2.new(math.sin(n4) * 0.5, 0)
+        UIGradient4.Offset = vector2
+        UIGradient2.Offset = vector2
+        UIGradient3.Offset = vector2
+        UIGradient.Offset = vector2
+        task.wait(0.04)
+    end
+end)
+TextButton2.MouseButton1Click:Connect(function()
+    Frame.Visible = false
+    TextButton.Visible = true
+end)
+TextButton.MouseButton1Click:Connect(function()
+    Frame.Visible = true
+    TextButton.Visible = false
+end)
+local t2 = {}
+local t3 = {}
+local u42
+local color3_5 = Color3.fromRGB(0, 0, 0)
+local color3_6 = Color3.fromRGB(255, 255, 255)
+local function v45(p6)
+    local UIGradient5 = Instance.new("UIGradient")
+    UIGradient5.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, color3_4),
+		ColorSequenceKeypoint.new(0.25, color3_3),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 220, 255)),
+		ColorSequenceKeypoint.new(0.75, color3_3),
+		ColorSequenceKeypoint.new(1, color3_4)
+	})
+    UIGradient5.Rotation = 90
+    UIGradient5.Parent = p6
+    return UIGradient5
+end
+local function v46(p7)
+    if p7 == u42 then
+        return
+    end
+    u42 = p7
+    for v136, v137 in ipairs(t2) do
+        local v138 = v136
+        local v139 = v138 == p7
+        local v140 = v139
+        if v139 then
+            v140 = color3
+        end
+        if not v140 then
+            v140 = color3_5
+        end
+        v137.BackgroundColor3 = v140
+        v137.TextColor3 = color3_6
+        local UIGradient6 = v137:FindFirstChildOfClass("UIGradient")
+        if v139 then
+            if not UIGradient6 then
+                local v142 = v45(v137)
+                task.spawn(function()
+                    local n5 = 0
+                    while true do
+                        local v197 = v142
+                        if v197 then
+                            v197 = v142.Parent and u42 == v138
+                        end
+                        if not v197 then
+                            break
+                        end
+                        n5 += 0.03
+                        v142.Offset = Vector2.new(0, math.sin(n5) * 0.5)
+                        task.wait(0.04)
+                    end
+                end)
+            end
+        elseif UIGradient6 then
+            UIGradient6:Destroy()
+        end
+    end
+    for i, v in ipairs(t3) do
+        v.Visible = i == p7
+    end
+end
+for i, v in ipairs({
+	"Keyless",
+	"Keys",
+	"Finder",
+	"Shader",
+	"Instant TP",
+	"Settings"
+}) do
+    local TextButton3 = Instance.new("TextButton")
+    TextButton3.Name = v
+    TextButton3.LayoutOrder = i
+    TextButton3.Size = UDim2.new(1, -8, 0, 36)
+    TextButton3.BackgroundColor3 = color3_5
+    TextButton3.BorderSizePixel = 0
+    TextButton3.Text = v
+    TextButton3.TextColor3 = color3_6
+    TextButton3.Font = Enum.Font.GothamBold
+    TextButton3.TextSize = 11
+    TextButton3.TextWrapped = false
+    TextButton3.AutoButtonColor = false
+    TextButton3.Parent = Frame4
+    v16(TextButton3, 5)
+    t2[i] = TextButton3
+    TextButton3.MouseButton1Click:Connect(function()
+        v46(i)
+    end)
+    TextButton3.MouseEnter:Connect(function()
+        if u42 ~= i then
+            TextButton3.BackgroundColor3 = color3_2
+        end
+    end)
+    TextButton3.MouseLeave:Connect(function()
+        if u42 ~= i then
+            TextButton3.BackgroundColor3 = color3_5
+        end
+    end)
+    local ScrollingFrame = Instance.new("ScrollingFrame")
+    ScrollingFrame.Name = v .. "_Page"
+    ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+    ScrollingFrame.BackgroundTransparency = 1
+    ScrollingFrame.BorderSizePixel = 0
+    ScrollingFrame.ScrollBarThickness = 2
+    ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    ScrollingFrame.Visible = false
+    ScrollingFrame.Parent = Frame5
+    local UIListLayout2 = Instance.new("UIListLayout")
+    UIListLayout2.FillDirection = Enum.FillDirection.Vertical
+    UIListLayout2.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    UIListLayout2.Padding = UDim.new(0, 4)
+    UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout2.Parent = ScrollingFrame
+    local UIPadding = Instance.new("UIPadding")
+    UIPadding.PaddingTop = UDim.new(0, 6)
+    UIPadding.PaddingLeft = UDim.new(0, 8)
+    UIPadding.PaddingRight = UDim.new(0, 8)
+    UIPadding.Parent = ScrollingFrame
+    t3[i] = ScrollingFrame
+end
+v46(1)
+
+-- ========== YOUR EARLIER SCRIPTS ==========
+local ONHub = { Name = "ON HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/davizin713/ONhub/refs/heads/main/script.lua\"))()" }
+local Decode = { Name = "DECODE", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/ItzYumi/Decode/refs/heads/main/DE%3ACODE.lua\"))()" }
+local AnimationPack = { Name = "ANIMATION PACK", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/arjhaysaver-byte/BEE-SCRIPT-ANIMATION-PACK/refs/heads/main/bee_hub.lua\"))()" }
+local AnimationPackPremium = { Name = "ANIMATION PACK PREMIUM", Script = "loadstring(game:HttpGet(\"https://api.rubis.app/v2/scrap/PwFrcMysMOIJuWAQ/raw\"))()" }
+local SynexHub = { Name = "SYNEX HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/miirandahub/loader/refs/heads/main/mirandaafk.lua\"))()" }
+local KiraHub = { Name = "KIRA HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/LSSOPS/OpenSource/refs/heads/main/KiraHub_Steal_An_Egg.lua\"))()" }
+local YokudoHub = { Name = "YOKUDO HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/betdoyvaka/stealanegg/main/Loader.lua\"))()" }
+local VantablackHub = { Name = "VANTABLACK", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/tranduykhanh08428-web/VantablackHub/refs/heads/main/Stealanegg.lua.txt\"))()" }
+local ServerHop = { Name = "SERVER HOP", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/elampo092/psychic-carnival/refs/heads/main/Kurdmade-hub\"))()" }
+local LkzFix = { Name = "LKZ FIX", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/LucasggkX/LKZ-Hub/refs/heads/main/Loader.lua\"))()" }
+local SorhineHub = { Name = "SORHINE HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/SorhineScriptOpv1/Script/refs/heads/main/Fn-stealanegg.lua\"))()" }
+local DiabloScript = { Name = "DIABLO SCRIPT", Script = "" }
+local InstantSteal = { Name = "INSTANT STEAL", Script = "" }
+local AntiChase = { Name = "ANTI CHASE", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/Wzeus-NTH/Wzeusno1/main/Wzeus/nthzz\"))()" }
+local AntiHit = { Name = "ANTI HIT", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/koxtakoxta8-design/KOXTA-ANTI-HIT/refs/heads/main/KOXTA-HIT\"))()" }
+local LeonHub = { Name = "LEON HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/n01771542-cmd/faluahub/main/main.lua\"))()" }
+local AjjanHub = { Name = "AJJAN HUB", Script = "loadstring(game:HttpGet(\"https://api.luarmor.net/files/v4/loaders/359e97f8618e9008afe5f496184ebb7c.lua\"))()" }
+local SenaPremium = { Name = "SENA PREMIUM", Script = "loadstring(game:HttpGet(\"https://api.luarmor.net/files/v4/loaders/65bf3459d87ba3ac46350e154b640929.lua\"))()" }
+local SpeedHub = { Name = "SPEED HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua\"))()" }
+local AnimationChanger = { Name = "ANIMATION CHANGER", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Emotes.lua\"))()" }
+
+-- EXISTING SCRIPTS FROM SOURCES HUB
+local t4 = { Name = "PROJECT MADARA", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/IsThisMe01/Project-Madara/refs/heads/main/stealanegg\"))()" }
+local t5 = { Name = "RIFT GOTCHA", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/Dodoyung24/script-core/main/Steal-An-Egg\"))()" }
+local t6 = { Name = "BKS HUB", Script = "loadstring(game:HttpGet(\"https://api.luarmor.net/files/v4/loaders/9ee4edde227ac85f50872bf9e4226508.lua\"))()" }
+local t7 = { Name = "BIYXO HUB", Script = "loadstring(game:HttpGet(\"https://flowauth.net/v1/loaders/69d3463240384f3a73fbe32c178093a2.lua\"))()" }
+local t8 = { Name = "VOIDSHELL HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/VoidShell-null/VoidShell-Hub/refs/heads/main/Scripts/StealAnEgg.luau\"))()" }
+local t9 = { Name = "HOSHI HUB", Script = "loadstring(game:HttpGet(\"https://hoshihub.site/loader.lua\"))()" }
+local t10 = { Name = "VXEZES HUB", Script = "loadstring(game:HttpGet(\"https://vxezestudio.online/api/scripts/script_G5CGjqj2X3rOS/stream/init\"))()" }
+local t11 = { Name = "CRZ HUB", Script = "loadstring(game:HttpGet(\"https://flowauth.net/v1/loaders/3c4e87ed34813171b0f8d53a108a7d88.lua\"))()" }
+local t12 = { Name = "FOXNAME HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/Bliqe/Upload/refs/heads/main/Games/RUO/12665928789.lua\"))()" }
+local t13 = { Name = "FYY HUB", Script = "loadstring(game:HttpGet(\"https://FyyCommunity.my.id\"))()" }
+local t14 = { Name = "GLINT ANTI-CHASE", Script = "loadstring(game:HttpGet(\"https://flowauth.net/v1/loaders/6824c37a4078d7d311677732e231edaa.lua\"))()" }
+local t15 = { Name = "HORIZON ANTI HIT", Script = "script_key = \"Trial\"; loadstring(game:HttpGet(\"https://api.getpolsec.com/scripts/hosted/6582551b42d21c6b7eb55f1d76d8d50ce53cb35592093d6615b5e83437594dc0.lua\"))()" }
+local t16 = { Name = "KEYLESS HUB", Script = "loadstring(game:HttpGet(\"https://api.luarmor.net/files/v3/loaders/97c3f6db55a2cf72141537a85458e5a7.lua\"))()" }
+local t17 = { Name = "LEST HUB", Script = "getgenv().SCRIPT_KEY = \"KEYLESS\"; loadstring(game:HttpGet(\"https://api.jnkie.com/api/v1/luascripts/public/c916d48837ab69c48a9b3cafb04b49c8d9253af84cf8e403b19e2be302cbe67a/download\"))()" }
+local t18 = { Name = "LIMBO HUB", Script = "loadstring(game:HttpGet(\"https://limbohub.my.id/loader.lua\"))()" }
+local t19 = { Name = "LKZ HUB", Script = "loadstring(game:HttpGet(\"https://api.luarmor.net/files/v4/loaders/65bf3459d87ba3ac46350e154b640929.lua\"))()" }
+local t20 = { Name = "NEVA HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/VEZ2/NEVAHUB/main/2\"))()" }
+-- FIXED LINE BELOW (Changed inner double quotes to single quotes
+-- FIXED LINE BELOW (Changed inner double quotes to single quotes)
+local t21 = { Name = "NRL HUB", Script = "loadstring(game:HttpGet('https://www.nrlscript.com/raw/y9BUU6LkVW'))()" }
+local t22 = { Name = "OUROBOROS", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/joustingmatch/Ouroboros/main/loader.lua\"))()" }
+local t23 = { Name = "OXIDE HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/xulfo/Oxide-Loader/main/Main.lua\"))()" }
+local t24 = { Name = "PULSE HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/PulseZax/Loader/refs/heads/main/.lua\"))()" }
+local t25 = { Name = "QUANTUM HUB KEYLESS", Script = "loadstring(game:HttpGet(\"https://pastefy.app/3SrWc75B/raw?part=addon.lua\"))()" }
+local t26 = { Name = "SENA HUB", Script = "loadstring(game:HttpGet('https://raw.githubusercontent.com/senarblx/sena/refs/heads/main/senav3go'))()" }
+local t27 = { Name = "SENA HUB KEYLESS", Script = "loadstring(game:HttpGet('https://raw.githubusercontent.com/senarblx/sena/refs/heads/main/loader'))()" }
+local t28 = { Name = "SOURBEE HUB", Script = "loadstring(game:HttpGet(\"https://pastefy.app/A1v4Jw1F/raw\"))()" }
+local t29 = { Name = "STEAL AN EGG", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/Dodoyung24/script-core/main/Steal-An-Egg\"))()" }
+local t30 = { Name = "TSUO HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/Tsuo7/TsuoHub/main/stealanegg\"))()" }
+local t31 = { Name = "VINCITORE HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/tutorkah104-rgb/Steal-an-Egg/refs/heads/main/Vincitore.luau\"))()" }
+local t32 = {
+	{ Name = "AIRFLOW HUB", Script = "loadstring(game:HttpGet(\"https://airflowscript.com/loader\"))()" },
+	{ Name = "BIGFROOT", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/hanniii1/Loader/refs/heads/main/BFLoader.lua\"))()" },
+	{ Name = "CLOVER HUB", Script = "loadstring(game:HttpGet(\"https://cloverhub.app/clover.lua\"))()" },
+	{ Name = "NASI RENDANG", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/JualNasiRendang/loader/refs/heads/main/main.lua\"))()" },
+	{ Name = "OMG HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/Omgshit/Scripts/main/MainLoader.lua\"))()" },
+	{ Name = "RIFT HUB", Script = "loadstring(game:HttpGet(\"https://rifton.top/loader.lua\"))()" },
+	{ Name = "ZEROIN HUB", Script = "loadstring(game:HttpGet(\"https://zeroinhub.com/api/script\"))()" },
+	AjjanHub,
+	SenaPremium,
+	SpeedHub
+}
+local t33 = {
+	{ Name = "GLINT FINDER", Script = "loadstring(game:HttpGet(\"https://luasnapper.up.railway.app/files/loaders/3e69a99bf74044258f10fc6359c005c8.lua\"))()" },
+	{ Name = "PRIVATE SERVER BYPASS", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/raw-roblox/PrivateServerBypass/refs/heads/main/lua\"))()" },
+	{ Name = "SERVER FINDER 1 PEOPLE", Script = "loadstring(game:HttpGet(\"https://api.obscuravm.com/scripts/8232205074136213997\"))()" }
+}
+local t34 = {
+	{ Name = "SHADER V1", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/randomstring0/pshade-ultimate/refs/heads/main/src/cd.lua\"))()" },
+	{ Name = "SHADER V2", Script = "loadstring(game:HttpGet(\"https://rawscripts.net/raw/Universal-Script-Simple-Shader-37434\"))()" },
+	AnimationChanger
+}
+local t35 = { Name = "MIRANDA HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/miirandahub/loader/refs/heads/main/stealaeggs\"))()" }
+local t36 = { Name = "LENNON HUB", Script = "loadstring(game:HttpGet(\"https://raw.githubusercontent.com/lennonxscripts/lennonhubv3/refs/heads/main/stealanegg.lua\"))()" }
+local t37 = { Name = "LENNON V4", Script = "loadstring(game:HttpGet(\"https://api.luarmor.net/files/v4/loaders/4595fe31a5f7a8b4f4dd7071f3119ef7.lua\"))()" }
+local t38 = {
+	Keyless = {
+		t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23, t24, t25, t26, t27, t28, t29, t30, t31,
+		ONHub, Decode, AnimationPack, AnimationPackPremium, SynexHub, KiraHub, YokudoHub, VantablackHub, ServerHop, LkzFix, SorhineHub, DiabloScript, InstantSteal, AntiChase, AntiHit, LeonHub
+	},
+	Keys = t32,
+	Finder = t33,
+	Shader = t34,
+	["Instant TP"] = { t35, t36, t37 }
+}
+for _, v in pairs(t38) do
+    table.sort(v, function(p8, p9)
+        return p8.Name:lower() < p9.Name:lower()
+    end)
+end
+local t39 = { Keyless = 1, Keys = 2, Finder = 3, Shader = 4, ["Instant TP"] = 5 }
+for k, v in pairs(t39) do
+    local v93 = t3[v]
+    local v94 = k
+    if v93 and t38[v94] then
+        for _, v2 in ipairs(t38[v94]) do
+            (function(p10, p11, p12)
+                local Frame7 = Instance.new("Frame")
+                Frame7.Name = p11
+                Frame7.Size = UDim2.new(1, -6, 0, 46)
+                Frame7.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
+                Frame7.BorderSizePixel = 0
+                Frame7.Parent = p10
+                v16(Frame7, 6)
+                local UIStroke = Instance.new("UIStroke", Frame7)
+                UIStroke.Color = Color3.fromRGB(45, 45, 45)
+                UIStroke.Thickness = 1
+                local TextLabel4 = Instance.new("TextLabel", Frame7)
+                TextLabel4.Size = UDim2.new(1, -80, 0, 26)
+                TextLabel4.Position = UDim2.new(0, 10, 0, 4)
+                TextLabel4.BackgroundTransparency = 1
+                TextLabel4.Text = p11
+                TextLabel4.TextColor3 = Color3.fromRGB(230, 230, 230)
+                TextLabel4.Font = Enum.Font.GothamBold
+                TextLabel4.TextSize = 11
+                TextLabel4.TextXAlignment = Enum.TextXAlignment.Left
+                local TextLabel5 = Instance.new("TextLabel", Frame7)
+                TextLabel5.Name = "StatusLabel"
+                TextLabel5.Size = UDim2.new(1, -80, 0, 12)
+                TextLabel5.Position = UDim2.new(0, 10, 0, 30)
+                TextLabel5.BackgroundTransparency = 1
+                TextLabel5.Text = "STATUS:WORKING"
+                TextLabel5.TextColor3 = color3_3
+                TextLabel5.Font = Enum.Font.GothamBlack
+                TextLabel5.TextSize = 8
+                TextLabel5.TextXAlignment = Enum.TextXAlignment.Left
+                local TextButton4 = Instance.new("TextButton", Frame7)
+                TextButton4.Size = UDim2.new(0, 64, 0, 24)
+                TextButton4.Position = UDim2.new(1, -70, 0.5, -12)
+                TextButton4.BackgroundColor3 = color3
+                TextButton4.BorderSizePixel = 0
+                TextButton4.Text = "EXECUTE"
+                TextButton4.TextColor3 = Color3.fromRGB(255, 255, 255)
+                TextButton4.Font = Enum.Font.GothamBlack
+                TextButton4.TextSize = 9
+                TextButton4.AutoButtonColor = true
+                v16(TextButton4, 5)
+                local UIGradient7 = Instance.new("UIGradient", TextButton4)
+                UIGradient7.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, color3_4),
+					ColorSequenceKeypoint.new(1, color3_2)
+				})
+                UIGradient7.Rotation = 90
+                TextButton4.MouseButton1Click:Connect(function()
+                    if p12 and p12 ~= "" then
+                        pcall(function()
+                            loadstring(p12)()
+                        end)
+                    end
+                end)
+            end)(v93, v2.Name, v2.Script)
+        end
+    end
+end
+local v97 = t3[6]
+local Frame8 = Instance.new("Frame")
+Frame8.Name = "DiscordRow"
+Frame8.Size = UDim2.new(1, -6, 0, 34)
+Frame8.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
+Frame8.BorderSizePixel = 0
+Frame8.Parent = v97
+v16(Frame8, 6)
+local UIStroke = Instance.new("UIStroke", Frame8)
+UIStroke.Color = Color3.fromRGB(45, 45, 45)
+UIStroke.Thickness = 1
+local TextLabel6 = Instance.new("TextLabel", Frame8)
+TextLabel6.Size = UDim2.new(1, -80, 1, 0)
+TextLabel6.Position = UDim2.new(0, 10, 0, 0)
+TextLabel6.BackgroundTransparency = 1
+TextLabel6.Text = "DISCORD"
+TextLabel6.TextColor3 = Color3.fromRGB(230, 230, 230)
+TextLabel6.Font = Enum.Font.GothamBold
+TextLabel6.TextSize = 11
+TextLabel6.TextXAlignment = Enum.TextXAlignment.Left
+local TextButton5 = Instance.new("TextButton", Frame8)
+TextButton5.Name = "DiscordCopyButton"
+TextButton5.Size = UDim2.new(0, 64, 0, 24)
+TextButton5.Position = UDim2.new(1, -70, 0.5, -12)
+TextButton5.BackgroundColor3 = color3
+TextButton5.BorderSizePixel = 0
+TextButton5.Text = "COPY"
+TextButton5.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton5.Font = Enum.Font.GothamBlack
+TextButton5.TextSize = 9
+TextButton5.AutoButtonColor = true
+v16(TextButton5, 5)
+local UIGradient8 = Instance.new("UIGradient", TextButton5)
+UIGradient8.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, color3_4),
+	ColorSequenceKeypoint.new(1, color3_2)
+})
+UIGradient8.Rotation = 90
+TextButton5.MouseButton1Click:Connect(function()
+    if setclipboard then
+        pcall(function()
+            setclipboard("https://discord.gg/6UmaGDv4J")
+        end)
+    elseif toclipboard then
+        pcall(function()
+            toclipboard("https://discord.gg/6UmaGDv4J")
+        end)
+    end
+    TextButton5.Text = "COPIED!"
+    task.wait(1.5)
+    TextButton5.Text = "COPY"
+end)
+local ImageLabel3 = Instance.new("ImageLabel", Frame3)
+ImageLabel3.Size = UDim2.new(0, 22, 0, 22)
+ImageLabel3.Position = UDim2.new(0, 9, 1, -37)
+ImageLabel3.BackgroundTransparency = 1
+ImageLabel3.ScaleType = Enum.ScaleType.Crop
+v16(ImageLabel3, 11)
+local UIStroke2 = Instance.new("UIStroke", ImageLabel3)
+UIStroke2.Color = color3
+UIStroke2.Thickness = 1.5
+ImageLabel3.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LocalPlayer.UserId .. "&width=420&height=420&format=png"
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    ImageLabel3.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LocalPlayer.UserId .. "&width=420&height=420&format=png"
+end)
+local TextLabel7 = Instance.new("TextLabel", Frame3)
+TextLabel7.Size = UDim2.new(0, 84, 0, 16)
+TextLabel7.Position = UDim2.new(0, 38, 1, -38)
+TextLabel7.BackgroundTransparency = 1
+TextLabel7.Text = LocalPlayer.DisplayName
+TextLabel7.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel7.Font = Enum.Font.GothamBlack
+TextLabel7.TextSize = 10
+TextLabel7.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel7.TextTruncate = Enum.TextTruncate.AtEnd
+local TextLabel8 = Instance.new("TextLabel", Frame3)
+TextLabel8.Size = UDim2.new(0, 84, 0, 14)
+TextLabel8.Position = UDim2.new(0, 38, 1, -22)
+TextLabel8.BackgroundTransparency = 1
+TextLabel8.Text = "00:00:00"
+TextLabel8.TextColor3 = Color3.fromRGB(160, 160, 160)
+TextLabel8.Font = Enum.Font.GothamBold
+TextLabel8.TextSize = 9
+TextLabel8.TextXAlignment = Enum.TextXAlignment.Left
+local elapsed = os.clock()
+task.spawn(function()
+    while true do
+        local v156 = TextLabel8
+        if v156 then
+            v156 = TextLabel8.Parent
+        end
+        if not v156 then
+            break
+        end
+        local v157 = math.floor(os.clock() - elapsed)
+        local v158 = math.floor(v157 / 3600)
+        local v159 = math.floor(v157 % 3600 / 60)
+        local v160 = v157 % 60
+        TextLabel8.Text = string.format("%02d:%02d:%02d", v158, v159, v160)
+        task.wait(1)
+    end
+end)
+if true then
+    (function()
+        local v166 = TweenService
+        local StarterGui = game:GetService("StarterGui")
+        local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+        local color3_7 = Color3.fromRGB(255, 255, 255)
+        local colorSequence2 = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
+			ColorSequenceKeypoint.new(0.25, Color3.fromRGB(90, 25, 160)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+			ColorSequenceKeypoint.new(0.75, Color3.fromRGB(90, 25, 160)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(138, 43, 226))
+		})
+        local str = tostring(t1[1] or t1[1])
+        local BlurEffect
+        local function v173(p13, p14, p15, p16, p17)
+            return v166:Create(p13, TweenInfo.new(p14, p15, p16), p17)
+        end
+        local function v174(p18, p19)
+            local v205 = p19 or 1.6
+            local UIGradient9 = Instance.new("UIGradient")
+            UIGradient9.Color = colorSequence2
+            UIGradient9.Rotation = 0
+            UIGradient9.Offset = Vector2.new(-1, 0)
+            UIGradient9.Parent = p18
+            task.spawn(function()
+                while true do
+                    local v265 = p18
+                    if v265 then
+                        v265 = p18.Parent
+                    end
+                    if not v265 then
+                        break
+                    end
+                    UIGradient9.Offset = Vector2.new(-1, 0)
+                    local v266 = v166:Create(UIGradient9, TweenInfo.new(v205, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), { Offset = Vector2.new(1, 0) })
+                    v266:Play()
+                    v266.Completed:Wait()
+                    task.wait(0.35)
+                end
+            end)
+            return UIGradient9
+        end
+        pcall(function()
+            StarterGui:SetCore("TopbarEnabled", false)
+        end)
+        local KhayHubIntro = PlayerGui:FindFirstChild("KhayHubIntro")
+        if KhayHubIntro then
+            KhayHubIntro:Destroy()
+        end
+        local ScreenGui2 = Instance.new("ScreenGui")
+        ScreenGui2.Name = "KhayHubIntro"
+        ScreenGui2.ResetOnSpawn = false
+        ScreenGui2.IgnoreGuiInset = true
+        ScreenGui2.DisplayOrder = 1000
+        ScreenGui2.Parent = PlayerGui
+        local u177 = true
+        local Frame9 = Instance.new("Frame", ScreenGui2)
+        Frame9.Name = "IntroBackground"
+        Frame9.Size = UDim2.new(1, 0, 1, 0)
+        Frame9.Position = UDim2.new(0, 0, 0, 0)
+        Frame9.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Frame9.BackgroundTransparency = 0
+        Frame9.BorderSizePixel = 0
+        Frame9.ZIndex = 0
+        local Frame10 = Instance.new("Frame", ScreenGui2)
+        Frame10.Size = UDim2.new(1, 0, 1, 0)
+        Frame10.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Frame10.BackgroundTransparency = 0.4
+        Frame10.BorderSizePixel = 0
+        Frame10.ZIndex = 1
+        local TextButton6 = Instance.new("TextButton", ScreenGui2)
+        TextButton6.Size = UDim2.new(1, 0, 1, 0)
+        TextButton6.Position = UDim2.new(0, 0, 0, 0)
+        TextButton6.BackgroundTransparency = 1
+        TextButton6.BorderSizePixel = 0
+        TextButton6.Text = ""
+        TextButton6.ZIndex = 50
+        TextButton6.AutoButtonColor = false
+        local TextLabel9 = Instance.new("TextLabel", ScreenGui2)
+        TextLabel9.Size = UDim2.new(0, 300, 0, 36)
+        TextLabel9.AnchorPoint = Vector2.new(0.5, 0.5)
+        TextLabel9.Position = UDim2.new(0.5, 0, 0.92, 0)
+        TextLabel9.BackgroundTransparency = 1
+        TextLabel9.Text = "TAP ANYWHERE TO SKIP"
+        TextLabel9.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TextLabel9.TextTransparency = 0.3
+        TextLabel9.Font = Enum.Font.GothamBlack
+        TextLabel9.TextSize = 16
+        TextLabel9.ZIndex = 10
+        v174(TextLabel9, 2.2)
+        task.spawn(function()
+            local n6 = 0
+            while true do
+                local v208 = ScreenGui2
+                if v208 then
+                    v208 = ScreenGui2.Parent and u177
+                end
+                if not v208 then
+                    break
+                end
+                task.wait(0.03)
+                n6 += 0.03
+                TextLabel9.TextTransparency = math.sin(n6 * 2) * 0.15 + 0.3
+            end
+        end)
+        TextButton6.MouseButton1Click:Connect(function()
+            if not u177 then
+                return
+            end
+            u177 = false
+            if BlurEffect then
+                local v209 = BlurEffect
+                local Quad = Enum.EasingStyle.Quad
+                local In = Enum.EasingDirection.In
+                local t40 = { Size = 0 }
+                v166:Create(v209, TweenInfo.new(0.25, Quad, In), t40):Play()
+            end
+            task.delay(0.2, function()
+                pcall(function()
+                    local v273 = BlurEffect
+                    if v273 then
+                        v273 = BlurEffect.Parent
+                    end
+                    if v273 then
+                        BlurEffect:Destroy()
+                    end
+                end)
+                pcall(function()
+                    local v274 = ScreenGui2
+                    if v274 then
+                        v274 = ScreenGui2.Parent
+                    end
+                    if v274 then
+                        ScreenGui2:Destroy()
+                    end
+                end)
+                pcall(function()
+                    StarterGui:SetCore("TopbarEnabled", true)
+                end)
+            end)
+        end)
+        local Lighting = game:GetService("Lighting")
+        local KhayHubIntroBlur = Lighting:FindFirstChild("KhayHubIntroBlur")
+        if KhayHubIntroBlur then
+            KhayHubIntroBlur:Destroy()
+        end
+        BlurEffect = Instance.new("BlurEffect")
+        BlurEffect.Name = "KhayHubIntroBlur"
+        BlurEffect.Size = 0
+        BlurEffect.Parent = Lighting
+        local v184 = BlurEffect
+        local Quad = Enum.EasingStyle.Quad
+        local Out = Enum.EasingDirection.Out
+        local t41 = { Size = 22 }
+        v166:Create(v184, TweenInfo.new(0.8, Quad, Out), t41):Play()
+        local Frame11 = Instance.new("Frame", ScreenGui2)
+        Frame11.Size = UDim2.new(1, 0, 1, 0)
+        Frame11.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Frame11.BackgroundTransparency = 0.98
+        Frame11.BorderSizePixel = 0
+        Frame11.ZIndex = 2
+        task.spawn(function()
+            local n7 = 0
+            while true do
+                local v214 = ScreenGui2
+                if v214 then
+                    v214 = ScreenGui2.Parent and u177
+                end
+                if not v214 then
+                    break
+                end
+                task.wait()
+                n7 += 0.02
+                Frame11.BackgroundTransparency = math.sin(n7) * 0.03 + 0.95
+            end
+        end)
+        local Frame12 = Instance.new("Frame", ScreenGui2)
+        Frame12.Size = UDim2.new(0, 0, 0, 0)
+        Frame12.AnchorPoint = Vector2.new(0.5, 0.5)
+        Frame12.Position = UDim2.new(0.5, 0, 0.45, 0)
+        Frame12.BackgroundTransparency = 1
+        Frame12.ZIndex = 10
+        local TextLabel10 = Instance.new("TextLabel", Frame12)
+        TextLabel10.Size = UDim2.new(1, 0, 1, 0)
+        TextLabel10.BackgroundTransparency = 1
+        TextLabel10.Text = "KHAY HUB"
+        TextLabel10.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TextLabel10.Font = Enum.Font.GothamBlack
+        TextLabel10.TextSize = 55
+        TextLabel10.ZIndex = 10
+        v174(TextLabel10, 1.6)
+        task.spawn(function()
+            while true do
+                local v215 = ScreenGui2
+                if v215 then
+                    v215 = ScreenGui2.Parent and u177
+                end
+                if not v215 then
+                    break
+                end
+                task.wait(math.random(1, 4) / 10)
+                if math.random() < 0.6 then
+                    local v216 = math.random(2, 5)
+                    local v217 = 1 < 0
+                    local n8 = 0
+                    while true do
+                        n8 = 1 + n8
+                        local v219 = n8 <= v216
+                        local v220 = not v217 and v219
+                        if (not v217 or not (v216 <= n8)) and not v220 then
+                            break
+                        end
+                        TextLabel10.TextColor3 = Color3.fromRGB(0, 0, 0)
+                        task.wait(0.04)
+                        TextLabel10.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        task.wait(0.03)
+                    end
+                                            TextLabel10.TextColor3 = Color3.fromRGB(0, 0, 0)
+                        task.wait(0.04)
+                        TextLabel10.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        task.wait(0.03)
+                    end
+                    TextLabel10.TextColor3 = Color3.fromRGB(255, 255, 255)
+                end
+                if math.random() < 0.35 then
+                    TextLabel10.Position = UDim2.new(math.random(-5, 5) / 100, 0, math.random(-4, 4) / 100, 0)
+                    task.wait(0.03)
+                    TextLabel10.Position = UDim2.new(0, 0, 0, 0)
+                end
+            end
+        end)
+        local TextLabel11 = Instance.new("TextLabel", ScreenGui2)
+        TextLabel11.Size = UDim2.new(0, 160, 0, 60)
+        TextLabel11.AnchorPoint = Vector2.new(0.5, 0.5)
+        TextLabel11.Position = UDim2.new(0.5, 0, 0.78, 0)
+        TextLabel11.BackgroundTransparency = 1
+        TextLabel11.Text = "0%"
+        TextLabel11.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TextLabel11.Font = Enum.Font.GothamBlack
+        TextLabel11.TextSize = 40
+        TextLabel11.ZIndex = 5
+        local u192 = v174(TextLabel11, 1.4)
+        task.spawn(function()
+            pcall(function()
+                u192 = Instance.new("Sound")
+                u192.SoundId = "rbxassetid://" .. str
+                u192.Volume = 0.7
+                u192.Parent = ScreenGui2
+                u192:Play()
+            end)
+        end)
+        task.delay(0.1, function()
+            local v222 = Frame12
+            local Back = Enum.EasingStyle.Back
+            local Out2 = Enum.EasingDirection.Out
+            local t42 = { Size = UDim2.new(0, 350, 0, 80) }
+            v166:Create(v222, TweenInfo.new(0.6, Back, Out2), t42):Play()
+        end)
+        task.delay(0.6, function()
+            local timestamp2 = tick()
+            task.spawn(function()
+                while true do
+                    local v267 = ScreenGui2
+                    if v267 then
+                        v267 = ScreenGui2.Parent and u177
+                    end
+                    if not v267 then
+                        break
+                    end
+                    local timestamp3 = tick()
+                    local _math = math
+                    local v270 = timestamp3 - timestamp2
+                    local v271 = _math.min(v270 / 1.8, 1)
+                    TextLabel11.Text = math.floor(v271 * 100) .. "%"
+                    if v271 >= 1 then
+                        break
+                    end
+                    task.wait(0.04)
+                end
+                TextLabel11.Text = "100%"
+            end)
+        end)
+        task.delay(2.5, function()
+            for _ = 1, 25 do
+                local Frame13 = Instance.new("Frame", ScreenGui2)
+                local v229 = math.random(3, 7)
+                Frame13.Size = UDim2.new(0, v229, 0, v229)
+                Frame13.Position = UDim2.new(0.5 + (math.random() - 0.5) * 0.03, 0, 0.78 + (math.random() - 0.5) * 0.03, 0)
+                Frame13.BackgroundColor3 = color3_7
+                Frame13.BackgroundTransparency = 0.2
+                Frame13.BorderSizePixel = 0
+                Frame13.ZIndex = 10
+                Instance.new("UICorner", Frame13).CornerRadius = UDim.new(1, 0)
+                local v230 = math.random()
+                local _math = math
+                local v232 = 0.5 + (v230 - 0.5) * 0.5
+                local v233 = 0.78 + (_math.random() - 0.5) * 0.5
+                local v234 = 0.2 + math.random() * 0.2
+                local v235 = v173
+                local Quad2 = Enum.EasingStyle.Quad
+                local Out3 = Enum.EasingDirection.Out
+                local uDim2 = UDim2.new(v232, 0, v233, 0)
+                local uDim2_2 = UDim2.new(0, 0, 0, 0)
+                v235(Frame13, v234, Quad2, Out3, { Position = uDim2, BackgroundTransparency = 1, Size = uDim2_2 }):Play()
+                task.delay(v234, function()
+                    pcall(function()
+                        Frame13:Destroy()
+                    end)
+                end)
+            end
+        end)
+        task.delay(2.8, function()
+            if not u177 then
+                return
+            end
+            local n9 = 0.4
+            local v241 = TextLabel10
+            local Quad3 = Enum.EasingStyle.Quad
+            local In = Enum.EasingDirection.In
+            local t43 = { TextTransparency = 1 }
+            v166:Create(v241, TweenInfo.new(0.4, Quad3, In), t43):Play()
+            local v245 = TextLabel11
+            local Quad4 = Enum.EasingStyle.Quad
+            local In2 = Enum.EasingDirection.In
+            local t44 = { TextTransparency = 1 }
+            v166:Create(v245, TweenInfo.new(0.4, Quad4, In2), t44):Play()
+            local v249 = Frame11
+            local Quad5 = Enum.EasingStyle.Quad
+            local In3 = Enum.EasingDirection.In
+            local t45 = { BackgroundTransparency = 1 }
+            v166:Create(v249, TweenInfo.new(n9, Quad5, In3), t45):Play()
+            local v253 = TextLabel9
+            local Quad6 = Enum.EasingStyle.Quad
+            local In4 = Enum.EasingDirection.In
+            local t46 = { TextTransparency = 1 }
+            v166:Create(v253, TweenInfo.new(n9, Quad6, In4), t46):Play()
+            local v257 = BlurEffect
+            if v257 then
+                v257 = BlurEffect.Parent
+            end
+            if v257 then
+                local v258 = BlurEffect
+                local v259 = n9 + 0.2
+                local Quad7 = Enum.EasingStyle.Quad
+                local In5 = Enum.EasingDirection.In
+                local t47 = { Size = 0 }
+                v166:Create(v258, TweenInfo.new(v259, Quad7, In5), t47):Play()
+            end
+        end)
+        task.delay(3.5, function()
+            if not u177 then
+                return
+            end
+            pcall(function()
+                StarterGui:SetCore("TopbarEnabled", true)
+            end)
+            pcall(function()
+                local v272 = BlurEffect
+                if v272 then
+                    v272 = BlurEffect.Parent
+                end
+                if v272 then
+                    BlurEffect:Destroy()
+                end
+            end)
+            local v263 = ScreenGui2
+            if v263 then
+                v263 = ScreenGui2.Parent
+            end
+            if v263 then
+                ScreenGui2:Destroy()
+            end
+        end)
+    end)()
+    task.wait(3.5)
+end
+Frame.Visible = true;
+
+-- ========== UPDATE NOTICE ==========
+(function()
+    if isfile and isfile("KhayHub_Update.txt") then
+        return
+    end
+    local Frame14 = Instance.new("Frame", ScreenGui)
+    Frame14.Name = "UpdateNoticeModal"
+    Frame14.Size = UDim2.new(0, 340, 0, 230)
+    Frame14.Position = UDim2.new(0.5, -170, 0.5, -115)
+    Frame14.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+    Frame14.BorderSizePixel = 0
+    Frame14.ZIndex = 200
+    Frame14.Active = true
+    Frame14.Draggable = true
+    v16(Frame14, 10)
+    v17(Frame14, 2)
+    local TextLabel12 = Instance.new("TextLabel", Frame14)
+    TextLabel12.Size = UDim2.new(1, 0, 0, 36)
+    TextLabel12.Position = UDim2.new(0, 0, 0, 4)
+    TextLabel12.BackgroundTransparency = 1
+    TextLabel12.Text = "KHAY HUB - WHATS NEW"
+    TextLabel12.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextLabel12.Font = Enum.Font.GothamBlack
+    TextLabel12.TextSize = 14
+    TextLabel12.ZIndex = 201
+    Instance.new("UIGradient", TextLabel12).Color = colorSequence
+    local TextLabel13 = Instance.new("TextLabel", Frame14)
+    TextLabel13.Size = UDim2.new(1, -24, 0, 130)
+    TextLabel13.Position = UDim2.new(0, 12, 0, 42)
+    TextLabel13.BackgroundTransparency = 1
+    TextLabel13.Text = "- Rebranded to KHAY HUB\n- Added 15+ new scripts\n- New purple theme\n- Discord link updated\n- Added ANIMATION PACK scripts\n- Added KIRA, YOKUDO, SYNEX\n- Added SORHINE HUB\n- Added ANTI CHASE + ANTI HIT\n- Added DIABLO + INSTANT STEAL\n- Improved stability"
+    TextLabel13.TextColor3 = Color3.fromRGB(220, 220, 220)
+    TextLabel13.Font = Enum.Font.GothamBold
+    TextLabel13.TextSize = 11
+    TextLabel13.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel13.TextYAlignment = Enum.TextYAlignment.Top
+    TextLabel13.TextWrapped = true
+    TextLabel13.ZIndex = 201
+    local TextButton7 = Instance.new("TextButton", Frame14)
+    TextButton7.Size = UDim2.new(0, 110, 0, 30)
+    TextButton7.Position = UDim2.new(0.5, -55, 1, -40)
+    TextButton7.BackgroundColor3 = color3
+    TextButton7.BorderSizePixel = 0
+    TextButton7.Text = "OK"
+    TextButton7.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextButton7.Font = Enum.Font.GothamBlack
+    TextButton7.TextSize = 11
+    TextButton7.AutoButtonColor = true
+    TextButton7.ZIndex = 201
+    v16(TextButton7, 6)
+    local UIGradient10 = Instance.new("UIGradient", TextButton7)
+    UIGradient10.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, color3_4),
+		ColorSequenceKeypoint.new(1, color3_2)
+	})
+    UIGradient10.Rotation = 90
+    TextButton7.MouseButton1Click:Connect(function()
+        if writefile then
+            pcall(function()
+                writefile("KhayHub_Update.txt", "seen")
+            end)
+        end
+        Frame14:Destroy()
+    end)
+end)()
