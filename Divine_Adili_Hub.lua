@@ -28874,6 +28874,116 @@ end
 
 v:Finalize({ Window = v2, MainTab = defaultTab, ShowMainTab = true })
 
+-- Divine Adili UI skin patch: the main window is created by the external
+-- Chilli Library, so the local anti-guard/logo changes alone do not restyle
+-- the library-owned Settings screen. This pass only changes UI properties.
+task.spawn(function()
+	local function getUiRoot()
+		local roots = { CoreGui }
+		if type(gethui) == "function" then
+			local ok, hidden = pcall(gethui)
+			if ok and typeof(hidden) == "Instance" then
+				table.insert(roots, 1, hidden)
+			end
+		end
+		for _, root in ipairs(roots) do
+			local found = root:FindFirstChild("Settings")
+			if found and found:IsA("ScreenGui") then
+				return found
+			end
+		end
+	end
+
+	local violet = Color3.fromRGB(124, 58, 237)
+	local violetLight = Color3.fromRGB(168, 85, 247)
+	local violetDark = Color3.fromRGB(67, 24, 110)
+	local panel = Color3.fromRGB(18, 12, 28)
+	local panel2 = Color3.fromRGB(28, 18, 42)
+	local stroke = Color3.fromRGB(96, 55, 145)
+	local white = Color3.fromRGB(245, 242, 255)
+	local backgroundAsset = "rbxassetid://95940648294892"
+	local logoAsset = "rbxassetid://140249108836517"
+
+	local function recolorGradient(g)
+		local ok, seq = pcall(function() return g.Color end)
+		if not ok or typeof(seq) ~= "ColorSequence" then return end
+		local keys = seq.Keypoints
+		if #keys < 2 then return end
+		local looksRed = false
+		for _, key in ipairs(keys) do
+			local c = key.Value
+			if c.R > c.B * 1.6 and c.R > c.G * 1.25 then
+				looksRed = true
+				break
+			end
+		end
+		if looksRed then
+			g.Color = ColorSequence.new(violetLight, violet)
+		end
+	end
+
+	local function apply(root)
+		if not root then return false end
+
+		for _, obj in ipairs(root:GetDescendants()) do
+			pcall(function()
+				if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+					if obj.Text == "Chilli Hub" then
+						obj.Text = "Divine Adili Hub"
+					end
+				elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+					if obj.Name == "Icon" and obj.Parent and obj.Parent.Name == "Top" then
+						obj.Image = logoAsset
+					end
+					if obj.Name == "Pattern" then
+						local parent = obj.Parent
+						if parent and parent.Parent and parent.Parent.Name == "Color" then
+							obj.Image = backgroundAsset
+							obj.ImageTransparency = 0.78
+							obj.ScaleType = Enum.ScaleType.Crop
+						end
+					end
+				elseif obj:IsA("UIGradient") then
+					recolorGradient(obj)
+				elseif obj:IsA("UIStroke") then
+					local c = obj.Color
+					if c.R > c.B * 1.6 and c.R > c.G * 1.25 then
+						obj.Color = stroke
+					end
+				elseif obj:IsA("Frame") then
+					local c = obj.BackgroundColor3
+					if c.R > c.B * 1.6 and c.R > c.G * 1.25 then
+						if obj.Name == "Top" then
+							obj.BackgroundColor3 = violetDark
+						elseif obj.Name == "Main" then
+							obj.BackgroundColor3 = panel
+						else
+							obj.BackgroundColor3 = panel2
+						end
+					end
+				end
+			end)
+		end
+
+		-- The library uses red values in its tab-selection tween. Re-apply the
+		-- violet skin periodically without replacing any button callbacks.
+		return true
+	end
+
+	local root
+	for _ = 1, 30 do
+		root = getUiRoot()
+		if root and apply(root) then break end
+		task.wait(0.2)
+	end
+	if not root then return end
+
+	while root.Parent do
+		apply(root)
+		task.wait(0.75)
+	end
+end)
+
 task.defer(function()
 	if #tbl2 == 0 or type(readfile) ~= "function" then
 		return
