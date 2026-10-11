@@ -1,4 +1,4 @@
--- S2r Hub STABLE | original steal engine preserved | black/violet UI
+-- S2r Hub STABLE | original steal + auto race unchanged | Obsidian Violet GUI polish
 
 local function geniter(f, s, c)
 	if type(f) ~= "function" then
@@ -928,6 +928,7 @@ local senaV4Config = {
 	AntiHitGuard = false,
 	FlyForCapture = false,
 	AutoStealCapture = false,
+	AutoRace = false,
 	InstantGrab = false,
 	InfiniteJump = false,
 	WalkSpeedMultiplier = 1,
@@ -23459,24 +23460,25 @@ do
 		local Assets = require(ReplicatedStorage.Data.Assets)
 		local EggState2 = require(ReplicatedStorage.Client.EggState)
 		local Save = require(ReplicatedStorage.Shared.Save)
+		-- S2r Obsidian / Violet design tokens (visual only; no feature settings).
 		local t166 = {
-			strokeCol = Color3.fromRGB(128, 71, 201),
-			accent = Color3.fromRGB(162, 91, 255),
-			accentA = Color3.fromRGB(117, 54, 199),
-			accentB = Color3.fromRGB(203, 142, 255),
-			surface = Color3.fromRGB(17, 12, 25),
-			surfaceHi = Color3.fromRGB(29, 20, 41),
-			text = Color3.fromRGB(235, 236, 245),
-			btnText = Color3.fromRGB(186, 184, 198),
-			muted = Color3.fromRGB(156, 154, 170),
-			shadow = Color3.fromRGB(4, 4, 8),
-			obsTop = Color3.fromRGB(24, 16, 36),
-			obsMid = Color3.fromRGB(16, 11, 25),
-			obsLow = Color3.fromRGB(11, 8, 19),
-			btnBg = Color3.fromRGB(33, 23, 47),
-			btnHover = Color3.fromRGB(48, 29, 73),
-			inputBg = Color3.fromRGB(13, 10, 21),
-			switchOff = Color3.fromRGB(46, 35, 59),
+			strokeCol = Color3.fromRGB(117, 63, 190),
+			accent = Color3.fromRGB(177, 91, 255),
+			accentA = Color3.fromRGB(112, 47, 184),
+			accentB = Color3.fromRGB(216, 168, 255),
+			surface = Color3.fromRGB(12, 10, 19),
+			surfaceHi = Color3.fromRGB(26, 19, 40),
+			text = Color3.fromRGB(250, 245, 255),
+			btnText = Color3.fromRGB(222, 207, 236),
+			muted = Color3.fromRGB(170, 158, 185),
+			shadow = Color3.fromRGB(3, 2, 6),
+			obsTop = Color3.fromRGB(24, 16, 37),
+			obsMid = Color3.fromRGB(13, 10, 23),
+			obsLow = Color3.fromRGB(7, 6, 14),
+			btnBg = Color3.fromRGB(30, 21, 46),
+			btnHover = Color3.fromRGB(53, 30, 82),
+			inputBg = Color3.fromRGB(12, 9, 22),
+			switchOff = Color3.fromRGB(43, 35, 57),
 			good = Color3.fromRGB(163, 230, 53)
 		}
 		local v3697 = t166
@@ -26432,7 +26434,7 @@ do
 						TextLabel7.Font = Enum.Font.GothamMedium
 						TextLabel7.TextSize = 10
 						TextLabel7.TextXAlignment = Enum.TextXAlignment.Left
-						TextLabel7.TextColor3 = Color3.fromRGB(150, 180, 220)
+						TextLabel7.TextColor3 = Color3.fromRGB(185, 162, 216)
 						TextLabel7.Text = string.format("Window: %s", v4056(v4159, v4160))
 						TextLabel7.Parent = Frame
 
@@ -26619,7 +26621,7 @@ do
 					TextLabel7.TextSize = 9
 					TextLabel7.TextXAlignment = Enum.TextXAlignment.Left
 					TextLabel7.TextTruncate = Enum.TextTruncate.AtEnd
-					TextLabel7.TextColor3 = Color3.fromRGB(150, 180, 220)
+					TextLabel7.TextColor3 = Color3.fromRGB(185, 162, 216)
 					TextLabel7.Text = v.subText2
 					TextLabel7.Parent = Frame
 
@@ -26652,7 +26654,7 @@ do
 					TextLabel9.TextSize = 10
 					TextLabel9.TextXAlignment = Enum.TextXAlignment.Right
 					TextLabel9.TextTruncate = Enum.TextTruncate.AtEnd
-					TextLabel9.TextColor3 = Color3.fromRGB(170, 185, 210)
+					TextLabel9.TextColor3 = Color3.fromRGB(183, 165, 207)
 					TextLabel9.Text = v.rateText
 					TextLabel9.Parent = Frame3
 				end
@@ -26766,7 +26768,7 @@ do
 
 			local UIStroke3 = Instance.new("UIStroke", Frame3)
 
-			UIStroke3.Color = Color3.fromRGB(50, 80, 130)
+			UIStroke3.Color = Color3.fromRGB(97, 60, 155)
 			UIStroke3.Thickness = 1
 			t176.noticeBox = Frame3
 
@@ -26924,7 +26926,7 @@ do
 			TextLabel7.AnchorPoint = Vector2.new(1, 0)
 			TextLabel7.Position = UDim2.fromScale(1, 0)
 			TextLabel7.Size = UDim2.new(0.5, -4, 1, 0)
-			TextLabel7.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+			TextLabel7.BackgroundColor3 = Color3.fromRGB(18, 13, 29)
 			TextLabel7.BackgroundTransparency = 0.2
 			TextLabel7.Font = Enum.Font.GothamBold
 			TextLabel7.TextSize = 11
@@ -27179,7 +27181,7 @@ do
 
 			Frame2.Size = UDim2.fromScale(1, 1)
 			Frame2.Position = UDim2.fromScale(0, 0)
-			Frame2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Frame2.BackgroundColor3 = t166.obsLow
 			Frame2.BackgroundTransparency = 0
 			Frame2.BorderSizePixel = 0
 			Frame2.ZIndex = 1
@@ -27198,8 +27200,8 @@ do
 			local UIStroke = Instance.new("UIStroke", Frame2)
 
 			UIStroke.Color = t166.strokeCol
-			UIStroke.Thickness = 1
-			UIStroke.Transparency = 0.72
+			UIStroke.Thickness = 1.25
+			UIStroke.Transparency = 0.34
 
 			local TextLabel5 = Instance.new("TextLabel")
 
@@ -27489,6 +27491,580 @@ do
 
 	v3692()
 
+
+-- S2r Hub ORIGINAL GUI layer. Standalone Roblox UI; no third-party GUI assets or UI library.
+-- This library implements the pre-existing UI factory interface. Gameplay callbacks stay in the host script.
+local function S2rOriginalUILibrary()
+    local Players = game:GetService("Players")
+    local UIS = game:GetService("UserInputService")
+    local RunServiceUI = game:GetService("RunService")
+    local localPlayer = Players.LocalPlayer
+    local P = {
+        bg = Color3.fromRGB(9, 8, 15),
+        surface = Color3.fromRGB(18, 15, 29),
+        layer = Color3.fromRGB(24, 19, 37),
+        field = Color3.fromRGB(34, 27, 49),
+        edge = Color3.fromRGB(57, 42, 81),
+        violet = Color3.fromRGB(163, 91, 255),
+        bright = Color3.fromRGB(207, 163, 255),
+        white = Color3.fromRGB(244, 237, 255),
+        muted = Color3.fromRGB(169, 158, 191),
+        green = Color3.fromRGB(96, 217, 165),
+    }
+    local function create(kind, props, parent)
+        local x = Instance.new(kind)
+        for k, v in pairs(props or {}) do x[k] = v end
+        if parent then x.Parent = parent end
+        return x
+    end
+    local function corner(o, r) return create("UICorner", {CornerRadius = UDim.new(0, r or 10)}, o) end
+    local function stroke(o, c, thickness, trans)
+        return create("UIStroke", {Color=c or P.edge, Thickness=thickness or 1, Transparency=trans or 0}, o)
+    end
+    local function label(parent, txt, fontSize, bold, color)
+        return create("TextLabel", {
+            BackgroundTransparency=1, BorderSizePixel=0, Text=tostring(txt or ""),
+            TextColor3=color or P.white, TextSize=fontSize or 13,
+            Font=bold and Enum.Font.GothamBold or Enum.Font.Gotham,
+            TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Center,
+        }, parent)
+    end
+    local function button(parent, txt, fill)
+        local b=create("TextButton", {
+            Text=tostring(txt or ""), Font=Enum.Font.GothamBold, TextSize=12,
+            TextColor3=P.white, BackgroundColor3=fill or P.field,
+            AutoButtonColor=true, BorderSizePixel=0,
+        }, parent)
+        corner(b,9)
+        return b
+    end
+    local function list(parent, pad)
+        local l=create("UIListLayout", {
+            Padding=UDim.new(0,pad or 8), SortOrder=Enum.SortOrder.LayoutOrder,
+            HorizontalAlignment=Enum.HorizontalAlignment.Center,
+        }, parent)
+        return l
+    end
+    local function safeCall(callback,...)
+        if type(callback) ~= "function" then return end
+        local ok,err=pcall(callback,...)
+        if not ok then warn("[S2r UI] Callback error:",err) end
+    end
+    local ui = {}
+    function ui:Window(options)
+        options=options or {}
+        local guiParent=localPlayer:WaitForChild("PlayerGui")
+        local previousEnv=getgenv and getgenv() or _G
+        if type(previousEnv.__S2rOriginalUICleanup)=="function" then
+            pcall(previousEnv.__S2rOriginalUICleanup)
+            previousEnv.__S2rOriginalUICleanup=nil
+        end
+        local older=guiParent:FindFirstChild("S2rOriginalInterface")
+        if older then older:Destroy() end
+        local root=create("ScreenGui", {
+            Name="S2rOriginalInterface", ResetOnSpawn=false, IgnoreGuiInset=true,
+            DisplayOrder=8500, ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
+        }, guiParent)
+        local shell=create("Frame", {
+            Name="S2rControlCenter", BackgroundColor3=P.bg, BorderSizePixel=0,
+            AnchorPoint=Vector2.new(0.5,0.5), Position=UDim2.fromScale(.5,.5),
+            Size=UDim2.fromOffset(768,494), ClipsDescendants=true,
+        },root)
+        corner(shell,15)
+        stroke(shell,P.violet,1.3,.06)
+        local scale=create("UIScale",{Scale=1},shell)
+        local function fit()
+            if not root.Parent then return end
+            local cam=workspace.CurrentCamera
+            if not cam then return end
+            local vp=cam.ViewportSize
+            scale.Scale=math.clamp(math.min((vp.X-26)/768,(vp.Y-48)/494,1),.38,1)
+        end
+        fit()
+        local sizeConn
+        if workspace.CurrentCamera then
+            sizeConn=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fit)
+        end
+        local bar=create("Frame",{Name="TopBar",Size=UDim2.new(1,0,0,68),BackgroundColor3=P.surface,BorderSizePixel=0},shell)
+        create("Frame",{Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,1,-1),BackgroundColor3=P.edge,BorderSizePixel=0},bar)
+        local mark=create("Frame",{Size=UDim2.fromOffset(43,43),Position=UDim2.fromOffset(17,12),BackgroundColor3=P.layer,BorderSizePixel=0},bar)
+        corner(mark,12);stroke(mark,P.violet,1.5)
+        local markLabel=label(mark,"S²r",18,true,P.bright)
+        markLabel.Size=UDim2.fromScale(1,1);markLabel.TextXAlignment=Enum.TextXAlignment.Center
+        local title=label(bar,"S2r HUB",21,true,P.white)
+        title.Position=UDim2.fromOffset(71,10);title.Size=UDim2.fromOffset(190,28)
+        local tagline=label(bar,"CONTROL CENTER  /  ORIGINAL UI",9,true,P.bright)
+        tagline.Position=UDim2.fromOffset(73,36);tagline.Size=UDim2.fromOffset(275,17)
+        local searchWrap=create("Frame",{Size=UDim2.fromOffset(208,34),Position=UDim2.new(1,-311,0,18),BackgroundColor3=P.field,BorderSizePixel=0},bar)
+        corner(searchWrap,10);stroke(searchWrap,P.edge,1)
+        local search=create("TextBox",{
+            ClearTextOnFocus=false, Text="", PlaceholderText="Search current tab...",
+            PlaceholderColor3=P.muted, TextColor3=P.white, BackgroundTransparency=1,
+            Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,
+            Position=UDim2.fromOffset(13,0),Size=UDim2.new(1,-20,1,0),
+        },searchWrap)
+        local hide=button(bar,"—",P.field);hide.Size=UDim2.fromOffset(35,34);hide.Position=UDim2.new(1,-90,0,18)
+        local close=button(bar,"×",P.field);close.TextSize=20;close.Size=UDim2.fromOffset(35,34);close.Position=UDim2.new(1,-47,0,18)
+        local left=create("Frame",{Position=UDim2.fromOffset(0,68),Size=UDim2.new(0,175,1,-101),BackgroundColor3=P.surface,BorderSizePixel=0},shell)
+        create("Frame",{Size=UDim2.new(0,1,1,0),Position=UDim2.new(1,-1,0,0),BackgroundColor3=P.edge,BorderSizePixel=0},left)
+        local navigation=create("ScrollingFrame",{
+            Name="Navigation",Position=UDim2.fromOffset(10,12),Size=UDim2.new(1,-20,1,-20),
+            BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=P.violet,
+            CanvasSize=UDim2.fromOffset(0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,
+        },left)
+        list(navigation,7)
+        local contentArea=create("Frame",{
+            Position=UDim2.fromOffset(175,68),Size=UDim2.new(1,-175,1,-101),
+            BackgroundColor3=P.bg,BorderSizePixel=0,ClipsDescendants=true,
+        },shell)
+        local footer=create("Frame",{
+            Position=UDim2.new(0,0,1,-33),Size=UDim2.new(1,0,0,33),
+            BackgroundColor3=P.surface,BorderSizePixel=0,
+        },shell)
+        create("Frame",{Size=UDim2.new(1,0,0,1),BackgroundColor3=P.edge,BorderSizePixel=0},footer)
+        local footText=label(footer,"S2r  •  READY",10,true,P.bright)
+        footText.Position=UDim2.fromOffset(17,2);footText.Size=UDim2.fromOffset(190,28)
+        local footRight=label(footer,"BLACK × VIOLET   •   V4",10,false,P.muted)
+        footRight.Size=UDim2.fromOffset(228,30);footRight.Position=UDim2.new(1,-245,0,1)
+        footRight.TextXAlignment=Enum.TextXAlignment.Right
+        local launcher=button(root,"S²r",P.surface)
+        launcher.Name="ReopenS2r";launcher.Font=Enum.Font.GothamBlack
+        launcher.TextColor3=P.bright;launcher.TextSize=17
+        launcher.Size=UDim2.fromOffset(49,49)
+        launcher.Position=UDim2.new(1,-65,0,104);launcher.Visible=false
+        corner(launcher,15);stroke(launcher,P.violet,2,.02)
+        local function showWindow(visible)
+            shell.Visible=visible
+            launcher.Visible=not visible
+            if visible then fit() end
+        end
+        hide.MouseButton1Click:Connect(function() showWindow(false) end)
+        close.MouseButton1Click:Connect(function() showWindow(false) end)
+        local lastLauncherDrag=0
+        launcher.MouseButton1Click:Connect(function()
+            if os.clock()-lastLauncherDrag>0.3 then showWindow(true) end
+        end)
+        local keyConn=UIS.InputBegan:Connect(function(input, processed)
+            if not processed and input.KeyCode==Enum.KeyCode.RightShift then
+                showWindow(not shell.Visible)
+            end
+        end)
+        -- Header drag (kept independent of all gameplay controls).
+        local dragging,dragStart,windowStart,dragPointer=false,nil,nil,nil
+        bar.InputBegan:Connect(function(input)
+            if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+                -- Drag only by the left/title area, never via search or close buttons.
+                if input.Position.X < bar.AbsolutePosition.X + bar.AbsoluteSize.X*0.46 then
+                    dragging=true;dragStart=input.Position;windowStart=shell.Position;dragPointer=input
+                end
+            end
+        end)
+        local moveConn=UIS.InputChanged:Connect(function(input)
+            if dragging and (input==dragPointer or (dragPointer and dragPointer.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseMovement)) then
+                local d=input.Position-dragStart
+                shell.Position=UDim2.new(windowStart.X.Scale,windowStart.X.Offset+d.X,windowStart.Y.Scale,windowStart.Y.Offset+d.Y)
+            end
+        end)
+        local endConn=UIS.InputEnded:Connect(function(input)
+            if input==dragPointer or input.UserInputType==Enum.UserInputType.MouseButton1 then dragging=false end
+        end)
+        -- Floating launcher can be moved out of the way on phones.
+        local launchDrag=nil
+        launcher.InputBegan:Connect(function(input)
+            if input.UserInputType==Enum.UserInputType.Touch or input.UserInputType==Enum.UserInputType.MouseButton1 then
+                launchDrag={start=input.Position,position=launcher.Position,source=input}
+            end
+        end)
+        local launchMove=UIS.InputChanged:Connect(function(input)
+            if launchDrag and (input==launchDrag.source or (launchDrag.source.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseMovement)) then
+                local delta=input.Position-launchDrag.start
+                if delta.Magnitude>8 then
+                    lastLauncherDrag=os.clock()
+                    local vp=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1024,768)
+                    launcher.Position=UDim2.fromOffset(
+                        math.clamp(launchDrag.position.X.Scale*vp.X+launchDrag.position.X.Offset+delta.X,5,vp.X-55),
+                        math.clamp(launchDrag.position.Y.Scale*vp.Y+launchDrag.position.Y.Offset+delta.Y,65,vp.Y-55)
+                    )
+                end
+            end
+        end)
+        local launchEnd=UIS.InputEnded:Connect(function(input)
+            if launchDrag and (input==launchDrag.source or input.UserInputType==Enum.UserInputType.MouseButton1) then launchDrag=nil end
+        end)
+        local state={tabs={},active=nil,root=root,popup=nil}
+        local function hidePopup()
+            if state.popup then state.popup:Destroy();state.popup=nil end
+        end
+        local function switchTab(tab)
+            hidePopup()
+            if state.active then
+                state.active.page.Visible=false
+                state.active.nav.BackgroundColor3=P.surface
+                state.active.nav.TextColor3=P.muted
+            end
+            state.active=tab
+            tab.page.Visible=true
+            tab.nav.BackgroundColor3=P.field
+            tab.nav.TextColor3=P.white
+            for _,t in ipairs(state.tabs) do
+                t.page.CanvasPosition=Vector2.new(0,0)
+            end
+            search.Text=""
+        end
+        local function applySearch()
+            local text=string.lower(search.Text)
+            if not state.active then return end
+            for _,section in ipairs(state.active.sections) do
+                local matches=0
+                for _,item in ipairs(section.items) do
+                    local b=item.frame
+                    local match=text=="" or string.find(string.lower(item.search),text,1,true)~=nil
+                    b.Visible=match
+                    if match then matches=matches+1 end
+                end
+                section.frame.Visible=text=="" or matches>0 or string.find(string.lower(section.name),text,1,true)~=nil
+                if text~="" and matches==0 then
+                    section.frame.Visible=false
+                end
+            end
+        end
+        search:GetPropertyChangedSignal("Text"):Connect(applySearch)
+        local window={}
+        function window:AddTab(info)
+            info=info or {}
+            local titleText=tostring(info.Name or "TAB")
+            local nav=button(navigation,"  "..titleText,P.surface)
+            nav.Name="Tab_"..titleText;nav.TextSize=12
+            nav.TextColor3=P.muted
+            nav.TextXAlignment=Enum.TextXAlignment.Left
+            nav.Size=UDim2.new(1,-1,0,39)
+            local accent=create("Frame",{Size=UDim2.fromOffset(3,23),Position=UDim2.fromOffset(4,8),BackgroundColor3=P.violet,BorderSizePixel=0,Visible=false},nav)
+            corner(accent,3)
+            local page=create("ScrollingFrame",{
+                Name="Page_"..titleText,BackgroundTransparency=1,BorderSizePixel=0,
+                Position=UDim2.fromOffset(13,12),Size=UDim2.new(1,-26,1,-23),
+                CanvasSize=UDim2.fromOffset(0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,
+                ScrollBarThickness=3,ScrollBarImageColor3=P.violet,Visible=false,
+                ScrollingDirection=Enum.ScrollingDirection.Y,
+            },contentArea)
+            list(page,11)
+            local tab={nav=nav,page=page,sections={},Name=titleText}
+            table.insert(state.tabs,tab)
+            nav.MouseButton1Click:Connect(function()
+                switchTab(tab)
+                for _,t in ipairs(state.tabs) do
+                    local dot=t.nav:FindFirstChildOfClass("Frame")
+                    if dot then dot.Visible=(t==tab) end
+                end
+            end)
+            function tab:AddSection(name)
+                name=tostring(name or "Section")
+                local sectionFrame=create("Frame",{
+                    Name="Section_"..name,Size=UDim2.new(1,-5,0,0),AutomaticSize=Enum.AutomaticSize.Y,
+                    BackgroundTransparency=1,BorderSizePixel=0,
+                },page)
+                list(sectionFrame,6)
+                local head=create("Frame",{Size=UDim2.new(1,0,0,37),BackgroundTransparency=1,BorderSizePixel=0},sectionFrame)
+                local stripe=create("Frame",{Size=UDim2.fromOffset(3,19),Position=UDim2.fromOffset(1,9),BackgroundColor3=P.violet,BorderSizePixel=0},head)
+                corner(stripe,2)
+                local heading=label(head,name,15,true,P.white)
+                heading.Position=UDim2.fromOffset(13,0);heading.Size=UDim2.new(1,-15,1,0)
+                local entries=create("Frame",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0},sectionFrame)
+                list(entries,8)
+                local section={frame=sectionFrame,name=name,items={}}
+                table.insert(tab.sections,section)
+                local function row(opts,h)
+                    opts=opts or {}
+                    local subtitle=tostring(opts.Content or "")
+                    local actual=h or math.clamp(65 + math.ceil(#subtitle/75)*16,67,142)
+                    local card=create("Frame",{Size=UDim2.new(1,-2,0,actual),BackgroundColor3=P.layer,BorderSizePixel=0,ClipsDescendants=false},entries)
+                    corner(card,10);stroke(card,P.edge,1,.38)
+                    local headingText=label(card,opts.Title or "",13,true,P.white)
+                    headingText.Position=UDim2.fromOffset(14,10);headingText.Size=UDim2.new(1,-157,0,21)
+                    local contentText=label(card,subtitle,11,false,P.muted)
+                    contentText.Position=UDim2.fromOffset(14,31)
+                    contentText.Size=UDim2.new(1,-166,1,-39)
+                    contentText.TextWrapped=true
+                    contentText.TextYAlignment=Enum.TextYAlignment.Top
+                    local item={frame=card,search=tostring(opts.Title or "").." "..subtitle}
+                    table.insert(section.items,item)
+                    return card,headingText,contentText
+                end
+                local function handleFor(opts,frame,titleLabel,contentLabel,default,render)
+                    local handle={Value=default,Frame=frame}
+                    function handle:Set(value,quiet)
+                        self.Value=value
+                        if render then render(value) end
+                        if not quiet then safeCall(opts.Callback,value) end
+                    end
+                    handle.SetValue=handle.Set
+                    handle.LoadValue=handle.Set
+                    function handle:ResetValue() self:Set(opts.Default) end
+                    function handle:SetTitle(v) titleLabel.Text=tostring(v or "") end
+                    function handle:SetContent(v) contentLabel.Text=tostring(v or "") end
+                    function handle:Lock() frame.Active=false end
+                    function handle:Unlock() frame.Active=true end
+                    function handle:SetVisible(v) frame.Visible=v == true end
+                    function handle:GetValue() return self.Value end
+                    function handle:Alive() return frame.Parent~=nil and root.Parent~=nil end
+                    return handle
+                end
+                function section:AddSubSection(text)
+                    local bar=create("Frame",{Size=UDim2.new(1,-4,0,25),BackgroundTransparency=1},entries)
+                    local textlabel=label(bar,string.upper(tostring(text or "")),10,true,P.bright)
+                    textlabel.Size=UDim2.fromScale(1,1);textlabel.Position=UDim2.fromOffset(5,0)
+                    table.insert(section.items,{frame=bar,search=tostring(text)})
+                    return self
+                end
+                function section:AddToggle(opts)
+                    opts=opts or {}
+                    local card,headingText,contentText=row(opts)
+                    local track=button(card,"",P.field)
+                    track.Size=UDim2.fromOffset(51,27);track.AnchorPoint=Vector2.new(1,.5)
+                    track.Position=UDim2.new(1,-14,.5,0)
+                    corner(track,14)
+                    local dot=create("Frame",{Size=UDim2.fromOffset(19,19),Position=UDim2.fromOffset(4,4),BackgroundColor3=P.muted,BorderSizePixel=0},track)
+                    corner(dot,10)
+                    local function render(value)
+                        track.BackgroundColor3=value and P.violet or P.field
+                        dot.BackgroundColor3=value and P.white or P.muted
+                        dot.Position=value and UDim2.new(1,-23,0,4) or UDim2.fromOffset(4,4)
+                    end
+                    local h=handleFor(opts,card,headingText,contentText,opts.Default==true,render)
+                    render(h.Value)
+                    track.MouseButton1Click:Connect(function() h:Set(not h.Value) end)
+                    return h
+                end
+                function section:AddButton(opts)
+                    opts=opts or {}
+                    local card,headingText,contentText=row(opts)
+                    local action=button(card,"RUN  ›",P.field)
+                    action.Size=UDim2.fromOffset(92,31);action.AnchorPoint=Vector2.new(1,.5)
+                    action.Position=UDim2.new(1,-13,.5,0)
+                    stroke(action,P.violet,1,.25)
+                    action.MouseButton1Click:Connect(function() safeCall(opts.Callback) end)
+                    return handleFor(opts,card,headingText,contentText,nil,nil)
+                end
+                function section:AddParagraph(opts)
+                    opts=opts or {}
+                    local card,headingText,contentText=row(opts)
+                    headingText.Size=UDim2.new(1,-25,0,21)
+                    contentText.Size=UDim2.new(1,-29,1,-36)
+                    return handleFor(opts,card,headingText,contentText,nil,nil)
+                end
+                function section:AddInput(opts)
+                    opts=opts or {}
+                    local card,headingText,contentText=row(opts,86)
+                    headingText.Size=UDim2.new(1,-30,0,21)
+                    contentText.Size=UDim2.new(1,-30,0,21)
+                    local field=create("TextBox",{
+                        Size=UDim2.new(1,-28,0,30),Position=UDim2.new(0,14,1,-37),
+                        BackgroundColor3=P.field,BorderSizePixel=0,Text=tostring(opts.Default or ""),
+                        TextSize=12,TextColor3=P.white,Font=Enum.Font.Gotham,
+                        PlaceholderText=tostring(opts.Placeholder or "Type here"),PlaceholderColor3=P.muted,
+                        ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left,
+                    },card)
+                    corner(field,8);stroke(field,P.edge,1,.2)
+                    local h=handleFor(opts,card,headingText,contentText,tostring(opts.Default or ""),function(value) field.Text=tostring(value or "") end)
+                    field.FocusLost:Connect(function() h:Set(field.Text) end)
+                    return h
+                end
+                function section:AddSlider(opts)
+                    opts=opts or {}
+                    local card,headingText,contentText=row(opts,90)
+                    local min,max=tonumber(opts.Min) or 0,tonumber(opts.Max) or 100
+                    local step=tonumber(opts.Increment) or 1
+                    local function quant(v)
+                        v=math.clamp(tonumber(v) or min,min,max)
+                        return math.floor((v-min)/step+0.5)*step+min
+                    end
+                    local line=create("Frame",{Position=UDim2.new(0,15,1,-18),Size=UDim2.new(1,-145,0,5),BackgroundColor3=P.field,BorderSizePixel=0},card)
+                    corner(line,3)
+                    local fill=create("Frame",{Size=UDim2.fromScale(0,1),BackgroundColor3=P.violet,BorderSizePixel=0},line)
+                    corner(fill,3)
+                    local sub=button(card,"−",P.field);sub.Size=UDim2.fromOffset(26,28)
+                    sub.Position=UDim2.new(1,-127,1,-32);sub.TextSize=17
+                    local valueText=button(card,"0",P.field);valueText.Size=UDim2.fromOffset(49,28)
+                    valueText.Position=UDim2.new(1,-95,1,-32)
+                    local plus=button(card,"+",P.field);plus.Size=UDim2.fromOffset(26,28)
+                    plus.Position=UDim2.new(1,-39,1,-32);plus.TextSize=16
+                    local function render(v)
+                        valueText.Text=tostring(v)
+                        fill.Size=UDim2.fromScale((v-min)/math.max(.001,max-min),1)
+                    end
+                    local h=handleFor(opts,card,headingText,contentText,quant(opts.Default or min),render)
+                    render(h.Value)
+                    sub.MouseButton1Click:Connect(function() h:Set(quant(h.Value-step)) end)
+                    plus.MouseButton1Click:Connect(function() h:Set(quant(h.Value+step)) end)
+                    local hit=button(line,"",P.field);hit.BackgroundTransparency=1
+                    hit.Size=UDim2.fromScale(1,3);hit.Position=UDim2.fromScale(0,-1)
+                    hit.MouseButton1Click:Connect(function(x,y)
+                        local location=UIS:GetMouseLocation().X
+                        h:Set(quant(min+(max-min)*math.clamp((location-line.AbsolutePosition.X)/line.AbsoluteSize.X,0,1)))
+                    end)
+                    return h
+                end
+                function section:AddDropdown(opts)
+                    opts=opts or {}
+                    local card,headingText,contentText=row(opts,82)
+                    headingText.Size=UDim2.new(1,-22,0,19)
+                    contentText.Size=UDim2.new(1,-22,0,20)
+                    local selector=button(card,"SELECT  ▾",P.field)
+                    selector.Position=UDim2.new(0,14,1,-36)
+                    selector.Size=UDim2.new(1,-28,0,30)
+                    selector.TextXAlignment=Enum.TextXAlignment.Left
+                    selector.TextSize=11
+                    stroke(selector,P.edge,1,.2)
+                    local choices=opts.Options or {}
+                    local initial=opts.Multi and (type(opts.Default)=="table" and opts.Default or {}) or (opts.Default or choices[1] or "")
+                    local h
+                    local function render(value)
+                        if opts.Multi then
+                            local names={}
+                            for _,v in ipairs(value or {}) do names[#names+1]=tostring(v) end
+                            selector.Text=#names>0 and ("  "..table.concat(names,", ")) or "  Select options  ▾"
+                        else
+                            selector.Text="  "..tostring(value or "Select option").."  ▾"
+                        end
+                    end
+                    h=handleFor(opts,card,headingText,contentText,initial,render)
+                    render(initial)
+                    function h:SetOptions(o) choices=o or {} end
+                    function h:Refresh(o) if type(o)=="table" then choices=o end end
+                    selector.MouseButton1Click:Connect(function()
+                        if state.popup then hidePopup();return end
+                        local popup=create("Frame",{
+                            Name="S2rDropdown",BackgroundColor3=P.surface,BorderSizePixel=0,
+                            Size=UDim2.fromOffset(math.max(180,math.floor(selector.AbsoluteSize.X)),math.min(230,math.max(45,#choices*31+12))),
+                            Position=UDim2.fromOffset(0,0),ZIndex=50,
+                        },root)
+                        corner(popup,10);stroke(popup,P.violet,1.2)
+                        local viewport=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1024,768)
+                        local pos=selector.AbsolutePosition
+                        local openY=pos.Y+selector.AbsoluteSize.Y+2
+                        if openY+popup.Size.Y.Offset>viewport.Y-16 then openY=math.max(10,pos.Y-popup.Size.Y.Offset-3) end
+                        popup.Position=UDim2.fromOffset(math.clamp(pos.X,5,math.max(5,viewport.X-popup.Size.X.Offset-8)),openY)
+                        local optionsScroll=create("ScrollingFrame",{
+                            BackgroundTransparency=1,BorderSizePixel=0,
+                            Size=UDim2.new(1,-12,1,-12),Position=UDim2.fromOffset(6,6),
+                            ScrollBarThickness=3,ScrollBarImageColor3=P.violet,
+                            AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.fromOffset(0,0),ZIndex=51,
+                        },popup)
+                        list(optionsScroll,3)
+                        state.popup=popup
+                        for _,choice in ipairs(choices) do
+                            local val=tostring(choice)
+                            local opt=button(optionsScroll,"  "..val,P.layer)
+                            opt.Size=UDim2.new(1,-1,0,28);opt.TextXAlignment=Enum.TextXAlignment.Left
+                            opt.ZIndex=52
+                            opt.MouseButton1Click:Connect(function()
+                                if opts.Multi then
+                                    local nextVal={}
+                                    for _,v in ipairs(h.Value or {}) do if tostring(v)~=val then table.insert(nextVal,v) end end
+                                    if #nextVal==#(h.Value or {}) then table.insert(nextVal,choice) end
+                                    h:Set(nextVal)
+                                else
+                                    h:Set(choice);hidePopup()
+                                end
+                            end)
+                        end
+                    end)
+                    return h
+                end
+                function section:AddActionList(opts)
+                    opts=opts or {}
+                    local card,headingText,contentText=row(opts,140)
+                    headingText.Size=UDim2.new(1,-20,0,20)
+                    contentText.Visible=false
+                    local container=create("ScrollingFrame",{
+                        Position=UDim2.fromOffset(11,34),Size=UDim2.new(1,-22,1,-41),
+                        BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,
+                        ScrollBarImageColor3=P.violet,CanvasSize=UDim2.fromOffset(0,0),
+                        AutomaticCanvasSize=Enum.AutomaticSize.Y,
+                    },card)
+                    local layout=list(container,4)
+                    local h=handleFor(opts,card,headingText,contentText,nil,nil)
+                    local function populate(records)
+                        for _,child in ipairs(container:GetChildren()) do if child~=layout then child:Destroy() end end
+                        if type(records)~="table" or #records==0 then
+                            local empty=label(container,opts.EmptyText or "Nothing here yet",11,false,P.muted)
+                            empty.Size=UDim2.new(1,0,0,28)
+                            return
+                        end
+                        for _,entry in ipairs(records) do
+                            local line=create("Frame",{BackgroundColor3=P.field,Size=UDim2.new(1,-4,0,55),BorderSizePixel=0},container)
+                            corner(line,6)
+                            local a=label(line,entry.name or "Player",11,true,P.white)
+                            a.Size=UDim2.new(1,-90,0,17);a.Position=UDim2.fromOffset(8,4)
+                            local b=label(line,entry.status or entry.sub or "",10,false,P.muted)
+                            b.RichText=true;b.TextWrapped=true
+                            b.Size=UDim2.new(1,-90,0,31);b.Position=UDim2.fromOffset(8,20)
+                            if entry.button and entry.button~=false then
+                                local click=button(line,tostring(entry.button),P.surface)
+                                click.Size=UDim2.fromOffset(73,27);click.Position=UDim2.new(1,-79,.5,-13)
+                                click.MouseButton1Click:Connect(function()
+                                    safeCall(entry.onClick,entry,function(message)
+                                        if click.Parent then click.Text=tostring(message) end
+                                    end)
+                                end)
+                            end
+                        end
+                    end
+                    function h:Update(records) if self:Alive() then populate(records) end end
+                    function h:Refresh(records) self:Update(records) end
+                    populate({})
+                    return h
+                end
+                function section:AddLiveChat(opts)
+                    return self:AddParagraph({Title=(opts and opts.Title or "Live Chat"),Content="Chat requires an independently hosted, authorized service. Not included in this standalone UI."})
+                end
+                function section:AddSupportCard()
+                    return self:AddParagraph({Title="S2r Hub",Content="Original S2r control center interface."})
+                end
+                function section:AddKeybind(opts) return self:AddInput(opts) end
+                function section:AddColorPicker(opts) return self:AddInput(opts) end
+                return section
+            end
+            nav.MouseButton1Click:Connect(function() applySearch() end)
+            if #state.tabs==1 then switchTab(tab);accent.Visible=true end
+            return tab
+        end
+        function window:AddForum(info)
+            local forum=self:AddTab({Name=info and info.Name or "Forum"})
+            forum:AddSection("Community"):AddParagraph({Title="Forum",Content="Community forums require a separate authorized backend."})
+            return forum
+        end
+        local toastHolder=create("Frame",{
+            BackgroundTransparency=1,Size=UDim2.fromOffset(275,250),
+            Position=UDim2.new(1,-290,0,65),ZIndex=60,
+        },root)
+        list(toastHolder,8)
+        function ui:Notify(info)
+            info=info or {}
+            if not root.Parent then return end
+            local toast=create("Frame",{Size=UDim2.new(1,0,0,70),BackgroundColor3=P.surface,BorderSizePixel=0,ZIndex=70},toastHolder)
+            corner(toast,10);stroke(toast,P.violet,1,.1)
+            local t=label(toast,info.Title or "S2r Hub",12,true,P.bright)
+            t.Size=UDim2.new(1,-18,0,21);t.Position=UDim2.fromOffset(9,5);t.ZIndex=71
+            local body=label(toast,info.Content or "",11,false,P.white)
+            body.TextWrapped=true;body.Size=UDim2.new(1,-18,0,37);body.Position=UDim2.fromOffset(9,27);body.ZIndex=71
+            task.delay(math.clamp(tonumber(info.Duration) or 4,1,12),function()
+                if toast.Parent then toast:Destroy() end
+            end)
+        end
+        local connCleanup = {keyConn, moveConn, endConn, launchMove, launchEnd, sizeConn}
+        local env=getgenv and getgenv() or _G
+        env.__S2rOriginalUICleanup=function()
+            for _,connection in ipairs(connCleanup) do
+                if connection then pcall(function() connection:Disconnect() end) end
+            end
+            if root.Parent then root:Destroy() end
+        end
+        return window
+    end
+    return ui
+end
+
 	local function v4315()
 		pcall(function()
 			local ChloeX_Instance = genv.ChloeX_Instance
@@ -27501,17 +28077,8 @@ do
 		genv.ChloeX_ReopenPrompt = nil
 		genv.ChloeX_Instance = nil
 
-		local SenaLibOverride = genv.SenaLibOverride
-
-		do
-			if type(SenaLibOverride) ~= "table" then
-				local ok, result = pcall(function()
-					return loadstring(game:HttpGet("https://senahub.xyz/raw/libsenuy"))()
-				end)
-
-				SenaLibOverride = ok and type(result) == "table" and result or nil
-			end
-		end
+		-- S2r original interface: no external GUI library, gameplay callbacks unchanged.
+		local SenaLibOverride = S2rOriginalUILibrary()
 
 		if not SenaLibOverride then
 			warn("[Sena] UI library failed to load")
@@ -29695,7 +30262,7 @@ do
 				Footer = "",
 				Folder = "SenaSAEv4", -- keep original settings folder for compatibility
 				Version = 1,
-				Color = Color3.fromRGB(159, 83, 255),
+				Color = Color3.fromRGB(177, 91, 255),
 				Image = "" -- clean background; the UI library still owns interaction logic
 			})
 			v4779(v4742)
@@ -30175,6 +30742,192 @@ do
 			local v4804 = v4742:AddTab({
 				Name = "Events",
 				Icon = "flame"
+			})
+
+			-- S2r Auto Race: self-contained event module. No existing steal logic is changed.
+			local S2rAutoRace = (function()
+				local CollectionService = game:GetService("CollectionService")
+				local controls, originalGetMoveVector, patchedGetMoveVector
+				local heartbeat, racePathModule, path, activeRaceId, raceTrack, progress
+				local move = Vector3.zero
+				local markProgress, markTime, reverseUntil = 0, 0, 0
+				local nextTrackSearch, lastWarning = 0, 0
+
+				local function resetRace()
+					path, activeRaceId, raceTrack, progress = nil, nil, nil, nil
+					markProgress, markTime, reverseUntil = 0, 0, 0
+					move = Vector3.zero
+					nextTrackSearch = 0
+				end
+
+				local function getRacePathModule()
+					if racePathModule then
+						return racePathModule
+					end
+					local shared = ReplicatedStorage:FindFirstChild("Shared")
+					local modules = shared and shared:FindFirstChild("Modules")
+					local moduleScript = modules and modules:FindFirstChild("RaceTrackPath")
+					if moduleScript then
+						local ok, result = pcall(require, moduleScript)
+						if ok and type(result) == "table" and type(result.new) == "function" then
+							racePathModule = result
+						end
+					end
+					return racePathModule
+				end
+
+				local function attachControls()
+					if controls and controls.GetMoveVector == patchedGetMoveVector then
+						return
+					end
+					local scripts = LocalPlayer:FindFirstChild("PlayerScripts")
+					local moduleScript = scripts and scripts:FindFirstChild("PlayerModule")
+					if not moduleScript then return end
+					local ok, module = pcall(require, moduleScript)
+					if not ok or not module then return end
+					local okControls, newControls = pcall(function() return module:GetControls() end)
+					if not okControls or type(newControls) ~= "table" then return end
+					if type(newControls.GetMoveVector) ~= "function" then return end
+					controls = newControls
+					originalGetMoveVector = controls.GetMoveVector
+					patchedGetMoveVector = function(self, ...)
+						if senaV4Config.AutoRace and v16() and LocalPlayer:GetAttribute("RaceId") ~= nil then
+							return move
+						end
+						return originalGetMoveVector(self, ...)
+					end
+					controls.GetMoveVector = patchedGetMoveVector
+				end
+
+				local function cornerSpeedAhead(currentPath, currentProgress)
+					local allowed = math.huge
+					for index = 0, 30 do
+						local first = currentPath:FrameAt(currentProgress + index * 12)
+						local second = currentPath:FrameAt(currentProgress + index * 12 + 144)
+						local right = first:VectorToObjectSpace(second.RightVector)
+						local turn = math.abs(math.atan2(-right.Z, right.X))
+						if turn > 0.2 then
+							local radius = 144 / turn
+							local cornerSpeed = math.min(math.sqrt(510 * radius), 1.3 * radius)
+							allowed = math.min(allowed, math.sqrt(cornerSpeed * cornerSpeed + 2 * 140 * index * 12))
+						end
+					end
+					return allowed
+				end
+
+				local function raceStep()
+					local raceId = LocalPlayer:GetAttribute("RaceId")
+					local character = LocalPlayer.Character
+					local root = character and character:FindFirstChild("HumanoidRootPart")
+					if raceId == nil or not root then
+						if activeRaceId ~= nil then resetRace() end
+						return
+					end
+					if activeRaceId ~= raceId then
+						resetRace()
+						activeRaceId = raceId
+					end
+					if not path then
+						if os.clock() < nextTrackSearch then return end
+						nextTrackSearch = os.clock() + 0.6
+						local TrackPath = getRacePathModule()
+						if not TrackPath then return end
+						for _, track in ipairs(CollectionService:GetTagged("RaceTrack")) do
+							if track.Name == tostring(raceId) then
+								local attachment = track:FindFirstChild("AttachmentTrack")
+								if attachment then
+									path = TrackPath.new(attachment)
+									raceTrack = track
+									progress = path:Project(root.Position, 0, 0, path.Length)
+									markProgress, markTime = progress, os.clock()
+									break
+								end
+							end
+						end
+					end
+					if not path or not raceTrack or not raceTrack.Parent then return end
+
+					progress = path:Project(root.Position, progress, 30, 80)
+					local target = path:FrameAt(progress + 40).Position
+					local up, look = root.CFrame.UpVector, root.CFrame.LookVector
+					local toTarget = target - root.Position
+					toTarget = toTarget - up * toTarget:Dot(up)
+					local angle = math.atan2(up:Dot(look:Cross(toTarget)), look:Dot(toTarget))
+					local velocity = root.AssemblyLinearVelocity
+					local speed = velocity.Magnitude
+
+					local now = os.clock()
+					local phase = raceTrack:GetAttribute("RacePhase")
+					if phase ~= nil and phase ~= "Racing" then
+						markProgress, markTime = progress, now
+					elseif now - markTime > 2.5 then
+						if progress - markProgress < 8 then
+							reverseUntil = now + 0.9
+						end
+						markProgress, markTime = progress, now
+					end
+
+					local steer = math.clamp(-angle / math.rad(30), -1, 1)
+					if velocity:Dot(look) < -1 then steer = -steer end
+					local allowed = cornerSpeedAhead(path, progress)
+					local throttle = -1
+					if now < reverseUntil or speed > allowed + 4 then
+						throttle = 1
+					elseif speed > allowed then
+						throttle = 0
+					end
+					move = Vector3.new(steer, 0, throttle)
+				end
+
+				local function stop()
+					senaV4Config.AutoRace = false
+					if heartbeat then
+						heartbeat:Disconnect()
+						heartbeat = nil
+					end
+					if controls and controls.GetMoveVector == patchedGetMoveVector then
+						controls.GetMoveVector = originalGetMoveVector
+					end
+					controls, originalGetMoveVector, patchedGetMoveVector = nil, nil, nil
+					resetRace()
+				end
+
+				local function setEnabled(enabled)
+					if not enabled then stop() return end
+					if heartbeat then return end
+					senaV4Config.AutoRace = true
+					local nextControlCheck = 0
+					heartbeat = RunService.Heartbeat:Connect(function()
+						if not senaV4Config.AutoRace or not v16() then stop() return end
+						if os.clock() >= nextControlCheck then
+							nextControlCheck = os.clock() + 1
+							local ok, err = pcall(attachControls)
+							if not ok and os.clock() - lastWarning > 5 then
+								lastWarning = os.clock()
+								warn("[S2r Auto Race] Controls:", err)
+							end
+						end
+						local ok, err = pcall(raceStep)
+						if not ok then
+							move = Vector3.zero
+							if os.clock() - lastWarning > 5 then
+								lastWarning = os.clock()
+								warn("[S2r Auto Race] Race update:", err)
+							end
+						end
+					end)
+				end
+
+				return { setEnabled = setEnabled, stop = stop }
+			end)()
+			local raceSection = v4804:AddSection("Auto Race Event")
+			t216.autoRace = raceSection:AddToggle({
+				Title = "Auto Race",
+				Content = "Automatically steers, manages speed, and recovers if stuck in the Race Event. Enable before joining; disable to restore normal controls. Turn off Auto Steal while racing to avoid competing movement.",
+				Default = false,
+				Callback = v4732(function(enabled)
+					S2rAutoRace.setEnabled(enabled == true)
+				end)
 			})
 			local v4805 = v4801:AddSection("Pet Favorite")
 
@@ -31493,6 +32246,9 @@ Missing: %s]], __SenaV4ScrambleTradeIn.banner, __SenaV4ScrambleTradeIn.status, m
 			v4904(t216.mutationRetry, v4573)
 			v4904(t216.autoMutation, v4568)
 			v4904(t216.autoRingEvent, v4569)
+			v4904(t216.autoRace, function(enabled)
+				S2rAutoRace.setEnabled(enabled == true)
+			end)
 			v4904(t216.autoSell, v4574)
 			v4904(t216.autoSellEgg, v4575)
 			v4904(t216.stealPlayerRarities, v4735)
@@ -31510,6 +32266,7 @@ Missing: %s]], __SenaV4ScrambleTradeIn.banner, __SenaV4ScrambleTradeIn.status, m
 
 		do
 			genv.__SenaV4HubShutdown = function()
+				S2rAutoRace.stop()
 				if __SenaV4PlayerSteal then
 					pcall(__SenaV4PlayerSteal.setEnabled, __SenaV4PlayerSteal, false)
 				end
@@ -31541,169 +32298,4 @@ Missing: %s]], __SenaV4ScrambleTradeIn.banner, __SenaV4ScrambleTradeIn.status, m
 
 	v4315()
 
-    -- S2r quick launcher: separate ScreenGui; the original UI callbacks are untouched.
-    do
-        local UIS = game:GetService("UserInputService")
-        local host = LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
-        local dock = Instance.new("ScreenGui")
-        dock.Name = "S2rHubStableLauncher"
-        dock.ResetOnSpawn = false
-        dock.IgnoreGuiInset = true
-        dock.DisplayOrder = 10000
-        dock.Parent = host
-        local btn = Instance.new("TextButton")
-        btn.Name = "S2rOpenButton"
-        btn.Text = "S²r"
-        btn.Font = Enum.Font.GothamBlack
-        btn.TextScaled = true
-        btn.TextColor3 = Color3.fromRGB(244, 230, 255)
-        btn.BackgroundColor3 = Color3.fromRGB(20, 11, 32)
-        btn.BackgroundTransparency = 0.05
-        btn.BorderSizePixel = 0
-        btn.AutoButtonColor = true
-        btn.Size = UDim2.fromOffset(46, 46)
-        btn.Position = UDim2.new(1, -60, 0, 118)
-        btn.Parent = dock
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 13)
-        local edge = Instance.new("UIStroke", btn)
-        edge.Color = Color3.fromRGB(166, 94, 255)
-        edge.Thickness = 2
-        local conns = {}
-        local dead = false
-        local cachedGui, cachedTitle
-        local nextScan = 0
-        local function findMain()
-            if cachedGui and cachedGui.Parent and cachedTitle and cachedTitle.Parent then
-                return cachedGui, cachedTitle
-            end
-            if os.clock() < nextScan then return nil, nil end
-            nextScan = os.clock() + 0.8
-            cachedGui, cachedTitle = nil, nil
-            for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui"), game:GetService("CoreGui")}) do
-                if root then
-                    local ok, result = pcall(function()
-                        for _, item in ipairs(root:GetDescendants()) do
-                            if (item:IsA("TextLabel") or item:IsA("TextButton")) and item.Text == "S2r Hub" then
-                                local gui = item:FindFirstAncestorWhichIsA("ScreenGui")
-                                if gui and gui ~= dock and not gui.Name:find("__SNE_Panel_", 1, true) then
-                                    -- Ignore small status overlays with the same brand text.
-                                    local mainSized = false
-                                    local parent = item.Parent
-                                    while parent and parent ~= gui do
-                                        if parent:IsA("GuiObject") and parent.AbsoluteSize.X >= 350 and parent.AbsoluteSize.Y >= 230 then
-                                            mainSized = true
-                                            break
-                                        end
-                                        parent = parent.Parent
-                                    end
-                                    if mainSized then return {gui, item} end
-                                end
-                            end
-                        end
-                    end)
-                    if ok and result then
-                        cachedGui, cachedTitle = result[1], result[2]
-                        return cachedGui, cachedTitle
-                    end
-                end
-            end
-        end
-        local function titleVisible(gui, title)
-            if not gui or not title or not gui.Enabled then return false end
-            local node = title
-            while node and node ~= gui do
-                if node:IsA("GuiObject") and not node.Visible then return false end
-                node = node.Parent
-            end
-            return true
-        end
-        local busy = false
-        local function refresh()
-            if dead then return end
-            local gui, title = findMain()
-            btn.Visible = busy or not titleVisible(gui, title)
-        end
-        local function reopen()
-            if busy or dead then return end
-            local gui, title = findMain()
-            if gui and title then
-                gui.Enabled = true
-                local node = title
-                while node and node ~= gui do
-                    if node:IsA("GuiObject") and not node.Visible then node.Visible = true end
-                    node = node.Parent
-                end
-                refresh()
-                return
-            end
-            -- X may destroy the external library GUI. Reload only if necessary.
-            busy = true
-            task.spawn(function()
-                local url = genv.S2rHubSourceURL or "https://raw.githubusercontent.com/preexmon-collab/Khay-Hub/refs/heads/main/S2r_Hub.lua"
-                local ok, err = pcall(function()
-                    local source = game:HttpGet(url)
-                    local chunk = assert(loadstring(source))
-                    chunk()
-                end)
-                busy = false
-                if not ok then warn("[S2r Hub] Unable to reopen GUI:", err) end
-                refresh()
-            end)
-        end
-        conns[#conns+1] = btn.MouseButton1Click:Connect(function()
-            if dragged or os.clock() < (btn:GetAttribute("S2rNoClickUntil") or 0) then return end
-            reopen()
-        end)
-        conns[#conns+1] = UIS.InputBegan:Connect(function(input, processed)
-            if not processed and input.KeyCode == Enum.KeyCode.RightShift then
-                local gui, title = findMain()
-                if titleVisible(gui, title) then
-                    gui.Enabled = false
-                    refresh()
-                else
-                    reopen()
-                end
-            end
-        end)
-        -- Drag support on touch and desktop; ignore the click after a drag.
-        local dragOrigin, startPos, dragInput, dragged
-        conns[#conns+1] = btn.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragOrigin, startPos, dragInput, dragged = input.Position, btn.Position, input, false
-            end
-        end)
-        conns[#conns+1] = UIS.InputChanged:Connect(function(input)
-            if dragOrigin and (input == dragInput or input.UserInputType == Enum.UserInputType.MouseMovement and dragInput and dragInput.UserInputType == Enum.UserInputType.MouseButton1) then
-                local delta = input.Position - dragOrigin
-                if delta.Magnitude > 7 then dragged = true end
-                if dragged then
-                    btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-                end
-            end
-        end)
-        conns[#conns+1] = UIS.InputEnded:Connect(function(input)
-            if input == dragInput or input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragInput, dragOrigin, startPos = nil, nil, nil
-                if dragged then
-                    -- A drag can emit a click, so suppress the immediate reopen.
-                    btn:SetAttribute("S2rNoClickUntil", os.clock() + 0.25)
-                end
-                dragged = false
-            end
-        end)
-        -- No game-feature state is modified by this updater.
-        task.spawn(function()
-            while not dead and dock.Parent do
-                pcall(refresh)
-                task.wait(0.7)
-            end
-        end)
-        genv.__S2rHubDockCleanup = function()
-            if dead then return end
-            dead = true
-            for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
-            dock:Destroy()
-        end
-        refresh()
-    end
 end
