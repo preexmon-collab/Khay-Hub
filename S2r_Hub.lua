@@ -1,4 +1,4 @@
--- S2r Hub | Black & Violet | Built-in logo and persistent GUI launcher
+-- S2r Hub | V3 mobile-responsive black/violet GUI | 2026-10-11
 
 local function geniter(f, s, c)
 	if type(f) ~= "function" then
@@ -27629,8 +27629,8 @@ do
 
 		local pill = Instance.new("TextButton")
 		pill.Name = "S2rReopenButton"
-		pill.Position = UDim2.new(0, 14, 0.43, 0)
-		pill.Size = UDim2.fromOffset(150, 48)
+		pill.Position = UDim2.new(0, 16, 0.25, 0)
+		pill.Size = UDim2.fromOffset(54, 54)
 		pill.BorderSizePixel = 0
 		pill.BackgroundColor3 = Color3.fromRGB(15, 9, 25)
 		pill.BackgroundTransparency = 0.05
@@ -27655,7 +27655,7 @@ do
 		})
 		highlight.Parent = pill
 
-		s2rMakeBrandmark(pill, UDim2.fromOffset(6, 6), 36)
+		s2rMakeBrandmark(pill, UDim2.fromOffset(6, 6), 42)
 
 		local title = Instance.new("TextLabel")
 		title.Name = "S2rDockTitle"
@@ -27693,7 +27693,10 @@ do
 		compact.ZIndex = 60
 		compact.Parent = pill
 
-		local compactMode = false
+		local compactMode = true
+		title.Visible = false
+		caption.Visible = false
+		compact.Visible = false
 		local lastMainGui = nil
 		local lastMainRoot = nil
 		local lastMainChain = {}
@@ -27757,7 +27760,10 @@ do
 
 		local function updateHint()
 			if dead then return end
-			caption.Text = busy and "RESTORING..." or isOpen() and "TAP TO HIDE" or "TAP TO OPEN"
+			local open = isOpen()
+			caption.Text = busy and "RESTORING..." or open and "TAP TO HIDE" or "TAP TO OPEN"
+			-- Keep the game screen clean: reveal the launcher only after the hub is closed.
+			pill.Visible = not open or busy
 		end
 
 		local function fitOnScreen()
@@ -27813,10 +27819,11 @@ do
 
 		local function toggleCompact()
 			compactMode = not compactMode
-			local targetWidth = compactMode and 48 or 150
-			pill.Size = UDim2.fromOffset(targetWidth, 48)
+			local targetWidth = compactMode and 54 or 154
+			pill.Size = UDim2.fromOffset(targetWidth, 54)
 			title.Visible = not compactMode
 			caption.Visible = not compactMode
+			compact.Visible = not compactMode
 			compact.Text = compactMode and "+" or "−"
 			compact.Position = UDim2.new(1, -19, 0, 2)
 			compact.TextSize = compactMode and 11 or 16
@@ -27901,7 +27908,7 @@ do
 		dock.hide = function() toggle(false) end
 		dock.compact = toggleCompact
 		dock.center = function()
-			pill.Position = UDim2.new(0, 14, 0.43, 0)
+			pill.Position = UDim2.new(0, 16, 0.25, 0)
 			fitOnScreen()
 		end
 		dock.destroy = function()
@@ -30122,92 +30129,209 @@ do
 			v4730()
 			v4742 = S2rLibOverride:Window({
 				Title = "S2r Hub",
-				Footer = "Steal An Egg • Black & Violet",
+				Footer = "", -- prevent library subtitle overlapping the main title
 				Folder = "S2rHub",
 				Version = 1,
 				Color = Color3.fromRGB(156, 82, 255),
 				Image = "" -- no background image
 			})
 			v4779(v4742)
-			-- The external library controls its own default colors. Theme only the GUI
-			-- containing our S2r Hub title, not unrelated game interfaces.
-			local function applyS2rMainTheme()
-				local targets = {
-					LocalPlayer:FindFirstChildOfClass("PlayerGui"),
-					game:GetService("CoreGui")
-				}
-				local dark = Color3.fromRGB(13, 10, 20)
-				local raised = Color3.fromRGB(29, 19, 44)
-				local violet = Color3.fromRGB(156, 82, 255)
-				local light = Color3.fromRGB(247, 243, 255)
-				local function style(widget)
-					if widget:IsA("Frame") or widget:IsA("ScrollingFrame") then
-						if widget.BackgroundTransparency < 0.95 then
-							widget.BackgroundColor3 = dark
-							widget.BackgroundTransparency = math.max(widget.BackgroundTransparency, 0.08)
-						end
-					elseif widget:IsA("TextButton") or widget:IsA("TextBox") then
-						if widget.BackgroundTransparency < 0.95 then
-							local bg = widget.BackgroundColor3
-							local _, saturation = bg:ToHSV()
-							widget.BackgroundColor3 = saturation > 0.35 and violet or raised
-						end
-						widget.TextColor3 = light
-					elseif widget:IsA("TextLabel") then
-						if widget.TextColor3.R < 0.6 then
-							widget.TextColor3 = light
-						end
-					elseif widget:IsA("UIStroke") then
-						widget.Color = violet
-					elseif widget:IsA("ImageLabel") then
-						local image = string.lower(widget.Image or "")
-						if image:find("sena_bg", 1, true) then
-							widget.Image = ""
-							widget.BackgroundTransparency = 1
+			-- Premium main-window styling. Only touches the S2r window; no game UI is changed.
+			-- The original library owns tabs and callbacks, so its gameplay features stay intact.
+			local Ui = game:GetService("UserInputService")
+			local s2rPalette = {
+				window = Color3.fromRGB(12, 10, 19),
+				sidebar = Color3.fromRGB(18, 14, 28),
+				card = Color3.fromRGB(24, 20, 35),
+				raised = Color3.fromRGB(34, 26, 49),
+				violet = Color3.fromRGB(159, 83, 255),
+				border = Color3.fromRGB(101, 62, 154),
+				white = Color3.fromRGB(246, 241, 255),
+				muted = Color3.fromRGB(179, 163, 204)
+			}
+			genv.S2rHubAppearance = type(genv.S2rHubAppearance) == "table" and genv.S2rHubAppearance or {}
+			local look = genv.S2rHubAppearance
+			look.Scale = math.clamp(tonumber(look.Scale) or 100, 65, 110)
+			local appearance = { window = nil, scaler = nil, viewportConn = nil }
+
+			local function s2rMainSurface(label, gui)
+				local node = label and label.Parent
+				local fallback
+				while node and node ~= gui do
+					if node:IsA("GuiObject") then
+						fallback = fallback or node
+						local size = node.AbsoluteSize
+						if size.X >= 380 and size.Y >= 230 then
+							return node
 						end
 					end
+					node = node.Parent
 				end
-				local styled = false
-				for _, root in ipairs(targets) do
+				return fallback
+			end
+
+			local function styleS2rWidget(widget)
+				if widget:FindFirstAncestor("S2rSignatureHeader") then return end
+				if widget.Name == "S2rSignatureHeader" or widget.Name == "S2rResponsiveScale" then return end
+				if widget:IsA("Frame") or widget:IsA("ScrollingFrame") then
+					if widget.BackgroundTransparency < 0.92 then
+						local original = widget.BackgroundColor3
+						local bright = (original.R + original.G + original.B) / 3
+						widget.BackgroundColor3 = bright > 0.32 and s2rPalette.raised or bright > 0.18 and s2rPalette.card or s2rPalette.sidebar
+						widget.BackgroundTransparency = math.min(widget.BackgroundTransparency, 0.06)
+					end
+					if widget:IsA("ScrollingFrame") then
+						widget.ScrollBarImageColor3 = s2rPalette.violet
+						widget.ScrollBarThickness = 3
+					end
+				elseif widget:IsA("TextButton") or widget:IsA("TextBox") then
+					if widget.BackgroundTransparency < 0.92 then
+						local _, saturation, value = widget.BackgroundColor3:ToHSV()
+						widget.BackgroundColor3 = saturation > 0.38 and value > 0.33 and s2rPalette.violet or s2rPalette.raised
+					end
+					if widget:IsA("TextBox") then
+						widget.PlaceholderColor3 = s2rPalette.muted
+					end
+					-- Do not overwrite icon fonts or their text glyphs.
+					if widget.Text ~= "" then widget.TextColor3 = s2rPalette.white end
+				elseif widget:IsA("TextLabel") then
+					if widget.TextColor3.R < 0.57 and widget.TextColor3.G < 0.57 then
+						widget.TextColor3 = s2rPalette.muted
+					end
+				elseif widget:IsA("UIStroke") then
+					widget.Color = s2rPalette.border
+					widget.Transparency = math.max(widget.Transparency, 0.30)
+				elseif widget:IsA("ImageLabel") and string.lower(widget.Image or ""):find("sena_bg", 1, true) then
+					widget.Image = ""
+					widget.BackgroundTransparency = 1
+				end
+			end
+
+			local function s2rHeader(surface, original)
+				if not surface or surface:FindFirstChild("S2rSignatureHeader") then return end
+				-- Hide the library's overlapping title while keeping its original text
+				-- searchable so the reopen controller can detect the main GUI.
+				if original then original.TextTransparency = 1 end
+				local header = Instance.new("Frame")
+				header.Name = "S2rSignatureHeader"
+				header.BackgroundColor3 = s2rPalette.window
+				header.BorderSizePixel = 0
+				header.Position = UDim2.fromOffset(12, 8)
+				header.Size = UDim2.fromOffset(206, 46)
+				header.ZIndex = 60
+				header.Parent = surface
+				Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
+				s2rMakeBrandmark(header, UDim2.fromOffset(5, 6), 34)
+				local primary = Instance.new("TextLabel")
+				primary.BackgroundTransparency = 1
+				primary.Position = UDim2.fromOffset(47, 5)
+				primary.Size = UDim2.fromOffset(153, 23)
+				primary.Text = "S2r Hub"
+				primary.Font = Enum.Font.GothamBold
+				primary.TextSize = 18
+				primary.TextColor3 = s2rPalette.white
+				primary.TextXAlignment = Enum.TextXAlignment.Left
+				primary.ZIndex = 62
+				primary.Parent = header
+				local subtitle = Instance.new("TextLabel")
+				subtitle.BackgroundTransparency = 1
+				subtitle.Position = UDim2.fromOffset(48, 27)
+				subtitle.Size = UDim2.fromOffset(150, 12)
+				subtitle.Text = "STEAL AN EGG  /  V3"
+				subtitle.Font = Enum.Font.GothamMedium
+				subtitle.TextSize = 9
+				subtitle.TextColor3 = s2rPalette.muted
+				subtitle.TextXAlignment = Enum.TextXAlignment.Left
+				subtitle.ZIndex = 62
+				subtitle.Parent = header
+			end
+
+			local function fitMainToViewport(recenter)
+				local surface = appearance.window
+				if not surface or not surface.Parent then return end
+				local cam = workspace.CurrentCamera
+				local vp = cam and cam.ViewportSize or Vector2.new(900, 600)
+				local scaler = appearance.scaler
+				local current = scaler and math.max(scaler.Scale, 0.05) or 1
+				local rendered = surface.AbsoluteSize
+				if rendered.X < 100 or rendered.Y < 100 then return end
+				local baseWidth, baseHeight = rendered.X / current, rendered.Y / current
+				local requested = (look.Scale or 100) / 100
+				-- Keep the full interface above the game HUD on phone landscape.
+				local availableWidth = math.max(320, vp.X - 30)
+				local availableHeight = math.max(230, vp.Y - (Ui.TouchEnabled and 96 or 55))
+				local autoFit = math.min(availableWidth / baseWidth, availableHeight / baseHeight)
+				if scaler then scaler.Scale = math.clamp(math.min(requested, autoFit), 0.45, 1.1) end
+				if recenter then
+					local parent = surface.Parent
+					local parentSize = parent and parent:IsA("GuiObject") and parent.AbsoluteSize or vp
+					if parentSize.X >= vp.X * 0.8 and parentSize.Y >= vp.Y * 0.8 then
+						surface.AnchorPoint = Vector2.new(0.5, 0.5)
+						surface.Position = UDim2.fromScale(0.5, 0.53)
+					end
+				end
+			end
+			local function mainThemeAttach(gui, label)
+				local surface = s2rMainSurface(label, gui)
+				if not surface or surface.AbsoluteSize.Y < 200 then return false end
+				appearance.window = surface
+				if not gui:GetAttribute("S2rMainThemeAppliedV3") then
+					gui:SetAttribute("S2rMainThemeAppliedV3", true)
+					for _, widget in ipairs(gui:GetDescendants()) do
+						pcall(styleS2rWidget, widget)
+					end
+					gui.DescendantAdded:Connect(function(widget)
+						pcall(styleS2rWidget, widget)
+					end)
+				end
+				s2rHeader(surface, label)
+				local scaler = surface:FindFirstChild("S2rResponsiveScale")
+				if not scaler then
+					scaler = Instance.new("UIScale")
+					scaler.Name = "S2rResponsiveScale"
+					scaler.Parent = surface
+				end
+				appearance.scaler = scaler
+				fitMainToViewport(false)
+				if not appearance.viewportConn and workspace.CurrentCamera then
+					appearance.viewportConn = workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+						fitMainToViewport(true)
+					end)
+				end
+				return true
+			end
+			local function applyS2rMainTheme()
+				for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui"), game:GetService("CoreGui")}) do
 					if root then
 						for _, label in ipairs(root:GetDescendants()) do
-							if (label:IsA("TextLabel") or label:IsA("TextButton"))
-								and label.Text:find("S2r Hub", 1, true) then
+							if (label:IsA("TextLabel") or label:IsA("TextButton")) and label.Text == "S2r Hub" then
 								local gui = label:FindFirstAncestorWhichIsA("ScreenGui")
-								if gui and not gui.Name:find("__SNE_Panel_", 1, true)
-									and gui.Name ~= "S2rHubPersistentDock" then
-									if label.Text == "S2r Hub" or label.Text == "      S2r Hub" then
-										s2rDock.capture(gui, label)
-									end
-									-- The library logo is also made in-code, with no decal dependency.
-									if label.Text == "S2r Hub" and not label:FindFirstChild("S2rOriginalLogo") then
-										s2rMakeBrandmark(label, UDim2.fromOffset(0, 0), 23)
-										label.Text = "      S2r Hub"
-									end
-									if not gui:GetAttribute("S2rMainThemeApplied") then
-										gui:SetAttribute("S2rMainThemeApplied", true)
-										for _, widget in ipairs(gui:GetDescendants()) do
-											pcall(style, widget)
-										end
-										gui.DescendantAdded:Connect(function(widget)
-											pcall(style, widget)
-										end)
-									end
-									styled = true
+								if gui and gui.Name ~= "S2rHubPersistentDock" and not gui.Name:find("__SNE_Panel_", 1, true) then
+									s2rDock.capture(gui, label)
+									if mainThemeAttach(gui, label) then return true end
 								end
 							end
 						end
 					end
 				end
-				return styled
+				return false
 			end
 			task.spawn(function()
-				for attempt = 1, 10 do
-					local ok, styled = pcall(applyS2rMainTheme)
-					if ok and styled then break end
-					task.wait(0.25)
+				for attempt = 1, 30 do
+					local ok, ready = pcall(applyS2rMainTheme)
+					if ok and ready then break end
+					task.wait(0.20)
 				end
 			end)
+			-- Let the settings tab control the real GUI, not just the floating panels.
+			genv.S2rHubResizeMain = function(percent)
+				look.Scale = math.clamp(tonumber(percent) or 100, 65, 110)
+				fitMainToViewport(true)
+			end
+			genv.S2rHubCenterMain = function()
+				fitMainToViewport(true)
+			end
+
 			t216 = {}
 			t217 = { "Respawn Point" }
 
@@ -30223,6 +30347,54 @@ do
 
 			u4745 = t217[1]
 			t218 = {}
+			-- A useful starting page instead of dropping users into a long toggle list.
+			do
+				local homeTab = v4742:AddTab({Name = "Home", Icon = "house"})
+				local welcome = homeTab:AddSection("S2r Control Center")
+				local summary = welcome:AddParagraph({
+					Title = "READY  /  S2r Hub V3",
+					Content = "Black + Violet  |  Responsive mobile GUI  |  Tap any tab to begin"
+				})
+				local quick = homeTab:AddSection("Quick Access")
+				quick:AddButton({
+					Title = "Egg Checker",
+					Content = "Inspect all eggs currently available in the game.",
+					Callback = v4732(function() s2rPanels.openChecker() end)
+				})
+				quick:AddButton({
+					Title = "Egg Spawn Board",
+					Content = "Open the live spawn display.",
+					Callback = v4732(function() s2rPanels.openBoard() end)
+				})
+				quick:AddButton({
+						Title = "Inventory",
+						Content = "Open the separate inventory information window.",
+						Callback = v4732(function() s2rPanels.openInventory() end)
+				})
+				quick:AddButton({
+					Title = "Hide Hub",
+					Content = "A small draggable S2r launcher will appear for reopening.",
+					Callback = v4732(function() s2rDock.hide() end)
+				})
+				task.spawn(function()
+					while v16() and summary do
+						pcall(function()
+							local active = {}
+							for _, key in ipairs({"AutoSteal", "AutoPlace", "AutoHatch", "AutoFavorite", "AutoSell", "AutoSellEgg", "Noclip"}) do
+								if s2rV4Config[key] == true then table.insert(active, key) end
+							end
+							local ping = math.floor((LocalPlayer:GetNetworkPing() or 0) * 1000)
+							summary:SetContent(string.format(
+								"%s  |  %d players  |  %dms ping\nActive: %s",
+								LocalPlayer.DisplayName, #Players:GetPlayers(), ping,
+								#active > 0 and table.concat(active, ", ") or "None"
+							))
+						end)
+						task.wait(4)
+					end
+				end)
+			end
+
 
 			local __S2rV4ScrambleRuntime = genv.__S2rV4ScrambleRuntime
 
@@ -31245,6 +31417,24 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Title = "Hide Main Hub (Reopen Anytime)",
 				Content = "Hide without unloading. Tap the floating S2r logo or press Right Shift to reopen.",
 				Callback = v4732(function() s2rDock.hide() end)
+			})
+			hubUI:AddSlider({
+				Title = "Main Window Size",
+				Content = "Resize the entire hub. Automatically fits narrow phones and landscape displays.",
+				Min = 65,
+				Max = 110,
+				Default = look.Scale,
+				Increment = 5,
+				Callback = v4732(function(value)
+					if type(genv.S2rHubResizeMain) == "function" then genv.S2rHubResizeMain(value) end
+				end)
+			})
+			hubUI:AddButton({
+				Title = "Center Main Window",
+				Content = "Recenter the hub if you moved it off-screen or changed orientation.",
+				Callback = v4732(function()
+					if type(genv.S2rHubCenterMain) == "function" then genv.S2rHubCenterMain() end
+				end)
 			})
 			hubUI:AddButton({
 				Title = "Reset Floating Launcher",
