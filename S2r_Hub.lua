@@ -27591,10 +27591,8 @@ local function S2rOriginalUILibrary()
         corner(mark,12);stroke(mark,P.violet,1.5)
         local markLabel=label(mark,"S²r",18,true,P.bright)
         markLabel.Size=UDim2.fromScale(1,1);markLabel.TextXAlignment=Enum.TextXAlignment.Center
-        local title=label(bar,"S2r HUB",21,true,P.white)
-        title.Position=UDim2.fromOffset(71,10);title.Size=UDim2.fromOffset(190,28)
-        local tagline=label(bar,"CONTROL CENTER  /  ORIGINAL UI",9,true,P.bright)
-        tagline.Position=UDim2.fromOffset(73,36);tagline.Size=UDim2.fromOffset(275,17)
+        local title=label(bar,"S2r HUB",23,true,P.white)
+        title.Position=UDim2.fromOffset(71,17);title.Size=UDim2.fromOffset(200,33)
         local searchWrap=create("Frame",{Size=UDim2.fromOffset(208,34),Position=UDim2.new(1,-311,0,18),BackgroundColor3=P.field,BorderSizePixel=0},bar)
         corner(searchWrap,10);stroke(searchWrap,P.edge,1)
         local search=create("TextBox",{
@@ -27605,7 +27603,7 @@ local function S2rOriginalUILibrary()
         },searchWrap)
         local hide=button(bar,"—",P.field);hide.Size=UDim2.fromOffset(35,34);hide.Position=UDim2.new(1,-90,0,18)
         local close=button(bar,"×",P.field);close.TextSize=20;close.Size=UDim2.fromOffset(35,34);close.Position=UDim2.new(1,-47,0,18)
-        local left=create("Frame",{Position=UDim2.fromOffset(0,68),Size=UDim2.new(0,175,1,-101),BackgroundColor3=P.surface,BorderSizePixel=0},shell)
+        local left=create("Frame",{Position=UDim2.fromOffset(0,68),Size=UDim2.new(0,175,1,-68),BackgroundColor3=P.surface,BorderSizePixel=0},shell)
         create("Frame",{Size=UDim2.new(0,1,1,0),Position=UDim2.new(1,-1,0,0),BackgroundColor3=P.edge,BorderSizePixel=0},left)
         local navigation=create("ScrollingFrame",{
             Name="Navigation",Position=UDim2.fromOffset(10,12),Size=UDim2.new(1,-20,1,-20),
@@ -27614,19 +27612,10 @@ local function S2rOriginalUILibrary()
         },left)
         list(navigation,7)
         local contentArea=create("Frame",{
-            Position=UDim2.fromOffset(175,68),Size=UDim2.new(1,-175,1,-101),
+            Position=UDim2.fromOffset(175,68),Size=UDim2.new(1,-175,1,-68),
             BackgroundColor3=P.bg,BorderSizePixel=0,ClipsDescendants=true,
         },shell)
-        local footer=create("Frame",{
-            Position=UDim2.new(0,0,1,-33),Size=UDim2.new(1,0,0,33),
-            BackgroundColor3=P.surface,BorderSizePixel=0,
-        },shell)
-        create("Frame",{Size=UDim2.new(1,0,0,1),BackgroundColor3=P.edge,BorderSizePixel=0},footer)
-        local footText=label(footer,"S2r  •  READY",10,true,P.bright)
-        footText.Position=UDim2.fromOffset(17,2);footText.Size=UDim2.fromOffset(190,28)
-        local footRight=label(footer,"BLACK × VIOLET   •   V4",10,false,P.muted)
-        footRight.Size=UDim2.fromOffset(228,30);footRight.Position=UDim2.new(1,-245,0,1)
-        footRight.TextXAlignment=Enum.TextXAlignment.Right
+        -- No decorative theme / version footer; give the feature list more room.
         local launcher=button(root,"S²r",P.surface)
         launcher.Name="ReopenS2r";launcher.Font=Enum.Font.GothamBlack
         launcher.TextColor3=P.bright;launcher.TextSize=17
@@ -28019,7 +28008,8 @@ local function S2rOriginalUILibrary()
                     return self:AddParagraph({Title=(opts and opts.Title or "Live Chat"),Content="Chat requires an independently hosted, authorized service. Not included in this standalone UI."})
                 end
                 function section:AddSupportCard()
-                    return self:AddParagraph({Title="S2r Hub",Content="Original S2r control center interface."})
+                    -- Keep the UI adapter method for compatibility without showing promotional text.
+                    return self:AddParagraph({Title="Support",Content=""})
                 end
                 function section:AddKeybind(opts) return self:AddInput(opts) end
                 function section:AddColorPicker(opts) return self:AddInput(opts) end
@@ -32114,10 +32104,7 @@ Missing: %s]], __SenaV4ScrambleTradeIn.banner, __SenaV4ScrambleTradeIn.status, m
 			})
 		end
 
-		v4742:AddTab({
-			Name = "Donate",
-			Icon = "donator"
-		}):AddSection("Support S2r Hub", true):AddSupportCard({})
+		-- The unused Donate placeholder tab was removed to keep navigation focused.
 
 		do
 			local function v4904(p1104, p1105)
