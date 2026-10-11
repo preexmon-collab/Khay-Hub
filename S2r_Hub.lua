@@ -1,4 +1,4 @@
--- discord.gg/syncrypt
+-- S2r Hub | Black & Violet | Built-in logo and persistent GUI launcher
 
 local function geniter(f, s, c)
 	if type(f) ~= "function" then
@@ -37,6 +37,75 @@ local RunService = game:GetService("RunService")
 game:GetService("TweenService")
 
 local TeleportService = game:GetService("TeleportService")
+
+-- S2r original brandmark. UI primitives only: no external image asset to break.
+local function s2rMakeBrandmark(parent, position, diameter)
+    local base = Instance.new("Frame")
+    base.Name = "S2rOriginalLogo"
+    base.Position = position
+    base.Size = UDim2.fromOffset(diameter, diameter)
+    base.BorderSizePixel = 0
+    base.BackgroundColor3 = Color3.fromRGB(24, 11, 42)
+    base.ClipsDescendants = true
+    base.ZIndex = 30
+    base.Parent = parent
+    Instance.new("UICorner", base).CornerRadius = UDim.new(0, math.floor(diameter * 0.29))
+
+    local color = Instance.new("UIGradient")
+    color.Rotation = 38
+    color.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 17, 67)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(18, 8, 32)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 6, 21))
+    })
+    color.Parent = base
+
+    local border = Instance.new("UIStroke")
+    border.Color = Color3.fromRGB(185, 107, 255)
+    border.Thickness = diameter >= 32 and 1.5 or 1
+    border.Transparency = 0.07
+    border.Parent = base
+
+    local strike = Instance.new("Frame")
+    strike.Name = "VioletBolt"
+    strike.AnchorPoint = Vector2.new(0.5, 0.5)
+    strike.Position = UDim2.fromScale(0.76, 0.29)
+    strike.Size = UDim2.fromScale(0.13, 0.75)
+    strike.Rotation = 34
+    strike.BorderSizePixel = 0
+    strike.BackgroundColor3 = Color3.fromRGB(166, 79, 255)
+    strike.ZIndex = 31
+    strike.Parent = base
+    Instance.new("UICorner", strike).CornerRadius = UDim.new(1, 0)
+
+    local sLabel = Instance.new("TextLabel")
+    sLabel.Name = "S2rMarkS"
+    sLabel.Position = UDim2.fromScale(0.06, 0.08)
+    sLabel.Size = UDim2.fromScale(0.60, 0.82)
+    sLabel.BackgroundTransparency = 1
+    sLabel.Text = "S"
+    sLabel.Font = Enum.Font.GothamBlack
+    sLabel.TextScaled = true
+    sLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    sLabel.TextStrokeTransparency = 0.85
+    sLabel.ZIndex = 33
+    sLabel.Parent = base
+
+    local number = Instance.new("TextLabel")
+    number.Name = "S2rMark2r"
+    number.Position = UDim2.fromScale(0.51, 0.46)
+    number.Size = UDim2.fromScale(0.47, 0.42)
+    number.BackgroundTransparency = 1
+    number.Text = "2r"
+    number.Font = Enum.Font.GothamBold
+    number.TextScaled = true
+    number.TextColor3 = Color3.fromRGB(207, 151, 255)
+    number.ZIndex = 34
+    number.Parent = base
+
+    return base
+end
+
 local v14, genv, v16, __S2rV4TweenRuntimeGeneration, t1, v19, v20, v21, v22, v23
 local v24, v25, v26, v27, v28, v29, v30, v31, v32, v33
 
@@ -47,6 +116,11 @@ do
 		return Workspace:FindFirstChild("World") or Workspace:FindFirstChild("__OBJECTS")
 	end
 	genv = getgenv and getgenv() or _G
+
+	-- Re-executing the hub must not leave duplicate launchers or hotkeys.
+	if type(genv.__S2rHubDockCleanup) == "function" then
+		pcall(genv.__S2rHubDockCleanup)
+	end
 
 	if type(genv.__S2rV4HubShutdown) == "function" then
 		pcall(genv.__S2rV4HubShutdown)
@@ -27229,8 +27303,8 @@ do
 			local TextLabel5 = Instance.new("TextLabel")
 
 			TextLabel5.BackgroundTransparency = 1
-			TextLabel5.Position = UDim2.fromOffset(14, 12)
-			TextLabel5.Size = UDim2.fromOffset(200, 22)
+			TextLabel5.Position = UDim2.fromOffset(52, 12)
+			TextLabel5.Size = UDim2.fromOffset(160, 22)
 			TextLabel5.Font = Enum.Font.GothamBold
 			TextLabel5.TextSize = 16
 			TextLabel5.TextXAlignment = Enum.TextXAlignment.Left
@@ -27238,15 +27312,17 @@ do
 			TextLabel5.Text = "S2r Hub"
 			TextLabel5.Parent = Frame2
 
-			local ImageLabel2 = Instance.new("ImageLabel")
+			-- Clear 30px S2r logo, generated directly with Roblox UI widgets.
+			s2rMakeBrandmark(Frame2, UDim2.fromOffset(12, 8), 30)
 
-			ImageLabel2.AnchorPoint = Vector2.new(0, 0.5)
-			ImageLabel2.Position = UDim2.fromOffset(11, 23)
-			ImageLabel2.Size = UDim2.fromOffset(20, 20)
-			ImageLabel2.BackgroundTransparency = 1
-			ImageLabel2.Image = "" -- old hub logo removed
-			ImageLabel2.ScaleType = Enum.ScaleType.Fit
-			ImageLabel2.Parent = Frame2
+			local accentRule = Instance.new("Frame")
+			accentRule.Name = "S2rAccentRule"
+			accentRule.Position = UDim2.new(0, 12, 0, 39)
+			accentRule.Size = UDim2.new(1, -24, 0, 1)
+			accentRule.BackgroundColor3 = t166.accentA
+			accentRule.BackgroundTransparency = 0.35
+			accentRule.BorderSizePixel = 0
+			accentRule.Parent = Frame2
 
 			local Frame3 = Instance.new("Frame")
 
@@ -27292,15 +27368,17 @@ do
 			UIStroke3.Thickness = 1
 			UIStroke3.Transparency = 0.6
 
-			local ImageLabel3 = Instance.new("ImageLabel")
-
-			ImageLabel3.AnchorPoint = Vector2.new(0.5, 0.5)
-			ImageLabel3.Position = UDim2.new(0, 12, 0.5, 0)
-			ImageLabel3.Size = UDim2.fromOffset(12, 12)
-			ImageLabel3.BackgroundTransparency = 1
-			ImageLabel3.Image = "" -- legacy community icon removed
-			ImageLabel3.ScaleType = Enum.ScaleType.Fit
-			ImageLabel3.Parent = TextButton
+			local copyIcon = Instance.new("TextLabel")
+			copyIcon.Name = "S2rCopyIcon"
+			copyIcon.AnchorPoint = Vector2.new(0, 0.5)
+			copyIcon.Position = UDim2.new(0, 10, 0.5, 0)
+			copyIcon.Size = UDim2.fromOffset(14, 15)
+			copyIcon.BackgroundTransparency = 1
+			copyIcon.Text = "◆"
+			copyIcon.Font = Enum.Font.GothamBold
+			copyIcon.TextSize = 13
+			copyIcon.TextColor3 = t166.accentB
+			copyIcon.Parent = TextButton
 
 			local TextLabel7 = Instance.new("TextLabel")
 
@@ -27527,6 +27605,319 @@ do
 	end
 
 	v3692()
+
+	-- Persistent, mobile-friendly launcher. This ScreenGui remains enabled when the
+	-- library closes or hides its own interface. It contains its own S2r logo.
+	local function createS2rDock()
+		local UIS = game:GetService("UserInputService")
+		local TweenService = game:GetService("TweenService")
+		local host = LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
+		for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui"), game:GetService("CoreGui")}) do
+			if root then
+				local old = root:FindFirstChild("S2rHubPersistentDock")
+				if old then pcall(function() old:Destroy() end) end
+			end
+		end
+
+		local dockGui = Instance.new("ScreenGui")
+		dockGui.Name = "S2rHubPersistentDock"
+		dockGui.ResetOnSpawn = false
+		dockGui.IgnoreGuiInset = true
+		dockGui.DisplayOrder = 1000000
+		dockGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		dockGui.Parent = host
+
+		local pill = Instance.new("TextButton")
+		pill.Name = "S2rReopenButton"
+		pill.Position = UDim2.new(0, 14, 0.43, 0)
+		pill.Size = UDim2.fromOffset(150, 48)
+		pill.BorderSizePixel = 0
+		pill.BackgroundColor3 = Color3.fromRGB(15, 9, 25)
+		pill.BackgroundTransparency = 0.05
+		pill.Text = ""
+		pill.Active = true
+		pill.AutoButtonColor = false
+		pill.Parent = dockGui
+		Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 14)
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Name = "VioletOutline"
+		stroke.Color = Color3.fromRGB(164, 88, 255)
+		stroke.Thickness = 1.5
+		stroke.Transparency = 0.12
+		stroke.Parent = pill
+
+		local highlight = Instance.new("UIGradient")
+		highlight.Rotation = 0
+		highlight.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(38, 19, 56)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(11, 8, 20))
+		})
+		highlight.Parent = pill
+
+		s2rMakeBrandmark(pill, UDim2.fromOffset(6, 6), 36)
+
+		local title = Instance.new("TextLabel")
+		title.Name = "S2rDockTitle"
+		title.BackgroundTransparency = 1
+		title.Position = UDim2.fromOffset(50, 5)
+		title.Size = UDim2.fromOffset(78, 20)
+		title.Text = "S2r Hub"
+		title.Font = Enum.Font.GothamBold
+		title.TextSize = 14
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = Color3.fromRGB(245, 236, 255)
+		title.Parent = pill
+
+		local caption = Instance.new("TextLabel")
+		caption.Name = "S2rDockHint"
+		caption.BackgroundTransparency = 1
+		caption.Position = UDim2.fromOffset(50, 25)
+		caption.Size = UDim2.fromOffset(82, 14)
+		caption.Text = "TAP TO HIDE"
+		caption.Font = Enum.Font.GothamMedium
+		caption.TextSize = 9
+		caption.TextXAlignment = Enum.TextXAlignment.Left
+		caption.TextColor3 = Color3.fromRGB(195, 149, 250)
+		caption.Parent = pill
+
+		local compact = Instance.new("TextButton")
+		compact.Name = "S2rCompactToggle"
+		compact.Position = UDim2.new(1, -22, 0, 5)
+		compact.Size = UDim2.fromOffset(17, 17)
+		compact.BackgroundTransparency = 1
+		compact.Text = "−"
+		compact.Font = Enum.Font.GothamBold
+		compact.TextSize = 16
+		compact.TextColor3 = Color3.fromRGB(199, 156, 255)
+		compact.ZIndex = 60
+		compact.Parent = pill
+
+		local compactMode = false
+		local lastMainGui = nil
+		local lastMainRoot = nil
+		local lastMainChain = {}
+		local nextGuiSearchAt = 0
+		local busy = false
+		local dead = false
+		local dragStart, startPos, dragging, dragInput
+		local suppressClickUntil = 0
+		local connections = {}
+
+		local function captureTitle(gui, label)
+			lastMainGui = gui
+			lastMainRoot = nil
+			lastMainChain = {}
+			local item = label
+			while item and item ~= gui do
+				if item:IsA("GuiObject") then
+					lastMainChain[#lastMainChain + 1] = item
+					lastMainRoot = item
+				end
+				item = item.Parent
+			end
+		end
+
+		local function getGui()
+			if lastMainGui and lastMainGui.Parent then
+				local alive = lastMainRoot and lastMainRoot.Parent
+				if alive then
+					for _, item in ipairs(lastMainChain) do
+						if not item.Parent then alive = false break end
+					end
+				end
+				if alive then return lastMainGui, lastMainRoot end
+			end
+			if os.clock() < nextGuiSearchAt then return nil, nil end
+			nextGuiSearchAt = os.clock() + 1.5
+			lastMainGui, lastMainRoot, lastMainChain = nil, nil, {}
+			for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui"), game:GetService("CoreGui")}) do
+				for _, descendant in ipairs(root:GetDescendants()) do
+					if (descendant:IsA("TextLabel") or descendant:IsA("TextButton")) and
+						(descendant.Text == "S2r Hub" or descendant.Text == "      S2r Hub") then
+						local gui = descendant:FindFirstAncestorWhichIsA("ScreenGui")
+						if gui and gui ~= dockGui and not gui.Name:find("__SNE_Panel_", 1, true) then
+							captureTitle(gui, descendant)
+							return lastMainGui, lastMainRoot
+						end
+					end
+				end
+			end
+			return nil, nil
+		end
+
+		local function isOpen()
+			local gui = getGui()
+			if not gui or not gui.Enabled then return false end
+			for _, item in ipairs(lastMainChain) do
+				if not item.Visible then return false end
+			end
+			return true
+		end
+
+		local function updateHint()
+			if dead then return end
+			caption.Text = busy and "RESTORING..." or isOpen() and "TAP TO HIDE" or "TAP TO OPEN"
+		end
+
+		local function fitOnScreen()
+			local camera = workspace.CurrentCamera
+			local vp = camera and camera.ViewportSize or Vector2.new(800, 500)
+			local width = pill.Size.X.Offset
+			local px = pill.Position.X.Scale * vp.X + pill.Position.X.Offset
+			local py = pill.Position.Y.Scale * vp.Y + pill.Position.Y.Offset
+			pill.Position = UDim2.fromOffset(
+				math.floor(math.clamp(px, 8, math.max(8, vp.X - width - 8))),
+				math.floor(math.clamp(py, 36, math.max(36, vp.Y - 60)))
+			)
+		end
+
+		local function toggle(forceShow)
+			if dead or busy then return end
+			local gui, root = getGui()
+			local show = forceShow
+			if show == nil then show = not isOpen() end
+			if gui then
+				gui.Enabled = show
+				if show then
+					for _, item in ipairs(lastMainChain) do
+						if item and item.Parent and not item.Visible then
+							item.Visible = true
+						end
+					end
+				end
+				updateHint()
+				return
+			end
+			if show then
+				-- The library may destroy its window when X is clicked. Restore
+				-- from the GitHub source provided by the user, not a random URL.
+				busy = true
+				updateHint()
+				task.spawn(function()
+					local source = genv.S2rHubSourceURL or "https://raw.githubusercontent.com/preexmon-collab/Khay-Hub/refs/heads/main/S2r_Hub.lua"
+					local ok, result = pcall(function()
+						local code = game:HttpGet(source)
+						local chunk = loadstring(code)
+						assert(type(chunk) == "function", "Invalid S2r Hub source")
+						chunk()
+					end)
+					busy = false
+					if not ok then
+						warn("[S2r Hub] Could not restore the main GUI: " .. tostring(result))
+					end
+					updateHint()
+				end)
+			end
+		end
+
+		local function toggleCompact()
+			compactMode = not compactMode
+			local targetWidth = compactMode and 48 or 150
+			pill.Size = UDim2.fromOffset(targetWidth, 48)
+			title.Visible = not compactMode
+			caption.Visible = not compactMode
+			compact.Text = compactMode and "+" or "−"
+			compact.Position = UDim2.new(1, -19, 0, 2)
+			compact.TextSize = compactMode and 11 or 16
+			fitOnScreen()
+		end
+
+		local function recordConnection(connection)
+			connections[#connections + 1] = connection
+		end
+		recordConnection(compact.MouseButton1Click:Connect(function()
+			suppressClickUntil = os.clock() + 0.22
+			toggleCompact()
+		end))
+		recordConnection(pill.MouseButton1Click:Connect(function()
+			if not dragging and os.clock() >= suppressClickUntil then
+				toggle()
+			end
+		end))
+		recordConnection(pill.MouseEnter:Connect(function()
+			TweenService:Create(stroke, TweenInfo.new(0.15), {Transparency = 0, Thickness = 2.3}):Play()
+		end))
+		recordConnection(pill.MouseLeave:Connect(function()
+			TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.12, Thickness = 1.5}):Play()
+		end))
+
+		recordConnection(pill.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragStart = input.Position
+				startPos = pill.Position
+				dragInput = input
+				dragging = false
+			end
+		end))
+		recordConnection(UIS.InputChanged:Connect(function(input)
+			if dragStart and startPos and
+				(input == dragInput or input.UserInputType == Enum.UserInputType.MouseMovement and dragInput and dragInput.UserInputType == Enum.UserInputType.MouseButton1) then
+				local delta = input.Position - dragStart
+				if delta.Magnitude >= 7 then
+					dragging = true
+					suppressClickUntil = os.clock() + 0.3
+				end
+				if dragging then
+					pill.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+					fitOnScreen()
+				end
+			end
+		end))
+		recordConnection(UIS.InputEnded:Connect(function(input)
+			if dragInput and (input == dragInput or input.UserInputType == Enum.UserInputType.MouseButton1) then
+					if dragging then suppressClickUntil = os.clock() + 0.3 end
+					dragInput, dragStart, startPos, dragging = nil, nil, nil, false
+			end
+		end))
+		recordConnection(UIS.InputBegan:Connect(function(input, processed)
+			if not processed and input.KeyCode == Enum.KeyCode.RightShift then
+				toggle()
+			end
+		end))
+		if workspace.CurrentCamera then
+			recordConnection(workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fitOnScreen))
+		end
+
+		task.spawn(function()
+			while not dead and dockGui.Parent and v16() do
+				updateHint()
+				task.wait(0.8)
+			end
+		end)
+
+		local dock = {}
+		dock.capture = function(gui, titleLabel)
+			if gui and gui.Parent and titleLabel then
+				captureTitle(gui, titleLabel)
+				updateHint()
+			end
+		end
+		dock.toggle = toggle
+		dock.mainGui = function()
+			return getGui()
+		end
+		dock.show = function() toggle(true) end
+		dock.hide = function() toggle(false) end
+		dock.compact = toggleCompact
+		dock.center = function()
+			pill.Position = UDim2.new(0, 14, 0.43, 0)
+			fitOnScreen()
+		end
+		dock.destroy = function()
+			if dead then return end
+			dead = true
+			for _, conn in ipairs(connections) do pcall(function() conn:Disconnect() end) end
+			if dockGui and dockGui.Parent then dockGui:Destroy() end
+		end
+		genv.__S2rHubDockCleanup = dock.destroy
+		genv.S2rHubUI = dock
+		fitOnScreen()
+		updateHint()
+		return dock
+	end
+
+	local s2rDock = createS2rDock()
 
 	local function v4315()
 		pcall(function()
@@ -29783,7 +30174,16 @@ do
 							if (label:IsA("TextLabel") or label:IsA("TextButton"))
 								and label.Text:find("S2r Hub", 1, true) then
 								local gui = label:FindFirstAncestorWhichIsA("ScreenGui")
-								if gui and not gui.Name:find("__SNE_Panel_", 1, true) then
+								if gui and not gui.Name:find("__SNE_Panel_", 1, true)
+									and gui.Name ~= "S2rHubPersistentDock" then
+									if label.Text == "S2r Hub" or label.Text == "      S2r Hub" then
+										s2rDock.capture(gui, label)
+									end
+									-- The library logo is also made in-code, with no decal dependency.
+									if label.Text == "S2r Hub" and not label:FindFirstChild("S2rOriginalLogo") then
+										s2rMakeBrandmark(label, UDim2.fromOffset(0, 0), 23)
+										label.Text = "      S2r Hub"
+									end
 									if not gui:GetAttribute("S2rMainThemeApplied") then
 										gui:SetAttribute("S2rMainThemeApplied", true)
 										for _, widget in ipairs(gui:GetDescendants()) do
@@ -30841,6 +31241,21 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 			})
 
 			local hubUI = v4851:AddSection("S2r Hub • UI Controls")
+			hubUI:AddButton({
+				Title = "Hide Main Hub (Reopen Anytime)",
+				Content = "Hide without unloading. Tap the floating S2r logo or press Right Shift to reopen.",
+				Callback = v4732(function() s2rDock.hide() end)
+			})
+			hubUI:AddButton({
+				Title = "Reset Floating Launcher",
+				Content = "Move the draggable S2r logo back to its default on-screen position.",
+				Callback = v4732(function() s2rDock.center() end)
+			})
+			hubUI:AddButton({
+				Title = "Compact / Expand Launcher",
+				Content = "Switch between the small logo button and the full S2r Hub launcher.",
+				Callback = v4732(function() s2rDock.compact() end)
+			})
 			hubUI:AddSlider({
 				Title = "Floating Panel Size",
 				Content = "Adjust all floating panels from 60% to 100%. Viewport fitting stays active on mobile.",
@@ -31671,6 +32086,19 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 
 		do
 			genv.__S2rV4HubShutdown = function()
+				-- Dispose only our own GUI windows on unload/reinject to avoid duplicates.
+				local mainGui = s2rDock.mainGui()
+				if mainGui then pcall(function() mainGui:Destroy() end) end
+				for _, panel in pairs(s2rPanels.windows or {}) do
+					if panel.gui and panel.gui.Parent then
+						pcall(function() panel.gui:Destroy() end)
+					end
+				end
+				if type(genv.__S2rHubDockCleanup) == "function" then
+					pcall(genv.__S2rHubDockCleanup)
+					genv.__S2rHubDockCleanup = nil
+					genv.S2rHubUI = nil
+				end
 				if __S2rV4PlayerSteal then
 					pcall(__S2rV4PlayerSteal.setEnabled, __S2rV4PlayerSteal, false)
 				end
