@@ -1,4 +1,4 @@
--- S2r Hub | V3 mobile-responsive black/violet GUI | 2026-10-11
+-- S2r Hub STABLE | original steal engine preserved | black/violet UI
 
 local function geniter(f, s, c)
 	if type(f) ~= "function" then
@@ -37,76 +37,7 @@ local RunService = game:GetService("RunService")
 game:GetService("TweenService")
 
 local TeleportService = game:GetService("TeleportService")
-
--- S2r original brandmark. UI primitives only: no external image asset to break.
-local function s2rMakeBrandmark(parent, position, diameter)
-    local base = Instance.new("Frame")
-    base.Name = "S2rOriginalLogo"
-    base.Position = position
-    base.Size = UDim2.fromOffset(diameter, diameter)
-    base.BorderSizePixel = 0
-    base.BackgroundColor3 = Color3.fromRGB(24, 11, 42)
-    base.ClipsDescendants = true
-    base.ZIndex = 30
-    base.Parent = parent
-    Instance.new("UICorner", base).CornerRadius = UDim.new(0, math.floor(diameter * 0.29))
-
-    local color = Instance.new("UIGradient")
-    color.Rotation = 38
-    color.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 17, 67)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(18, 8, 32)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 6, 21))
-    })
-    color.Parent = base
-
-    local border = Instance.new("UIStroke")
-    border.Color = Color3.fromRGB(185, 107, 255)
-    border.Thickness = diameter >= 32 and 1.5 or 1
-    border.Transparency = 0.07
-    border.Parent = base
-
-    local strike = Instance.new("Frame")
-    strike.Name = "VioletBolt"
-    strike.AnchorPoint = Vector2.new(0.5, 0.5)
-    strike.Position = UDim2.fromScale(0.76, 0.29)
-    strike.Size = UDim2.fromScale(0.13, 0.75)
-    strike.Rotation = 34
-    strike.BorderSizePixel = 0
-    strike.BackgroundColor3 = Color3.fromRGB(166, 79, 255)
-    strike.ZIndex = 31
-    strike.Parent = base
-    Instance.new("UICorner", strike).CornerRadius = UDim.new(1, 0)
-
-    local sLabel = Instance.new("TextLabel")
-    sLabel.Name = "S2rMarkS"
-    sLabel.Position = UDim2.fromScale(0.06, 0.08)
-    sLabel.Size = UDim2.fromScale(0.60, 0.82)
-    sLabel.BackgroundTransparency = 1
-    sLabel.Text = "S"
-    sLabel.Font = Enum.Font.GothamBlack
-    sLabel.TextScaled = true
-    sLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    sLabel.TextStrokeTransparency = 0.85
-    sLabel.ZIndex = 33
-    sLabel.Parent = base
-
-    local number = Instance.new("TextLabel")
-    number.Name = "S2rMark2r"
-    number.Position = UDim2.fromScale(0.51, 0.46)
-    number.Size = UDim2.fromScale(0.47, 0.42)
-    number.BackgroundTransparency = 1
-    number.Text = "2r"
-    number.Font = Enum.Font.GothamBold
-    number.TextScaled = true
-    number.TextColor3 = Color3.fromRGB(207, 151, 255)
-    number.ZIndex = 34
-    number.Parent = base
-
-    return base
-end
-
-local v14, genv, v16, __S2rV4TweenRuntimeGeneration, t1, v19, v20, v21, v22, v23
+local v14, genv, v16, __SenaV4TweenRuntimeGeneration, t1, v19, v20, v21, v22, v23
 local v24, v25, v26, v27, v28, v29, v30, v31, v32, v33
 
 do
@@ -116,36 +47,43 @@ do
 		return Workspace:FindFirstChild("World") or Workspace:FindFirstChild("__OBJECTS")
 	end
 	genv = getgenv and getgenv() or _G
-
-	-- Re-executing the hub must not leave duplicate launchers or hotkeys.
-	if type(genv.__S2rHubDockCleanup) == "function" then
-		pcall(genv.__S2rHubDockCleanup)
+	-- Hotfix handoff from the V3 GUI build. Stop its separately renamed runtime
+	-- before the original steal engine starts, preventing duplicate controllers.
+	genv.__S2rV4HubSession = nil
+	for _, key in ipairs({
+		"__S2rV4HubShutdown", "__S2rV4TweenRuntimeCleanup",
+		"__S2rV4EggRuntimeCleanup", "__S2rV4AntiGuardCleanup",
+		"__S2rV4CosmeticSuppressCleanup", "__S2rV4DecomBoostCleanup",
+		"__S2rV4StealDeclutterCleanup", "__S2rHubDockCleanup"
+	}) do
+		local stop = genv[key]
+		if type(stop) == "function" then pcall(stop) end
 	end
 
-	if type(genv.__S2rV4HubShutdown) == "function" then
-		pcall(genv.__S2rV4HubShutdown)
+	if type(genv.__SenaV4HubShutdown) == "function" then
+		pcall(genv.__SenaV4HubShutdown)
 	end
 
 	local t2 = {}
 
-	genv.__S2rV4HubSession = t2
+	genv.__SenaV4HubSession = t2
 	v16 = function()
-		return genv.__S2rV4HubSession == t2
+		return genv.__SenaV4HubSession == t2
 	end
-	genv.__S2rV4IdentityGetter = genv.getthreadidentity or genv.get_thread_identity or genv.getidentity or genv.getthreadcontext or genv.get_thread_context
-	genv.__S2rV4IdentitySetter = genv.setthreadidentity or genv.set_thread_identity or genv.setidentity or genv.setthreadcontext or genv.set_thread_context
+	genv.__SenaV4IdentityGetter = genv.getthreadidentity or genv.get_thread_identity or genv.getidentity or genv.getthreadcontext or genv.get_thread_context
+	genv.__SenaV4IdentitySetter = genv.setthreadidentity or genv.set_thread_identity or genv.setidentity or genv.setthreadcontext or genv.set_thread_context
 
-	local __S2rV4IdentitySetter = genv.__S2rV4IdentitySetter
+	local __SenaV4IdentitySetter = genv.__SenaV4IdentitySetter
 
-	if type(__S2rV4IdentitySetter) == "function" then
-		pcall(__S2rV4IdentitySetter, 8)
-		genv.__S2rV4UICapabilityIdentity = 8
+	if type(__SenaV4IdentitySetter) == "function" then
+		pcall(__SenaV4IdentitySetter, 8)
+		genv.__SenaV4UICapabilityIdentity = 8
 	end
 
 	if not (rawget(_G, "setfpscap") or rawget(_G, "set_fps_cap")) and type(setfpscap) == "function" then
 	end
 
-	genv.__S2rV4SetCapFps = function(p1)
+	genv.__SenaV4SetCapFps = function(p1)
 		local v37 = math.clamp(math.floor(tonumber(p1) or 240), 1, 999)
 		local setfpscap_ = rawget(_G, "setfpscap") or rawget(_G, "set_fps_cap") or type(setfpscap) == "function" and setfpscap
 
@@ -156,24 +94,24 @@ do
 		return false
 	end
 
-	if type(genv.__S2rV4TweenRuntimeCleanup) == "function" then
-		pcall(genv.__S2rV4TweenRuntimeCleanup)
+	if type(genv.__SenaV4TweenRuntimeCleanup) == "function" then
+		pcall(genv.__SenaV4TweenRuntimeCleanup)
 	end
 
-	if type(genv.__S2rV4EggRuntimeCleanup) == "function" then
-		pcall(genv.__S2rV4EggRuntimeCleanup)
+	if type(genv.__SenaV4EggRuntimeCleanup) == "function" then
+		pcall(genv.__SenaV4EggRuntimeCleanup)
 	end
 
-	if type(genv.__S2rV4AntiGuardCleanup) == "function" then
-		pcall(genv.__S2rV4AntiGuardCleanup)
+	if type(genv.__SenaV4AntiGuardCleanup) == "function" then
+		pcall(genv.__SenaV4AntiGuardCleanup)
 	end
 
-	genv.__S2rV4TweenRuntimeGeneration = (genv.__S2rV4TweenRuntimeGeneration or 0) + 1
-	__S2rV4TweenRuntimeGeneration = genv.__S2rV4TweenRuntimeGeneration
+	genv.__SenaV4TweenRuntimeGeneration = (genv.__SenaV4TweenRuntimeGeneration or 0) + 1
+	__SenaV4TweenRuntimeGeneration = genv.__SenaV4TweenRuntimeGeneration
 	t1 = {
-		KEY = "__S2rV4StealAnEggMovementSpoof",
+		KEY = "__SenaV4StealAnEggMovementSpoof",
 		VERSION = 436,
-		INTEGRITY_KEY = "__S2rV4StealAnEggIntegritySpoof",
+		INTEGRITY_KEY = "__SenaV4StealAnEggIntegritySpoof",
 		SIGNAL = "ClientCharacter: GetDebugSnapshot",
 		HEADROOM = 1.35,
 		CLAMP = 0.15,
@@ -230,7 +168,7 @@ do
 
 	local function v57()
 		for _, child in ipairs(Workspace:GetChildren()) do
-			if child:IsA("BasePart") and child.Name == "__S2rV4HoverPad" and child ~= u51 then
+			if child:IsA("BasePart") and child.Name == "__SenaV4HoverPad" and child ~= u51 then
 				pcall(child.Destroy, child)
 			end
 		end
@@ -257,7 +195,7 @@ do
 		return true
 	end
 	v22 = function()
-		if not u51 or not u51.Parent or u51:GetAttribute("S2rV4RuntimeOwner") ~= v52 then
+		if not u51 or not u51.Parent or u51:GetAttribute("SenaV4RuntimeOwner") ~= v52 then
 			v57()
 
 			if u51 and u51.Parent then
@@ -266,8 +204,8 @@ do
 
 			local Part = Instance.new("Part")
 
-			Part.Name = "__S2rV4HoverPad"
-			Part:SetAttribute("S2rV4RuntimeOwner", v52)
+			Part.Name = "__SenaV4HoverPad"
+			Part:SetAttribute("SenaV4RuntimeOwner", v52)
 			Part.Anchored = true
 			Part.CanCollide = true
 			Part.CanQuery = true
@@ -379,7 +317,7 @@ do
 		v23()
 	end
 
-	genv.__S2rV4TweenRuntimeCleanup = function()
+	genv.__SenaV4TweenRuntimeCleanup = function()
 		for _, v in pairs(t3) do
 			if type(v) == "table" then
 				v.cancelled = true
@@ -748,7 +686,7 @@ do
 		end
 
 		connection3 = RunService.PreSimulation:Connect(function()
-			if genv.__S2rV4TweenRuntimeGeneration ~= __S2rV4TweenRuntimeGeneration then
+			if genv.__SenaV4TweenRuntimeGeneration ~= __SenaV4TweenRuntimeGeneration then
 				local v142 = connection3
 
 				connection3 = nil
@@ -790,7 +728,7 @@ do
 		v139()
 	end
 
-	genv.__S2rV4TweenRuntimeCleanup = function()
+	genv.__SenaV4TweenRuntimeCleanup = function()
 		v68()
 		v147()
 	end
@@ -910,7 +848,7 @@ do
 	end)
 end
 
-local s2rV4Config = {
+local senaV4Config = {
 	AutoSteal = false,
 	HelpFriend = false,
 	ScrambleTradeInTrade = false,
@@ -1035,13 +973,13 @@ local AreaEggResetWall = require(game:GetService("ReplicatedStorage").Client.Are
 
 AreaEggResetWall.IsClosed = AreaEggResetWall.IsSealed
 v20 = function()
-	if genv.__S2rV4AdminBoost == true then
+	if genv.__SenaV4AdminBoost == true then
 		return 4000
 	end
 
-	return math.clamp(math.floor((tonumber(s2rV4Config.TweenSpeedMultiplier) or t1.DEF_INPUT) + 0.5), t1.MIN_INPUT, t1.MAX_INPUT) * t1.MULTIPLIER
+	return math.clamp(math.floor((tonumber(senaV4Config.TweenSpeedMultiplier) or t1.DEF_INPUT) + 0.5), t1.MIN_INPUT, t1.MAX_INPUT) * t1.MULTIPLIER
 end
-s2rV4Config.applyStealValueInput = function(p35, p36)
+senaV4Config.applyStealValueInput = function(p35, p36)
 	local lower = string.lower
 	local tostring_ = tostring
 	local v167 = lower(tostring_(p36 or "")):gsub("[%s,]", "")
@@ -1073,7 +1011,7 @@ s2rV4Config.applyStealValueInput = function(p35, p36)
 
 	return true
 end
-s2rV4Config.getAreaEggValue = function(p37, p38)
+senaV4Config.getAreaEggValue = function(p37, p38)
 	if not p37._assetGenerationUtil then
 		p37._assetGenerationUtil = require(game:GetService("ReplicatedStorage").Shared.Util.AssetEarnings)
 	end
@@ -1094,9 +1032,9 @@ end
 
 local function v172(p39)
 	local max = math.max
-	local StealPriorityUntil = s2rV4Config.StealPriorityUntil or 0
+	local StealPriorityUntil = senaV4Config.StealPriorityUntil or 0
 
-	s2rV4Config.StealPriorityUntil = max(StealPriorityUntil, os.clock() + (p39 or 5))
+	senaV4Config.StealPriorityUntil = max(StealPriorityUntil, os.clock() + (p39 or 5))
 end
 
 local AreaEggCycle
@@ -1189,22 +1127,22 @@ do
 end
 
 local function v198()
-	if s2rV4Config.IsStealing then
+	if senaV4Config.IsStealing then
 		return false
 	end
 
-	local __S2rV4DronesWantCharacter = genv.__S2rV4DronesWantCharacter
+	local __SenaV4DronesWantCharacter = genv.__SenaV4DronesWantCharacter
 
-	if __S2rV4DronesWantCharacter and __S2rV4DronesWantCharacter() then
+	if __SenaV4DronesWantCharacter and __SenaV4DronesWantCharacter() then
 		return false
 	end
 
-	if s2rV4Config.IsPlacing == true then
+	if senaV4Config.IsPlacing == true then
 		return false
 	end
 
-	if s2rV4Config.AutoSteal then
-		return os.clock() >= (s2rV4Config.StealPriorityUntil or 0)
+	if senaV4Config.AutoSteal then
+		return os.clock() >= (senaV4Config.StealPriorityUntil or 0)
 	end
 
 	return true
@@ -1219,8 +1157,8 @@ do
 
 			local s1 = ""
 
-			if typeof(readfile) == "function" and typeof(isfile) == "function" and isfile("S2r_Disconnect_Log.txt") then
-				s1 = readfile("S2r_Disconnect_Log.txt") or ""
+			if typeof(readfile) == "function" and typeof(isfile) == "function" and isfile("Sena_Disconnect_Log.txt") then
+				s1 = readfile("Sena_Disconnect_Log.txt") or ""
 			end
 
 			local t5 = {}
@@ -1237,7 +1175,7 @@ do
 				table.remove(t5, 1)
 			end
 
-			writefile("S2r_Disconnect_Log.txt", table.concat(t5, "\n"))
+			writefile("Sena_Disconnect_Log.txt", table.concat(t5, "\n"))
 		end)
 	end
 end
@@ -1276,7 +1214,7 @@ local function v205(p41)
 	return t6
 end
 local function v211(p42, p43, p44, p45)
-	if s2rV4Config.SellAll then
+	if senaV4Config.SellAll then
 		return true
 	end
 
@@ -1364,11 +1302,11 @@ end
 local function v223(p49)
 	local tweenSpeedMultiplier = math.clamp(math.floor((tonumber(p49) or t1.DEF_INPUT) + 0.5), t1.MIN_INPUT, t1.MAX_INPUT)
 
-	if math.abs((s2rV4Config.TweenSpeedMultiplier or 0) - tweenSpeedMultiplier) <= 0.001 then
+	if math.abs((senaV4Config.TweenSpeedMultiplier or 0) - tweenSpeedMultiplier) <= 0.001 then
 		return
 	end
 
-	s2rV4Config.TweenSpeedMultiplier = tweenSpeedMultiplier
+	senaV4Config.TweenSpeedMultiplier = tweenSpeedMultiplier
 end
 local function v225(p50, p51, p52, p53)
 	local v226 = os.clock() + p52
@@ -1458,7 +1396,7 @@ local function v232(p54, p55, p56, p57, p58, p59, p60)
 
 	local v237 = p60 and math.max(p54.Position.Y, p56.Position.Y + 5, vector3.Y + 5) or nil
 	local v238 = v237 and cFrameNew(p56.Position.X, v237, p56.Position.Z) * p56.Rotation or p56
-	local v239 = math.clamp(v20(), t1.MIN_SPEED, genv.__S2rV4AdminBoost == true and 3000 or t1.MAX_SPEED)
+	local v239 = math.clamp(v20(), t1.MIN_SPEED, genv.__SenaV4AdminBoost == true and 3000 or t1.MAX_SPEED)
 
 	v27(Parent, v239 * t1.HEADROOM)
 
@@ -1480,7 +1418,7 @@ local function v232(p54, p55, p56, p57, p58, p59, p60)
 
 	while not t10.cancelled and (not p57 or not p57()) and p54.Parent and not (v246 <= os.clock()) do
 		local v249 = math.max(math.min(RunService.Heartbeat:Wait(), 0.15), 0.0041666666666666666)
-		local v250 = math.clamp(v20(), t1.MIN_SPEED, genv.__S2rV4AdminBoost == true and 3000 or t1.MAX_SPEED)
+		local v250 = math.clamp(v20(), t1.MIN_SPEED, genv.__SenaV4AdminBoost == true and 3000 or t1.MAX_SPEED)
 
 		v27(Parent, v250 * t1.HEADROOM)
 
@@ -1611,7 +1549,7 @@ local function v267(p65, p66)
 			local Humanoid = Parent and Parent:FindFirstChildOfClass("Humanoid")
 
 			if Humanoid then
-				local v270 = math.clamp(v20(), t1.MIN_SPEED, genv.__S2rV4AdminBoost == true and 3000 or t1.MAX_SPEED)
+				local v270 = math.clamp(v20(), t1.MIN_SPEED, genv.__SenaV4AdminBoost == true and 3000 or t1.MAX_SPEED)
 
 				v27(Parent, v270 * t1.HEADROOM)
 
@@ -1628,7 +1566,7 @@ local function v267(p65, p66)
 	return false
 end
 
-getgenv().S2rV4Config = s2rV4Config
+getgenv().SenaV4Config = senaV4Config
 
 local function v271(p67)
 	if p67 and p67.Name == "PlayerTrap" then
@@ -1776,7 +1714,7 @@ local t11 = {
 	ConfirmTimeout = 2.5,
 	PollSeconds = 0.05,
 	ArrivalSettle = 0.5,
-	DecoyName = "__S2rV4TweenTreadmillDecoy",
+	DecoyName = "__SenaV4TweenTreadmillDecoy",
 	destroyTrail = function(p69)
 		if typeof(p69) == "Instance" then
 			if p69:IsA("Trail") then
@@ -1785,7 +1723,7 @@ local t11 = {
 		end
 	end,
 	destroyStealPopup = function(p70)
-		if s2rV4Config.IsStealing then
+		if senaV4Config.IsStealing then
 			if typeof(p70) == "Instance" and (p70.Name == "SpeedGainPopup" or p70.Name == "PlusOne") then
 				pcall(p70.Destroy, p70)
 			end
@@ -2103,8 +2041,8 @@ t11.prepare = function(p73, p74)
 
 	return false
 end
-t11.previousCleanup = genv.__S2rV4TweenRuntimeCleanup
-genv.__S2rV4TweenRuntimeCleanup = function()
+t11.previousCleanup = genv.__SenaV4TweenRuntimeCleanup
+genv.__SenaV4TweenRuntimeCleanup = function()
 	v290()
 	t11.removeDecoy()
 
@@ -2122,8 +2060,8 @@ LocalPlayer.CharacterRemoving:Connect(function()
 end)
 
 do
-	if type(genv.__S2rV4CosmeticSuppressCleanup) == "function" then
-		pcall(genv.__S2rV4CosmeticSuppressCleanup)
+	if type(genv.__SenaV4CosmeticSuppressCleanup) == "function" then
+		pcall(genv.__SenaV4CosmeticSuppressCleanup)
 	end
 
 	local t12 = {}
@@ -2174,7 +2112,7 @@ do
 		local GuardPresentationComponent = require(ReplicatedStorage.Shared.Modules.GuardAreas.GuardPresentationComponent)
 
 		if type(GuardPresentationComponent) == "table" then
-			genv.__S2rV4GuardPresentOrig = genv.__S2rV4GuardPresentOrig or {
+			genv.__SenaV4GuardPresentOrig = genv.__SenaV4GuardPresentOrig or {
 				PlayWake = GuardPresentationComponent.PlayWake,
 				PlayHit = GuardPresentationComponent.PlayHit,
 				PlayAfterWake = GuardPresentationComponent.PlayAfterWake,
@@ -2192,7 +2130,7 @@ do
 			GuardPresentationComponent.ScheduleAfterWake = playWake
 		end
 	end)
-	genv.__S2rV4CosmeticSuppressCleanup = function()
+	genv.__SenaV4CosmeticSuppressCleanup = function()
 		for _, v in ipairs(t12) do
 			pcall(function()
 				v:Disconnect()
@@ -2201,13 +2139,13 @@ do
 
 		table.clear(t12)
 
-		local __S2rV4GuardPresentOrig = genv.__S2rV4GuardPresentOrig
+		local __SenaV4GuardPresentOrig = genv.__SenaV4GuardPresentOrig
 
-		if type(__S2rV4GuardPresentOrig) == "table" then
+		if type(__SenaV4GuardPresentOrig) == "table" then
 			pcall(function()
 				local GuardPresentationComponent = require(ReplicatedStorage.Shared.Modules.GuardAreas.GuardPresentationComponent)
 
-				for k, v in pairs(__S2rV4GuardPresentOrig) do
+				for k, v in pairs(__SenaV4GuardPresentOrig) do
 					GuardPresentationComponent[k] = v
 				end
 			end)
@@ -2216,8 +2154,8 @@ do
 end
 
 do
-	if type(genv.__S2rV4StealDeclutterCleanup) == "function" then
-		pcall(genv.__S2rV4StealDeclutterCleanup)
+	if type(genv.__SenaV4StealDeclutterCleanup) == "function" then
+		pcall(genv.__SenaV4StealDeclutterCleanup)
 	end
 
 	local t13 = {
@@ -2308,7 +2246,7 @@ do
 		end)
 	end
 
-	genv.__S2rV4SetStealDeclutter = function(p81)
+	genv.__SenaV4SetStealDeclutter = function(p81)
 		local v383 = p81 == true
 
 		if v383 == u367 then
@@ -2323,7 +2261,7 @@ do
 			v380()
 		end
 	end
-	genv.__S2rV4StealDeclutterCleanup = function()
+	genv.__SenaV4StealDeclutterCleanup = function()
 		u367 = false
 		v380()
 	end
@@ -2358,7 +2296,7 @@ do
 		while u286 ~= nil and os.clock() < v388 do
 			task.wait(0.05)
 
-			if not s2rV4Config.AutoSteal then
+			if not senaV4Config.AutoSteal then
 				return false
 			end
 
@@ -2381,8 +2319,8 @@ do
 	end
 end
 
-if type(genv.__S2rV4DecomBoostCleanup) == "function" then
-	pcall(genv.__S2rV4DecomBoostCleanup)
+if type(genv.__SenaV4DecomBoostCleanup) == "function" then
+	pcall(genv.__SenaV4DecomBoostCleanup)
 end
 
 local t15, v390, v391
@@ -2391,7 +2329,7 @@ do
 	local t16 = {}
 	local u393 = false
 
-	genv.__S2rV4DecomBoostCleanup = function()
+	genv.__SenaV4DecomBoostCleanup = function()
 		for _, v in ipairs(t16) do
 			pcall(function()
 				v:Disconnect()
@@ -2647,8 +2585,8 @@ do
 				t19.quality = Enum.QualityLevel.Automatic
 			end
 
-			t15.snapshot = genv.__S2rV4DecomSnapshot or t19
-			genv.__S2rV4DecomSnapshot = t15.snapshot
+			t15.snapshot = genv.__SenaV4DecomSnapshot or t19
+			genv.__SenaV4DecomSnapshot = t15.snapshot
 		end
 
 		pcall(function()
@@ -2868,7 +2806,7 @@ do
 		t15.effects = {}
 		t15.snapshot = nil
 	end
-	genv.__S2rV4DecomBoostUndo = t15
+	genv.__SenaV4DecomBoostUndo = t15
 
 	local u456 = false
 
@@ -2898,7 +2836,7 @@ do
 		end
 	end
 	local function v462()
-		if s2rV4Config._fpsEggsReady then
+		if senaV4Config._fpsEggsReady then
 			return true
 		end
 
@@ -2940,7 +2878,7 @@ do
 		end)
 	end
 	local function v471()
-		if s2rV4Config._fpsPetsReady then
+		if senaV4Config._fpsPetsReady then
 			return true
 		end
 
@@ -3006,8 +2944,8 @@ do
 		return false
 	end
 	local function v489()
-		if type(genv.__S2rV4SetCapFps) == "function" then
-			pcall(genv.__S2rV4SetCapFps, 240)
+		if type(genv.__SenaV4SetCapFps) == "function" then
+			pcall(genv.__SenaV4SetCapFps, 240)
 		end
 
 		pcall(function()
@@ -3100,7 +3038,7 @@ do
 		end
 	end
 	local function v500()
-		if s2rV4Config._fpsWorldReady then
+		if senaV4Config._fpsWorldReady then
 			return true
 		end
 
@@ -3170,7 +3108,7 @@ do
 		return false
 	end
 	local function v520()
-		if s2rV4Config._fpsAreasReady then
+		if senaV4Config._fpsAreasReady then
 			return true
 		end
 
@@ -3298,14 +3236,14 @@ do
 			end
 		end
 
-		s2rV4Config._fpsAreaListener = connection
-		s2rV4Config._fpsAreaDeleted = fpsAreaDeleted
-		s2rV4Config._fpsAreasReady = true
+		senaV4Config._fpsAreaListener = connection
+		senaV4Config._fpsAreaDeleted = fpsAreaDeleted
+		senaV4Config._fpsAreasReady = true
 
 		return true
 	end
 	local function v545()
-		if s2rV4Config._fpsPlotsReady then
+		if senaV4Config._fpsPlotsReady then
 			return true
 		end
 
@@ -3367,7 +3305,7 @@ do
 		return false
 	end
 	local function v557()
-		if s2rV4Config._fpsTreadmillsReady then
+		if senaV4Config._fpsTreadmillsReady then
 			return true
 		end
 
@@ -3474,24 +3412,24 @@ do
 	end
 
 	v391 = function()
-		if u456 or s2rV4Config._fpsBoostApplying then
+		if u456 or senaV4Config._fpsBoostApplying then
 			return
 		end
 
-		s2rV4Config._fpsBoostApplying = true
+		senaV4Config._fpsBoostApplying = true
 
 		local ok, result = pcall(function()
 			v489()
-			s2rV4Config._fpsPlotsReady = v545() == true
-			s2rV4Config._fpsTreadmillsReady = v557() == true
-			s2rV4Config._fpsAreasReady = v520() == true
-			s2rV4Config._fpsWorldReady = v500() == true
-			s2rV4Config._fpsPetsReady = v471() == true
-			s2rV4Config._fpsEggsReady = v462() == true
-			u456 = s2rV4Config._fpsEggsReady and s2rV4Config._fpsPetsReady and s2rV4Config._fpsWorldReady and s2rV4Config._fpsPlotsReady and s2rV4Config._fpsTreadmillsReady and s2rV4Config._fpsAreasReady
+			senaV4Config._fpsPlotsReady = v545() == true
+			senaV4Config._fpsTreadmillsReady = v557() == true
+			senaV4Config._fpsAreasReady = v520() == true
+			senaV4Config._fpsWorldReady = v500() == true
+			senaV4Config._fpsPetsReady = v471() == true
+			senaV4Config._fpsEggsReady = v462() == true
+			u456 = senaV4Config._fpsEggsReady and senaV4Config._fpsPetsReady and senaV4Config._fpsWorldReady and senaV4Config._fpsPlotsReady and senaV4Config._fpsTreadmillsReady and senaV4Config._fpsAreasReady
 		end)
 
-		s2rV4Config._fpsBoostApplying = nil
+		senaV4Config._fpsBoostApplying = nil
 
 		if not ok then
 			warn("[FPSBoost] Gagal menerapkan FPS Boost:", result)
@@ -3563,20 +3501,20 @@ local t25 = {
 do
 	local function v599(p98)
 		if p98 == "auto_steal" then
-			local __S2rV4StealWantsCharacter = genv.__S2rV4StealWantsCharacter
+			local __SenaV4StealWantsCharacter = genv.__SenaV4StealWantsCharacter
 
-			return __S2rV4StealWantsCharacter ~= nil and __S2rV4StealWantsCharacter() == true
+			return __SenaV4StealWantsCharacter ~= nil and __SenaV4StealWantsCharacter() == true
 		end
 
 		if p98 ~= "mech_boss" then
 			if p98 == "butterfly" then
-				local __S2rV4ButterflyRuntime = genv.__S2rV4ButterflyRuntime
+				local __SenaV4ButterflyRuntime = genv.__SenaV4ButterflyRuntime
 
-				return __S2rV4ButterflyRuntime ~= nil and __S2rV4ButterflyRuntime.wantsCharacter == true
+				return __SenaV4ButterflyRuntime ~= nil and __SenaV4ButterflyRuntime.wantsCharacter == true
 			end
 
 			if p98 == "auto_place" then
-				return s2rV4Config.IsPlacing == true
+				return senaV4Config.IsPlacing == true
 			end
 
 			return false
@@ -3586,7 +3524,7 @@ do
 			return true
 		end
 
-		if s2rV4Config.ScrambleBossAuto ~= true then
+		if senaV4Config.ScrambleBossAuto ~= true then
 			return false
 		end
 
@@ -3607,9 +3545,9 @@ do
 	end
 	local function v604(p99)
 		if p99 == "auto_steal" then
-			local __S2rV4EggRuntime = genv.__S2rV4EggRuntime
+			local __SenaV4EggRuntime = genv.__SenaV4EggRuntime
 
-			return __S2rV4EggRuntime ~= nil and __S2rV4EggRuntime.enabled == true and (__S2rV4EggRuntime.running == true or __S2rV4EggRuntime.carry ~= nil and __S2rV4EggRuntime.carry.active == true)
+			return __SenaV4EggRuntime ~= nil and __SenaV4EggRuntime.enabled == true and (__SenaV4EggRuntime.running == true or __SenaV4EggRuntime.carry ~= nil and __SenaV4EggRuntime.carry.active == true)
 		end
 
 		if p99 == "mech_boss" then
@@ -3618,15 +3556,15 @@ do
 
 		if p99 ~= "butterfly" then
 			if p99 == "auto_place" then
-				return s2rV4Config.IsPlacing == true
+				return senaV4Config.IsPlacing == true
 			end
 
 			return false
 		end
 
-		local __S2rV4ButterflyRuntime = genv.__S2rV4ButterflyRuntime
+		local __SenaV4ButterflyRuntime = genv.__SenaV4ButterflyRuntime
 
-		return __S2rV4ButterflyRuntime ~= nil and __S2rV4ButterflyRuntime.active == true
+		return __SenaV4ButterflyRuntime ~= nil and __SenaV4ButterflyRuntime.active == true
 	end
 
 	t25.blocker = function(p100)
@@ -4130,7 +4068,7 @@ do
 		local PlotState2 = require(ReplicatedStorage2.Client.PlotState)
 
 		local function v721()
-			return genv.__S2rV4AdminBoost == true and 3000 or 1000
+			return genv.__SenaV4AdminBoost == true and 3000 or 1000
 		end
 
 		local t42 = {
@@ -4453,14 +4391,14 @@ do
 		end
 		local function v792()
 			local v793 = v781()
-			local __S2rV4StealAnEggMovementSpoof = v793.__S2rV4StealAnEggMovementSpoof
+			local __SenaV4StealAnEggMovementSpoof = v793.__SenaV4StealAnEggMovementSpoof
 
-			if type(__S2rV4StealAnEggMovementSpoof) ~= "table" or __S2rV4StealAnEggMovementSpoof.Version ~= 436 then
-				if type(__S2rV4StealAnEggMovementSpoof) == "table" then
-					__S2rV4StealAnEggMovementSpoof.Enabled = false
+			if type(__SenaV4StealAnEggMovementSpoof) ~= "table" or __SenaV4StealAnEggMovementSpoof.Version ~= 436 then
+				if type(__SenaV4StealAnEggMovementSpoof) == "table" then
+					__SenaV4StealAnEggMovementSpoof.Enabled = false
 				end
 
-				__S2rV4StealAnEggMovementSpoof = {
+				__SenaV4StealAnEggMovementSpoof = {
 					Version = 436,
 					Installed = false,
 					Enabled = false,
@@ -4469,10 +4407,10 @@ do
 					RootPart = nil,
 					WalkSpeed = 600
 				}
-				v793.__S2rV4StealAnEggMovementSpoof = __S2rV4StealAnEggMovementSpoof
+				v793.__SenaV4StealAnEggMovementSpoof = __SenaV4StealAnEggMovementSpoof
 			end
 
-			return __S2rV4StealAnEggMovementSpoof
+			return __SenaV4StealAnEggMovementSpoof
 		end
 		local function v795(p152, p153)
 			local v796 = v792()
@@ -4492,12 +4430,12 @@ do
 			return Humanoid ~= nil and HumanoidRootPart ~= nil
 		end
 		local function v799()
-			local __S2rV4StealAnEggMovementSpoof = v781().__S2rV4StealAnEggMovementSpoof
+			local __SenaV4StealAnEggMovementSpoof = v781().__SenaV4StealAnEggMovementSpoof
 
-			if type(__S2rV4StealAnEggMovementSpoof) == "table" then
-				__S2rV4StealAnEggMovementSpoof.Enabled = false
-				__S2rV4StealAnEggMovementSpoof.Humanoid = nil
-				__S2rV4StealAnEggMovementSpoof.RootPart = nil
+			if type(__SenaV4StealAnEggMovementSpoof) == "table" then
+				__SenaV4StealAnEggMovementSpoof.Enabled = false
+				__SenaV4StealAnEggMovementSpoof.Humanoid = nil
+				__SenaV4StealAnEggMovementSpoof.RootPart = nil
 			end
 		end
 		local function v801(p154, p155, p156)
@@ -4702,14 +4640,14 @@ do
 		end
 		local function v851()
 			local v852 = v781()
-			local __S2rV4StealAnEggIntegritySpoof = v852.__S2rV4StealAnEggIntegritySpoof
+			local __SenaV4StealAnEggIntegritySpoof = v852.__SenaV4StealAnEggIntegritySpoof
 
-			if type(__S2rV4StealAnEggIntegritySpoof) ~= "table" then
-				__S2rV4StealAnEggIntegritySpoof = {}
-				v852.__S2rV4StealAnEggIntegritySpoof = __S2rV4StealAnEggIntegritySpoof
+			if type(__SenaV4StealAnEggIntegritySpoof) ~= "table" then
+				__SenaV4StealAnEggIntegritySpoof = {}
+				v852.__SenaV4StealAnEggIntegritySpoof = __SenaV4StealAnEggIntegritySpoof
 			end
 
-			return __S2rV4StealAnEggIntegritySpoof
+			return __SenaV4StealAnEggIntegritySpoof
 		end
 		local function v854(p167, p168, p169)
 			return type(p167) == "table" and rawget(p167, "Player") == LocalPlayer2 and rawget(p167, "Character") == LocalPlayer2.Character and rawget(p167, "Humanoid") == p168 and rawget(p167, "RootPart") == p169
@@ -4757,36 +4695,36 @@ do
 			return true
 		end
 		local function v860(p176, p177, p178, p179)
-			local __S2rV4StealAnEggIntegritySpoof = v781().__S2rV4StealAnEggIntegritySpoof
+			local __SenaV4StealAnEggIntegritySpoof = v781().__SenaV4StealAnEggIntegritySpoof
 
-			if type(__S2rV4StealAnEggIntegritySpoof) ~= "table" or not __S2rV4StealAnEggIntegritySpoof.Enabled or __S2rV4StealAnEggIntegritySpoof.Humanoid ~= p176 or __S2rV4StealAnEggIntegritySpoof.RootPart ~= p177 or not v855(__S2rV4StealAnEggIntegritySpoof.State, p176, p177) then
+			if type(__SenaV4StealAnEggIntegritySpoof) ~= "table" or not __SenaV4StealAnEggIntegritySpoof.Enabled or __SenaV4StealAnEggIntegritySpoof.Humanoid ~= p176 or __SenaV4StealAnEggIntegritySpoof.RootPart ~= p177 or not v855(__SenaV4StealAnEggIntegritySpoof.State, p176, p177) then
 				return false
 			end
 
-			__S2rV4StealAnEggIntegritySpoof.WalkSpeed = math.clamp(p178 * 1.35, 200, 1350)
+			__SenaV4StealAnEggIntegritySpoof.WalkSpeed = math.clamp(p178 * 1.35, 200, 1350)
 
 			if typeof(p179) == "Vector3" then
-				__S2rV4StealAnEggIntegritySpoof.TravelVelocity = p179
-			elseif typeof(__S2rV4StealAnEggIntegritySpoof.TravelVelocity) ~= "Vector3" then
-				__S2rV4StealAnEggIntegritySpoof.TravelVelocity = Vector3.zero
+				__SenaV4StealAnEggIntegritySpoof.TravelVelocity = p179
+			elseif typeof(__SenaV4StealAnEggIntegritySpoof.TravelVelocity) ~= "Vector3" then
+				__SenaV4StealAnEggIntegritySpoof.TravelVelocity = Vector3.zero
 			end
 
-			return v831(__S2rV4StealAnEggIntegritySpoof.State, __S2rV4StealAnEggIntegritySpoof.WalkSpeed, __S2rV4StealAnEggIntegritySpoof.TravelVelocity)
+			return v831(__SenaV4StealAnEggIntegritySpoof.State, __SenaV4StealAnEggIntegritySpoof.WalkSpeed, __SenaV4StealAnEggIntegritySpoof.TravelVelocity)
 		end
 		local function v862(p180)
-			local __S2rV4StealAnEggIntegritySpoof = v781().__S2rV4StealAnEggIntegritySpoof
+			local __SenaV4StealAnEggIntegritySpoof = v781().__SenaV4StealAnEggIntegritySpoof
 
-			if type(__S2rV4StealAnEggIntegritySpoof) ~= "table" then
+			if type(__SenaV4StealAnEggIntegritySpoof) ~= "table" then
 				return
 			end
 
-			if p180 == nil or __S2rV4StealAnEggIntegritySpoof.Humanoid == p180 then
-				__S2rV4StealAnEggIntegritySpoof.Enabled = false
-				__S2rV4StealAnEggIntegritySpoof.Humanoid = nil
-				__S2rV4StealAnEggIntegritySpoof.RootPart = nil
-				__S2rV4StealAnEggIntegritySpoof.State = nil
-				__S2rV4StealAnEggIntegritySpoof.TravelVelocity = nil
-				__S2rV4StealAnEggIntegritySpoof.NextSearchAt = 0
+			if p180 == nil or __SenaV4StealAnEggIntegritySpoof.Humanoid == p180 then
+				__SenaV4StealAnEggIntegritySpoof.Enabled = false
+				__SenaV4StealAnEggIntegritySpoof.Humanoid = nil
+				__SenaV4StealAnEggIntegritySpoof.RootPart = nil
+				__SenaV4StealAnEggIntegritySpoof.State = nil
+				__SenaV4StealAnEggIntegritySpoof.TravelVelocity = nil
+				__SenaV4StealAnEggIntegritySpoof.NextSearchAt = 0
 			end
 		end
 		local function v864(p181, p182)
@@ -5158,8 +5096,8 @@ do
 
 							task.defer(function()
 								if not obj.destroyed and obj.enabled and obj.carry.uid == p194.Uid and obj:_hasConfirmedCarry(p194.Uid) then
-									if genv.__S2rV4GodMode then
-										genv.__S2rV4GodMode:stopDefend()
+									if genv.__SenaV4GodMode then
+										genv.__SenaV4GodMode:stopDefend()
 									end
 
 									obj:_returnToSafe()
@@ -5195,8 +5133,8 @@ do
 				obj.carry.active = false
 				obj.carry.uid = nil
 
-				if genv.__S2rV4GodMode then
-					genv.__S2rV4GodMode:startDefend(Uid)
+				if genv.__SenaV4GodMode then
+					genv.__SenaV4GodMode:startDefend(Uid)
 				end
 
 				if obj._captureHoldUid ~= nil and Uid == obj._captureHoldUid or obj._adminBusyUid ~= nil and Uid == obj._adminBusyUid then
@@ -6898,7 +6836,7 @@ do
 
 		do
 			t46._resolveSettleSeconds = function(p264, p265)
-				local v1081 = math.clamp(tonumber(s2rV4Config.StealHoldSeconds) or 5, 1, 10)
+				local v1081 = math.clamp(tonumber(senaV4Config.StealHoldSeconds) or 5, 1, 10)
 				local v1082 = p264.settleBonus and type(p265) == "table" and p264.settleBonus[p265.Uid]
 				local seconds = v1082 and v1082.untilAt > os.clock() and v1082.seconds or 0
 
@@ -7255,7 +7193,7 @@ do
 			end
 
 			for _, child in ipairs(workspace:GetChildren()) do
-				if child.Name == "__S2rV4HoverPad" or child.Name == "__S2rV4TreadmillDecoy" then
+				if child.Name == "__SenaV4HoverPad" or child.Name == "__SenaV4TreadmillDecoy" then
 					table.insert(filterDescendantsInstances, child)
 				end
 			end
@@ -7373,7 +7311,7 @@ do
 					return false
 				end
 
-				treadmillDecoy.Name = "__S2rV4TreadmillDecoy"
+				treadmillDecoy.Name = "__SenaV4TreadmillDecoy"
 
 				for _, descendant in ipairs(treadmillDecoy:GetDescendants()) do
 					if t45[descendant.ClassName] or descendant:IsA("Trail") then
@@ -7863,20 +7801,20 @@ do
 				return p316._brakeDecel
 			end
 
-			local __S2rV4BrakeDecel = genv.__S2rV4BrakeDecel
+			local __SenaV4BrakeDecel = genv.__SenaV4BrakeDecel
 
 			if LocalPlayer2.Character then
 				local Humanoid = LocalPlayer2.Character:FindFirstChildOfClass("Humanoid")
 
-				if type(__S2rV4BrakeDecel) == "table" and Humanoid then
-					if math.abs((__S2rV4BrakeDecel.ws or 0) - Humanoid.WalkSpeed) < 15 then
-						p316._brakeDecel = __S2rV4BrakeDecel.decel
+				if type(__SenaV4BrakeDecel) == "table" and Humanoid then
+					if math.abs((__SenaV4BrakeDecel.ws or 0) - Humanoid.WalkSpeed) < 15 then
+						p316._brakeDecel = __SenaV4BrakeDecel.decel
 
-						return __S2rV4BrakeDecel.decel
+						return __SenaV4BrakeDecel.decel
 					end
 				end
 			else
-				type(__S2rV4BrakeDecel)
+				type(__SenaV4BrakeDecel)
 			end
 
 			return 420
@@ -8078,7 +8016,7 @@ do
 									end
 								elseif state == 26 then
 									v1211._brakeDecel = v1211:_walkBrakeDecel() * 0.8 + v1240 * 0.93 * 0.2
-									genv.__S2rV4BrakeDecel = {
+									genv.__SenaV4BrakeDecel = {
 										ws = Humanoid.WalkSpeed,
 										decel = v1211._brakeDecel
 									}
@@ -8656,7 +8594,7 @@ do
 			t46._syncHoverPad = function(p378, p379)
 				local hoverPad = p378.hoverPad
 
-				if not hoverPad or not hoverPad.Parent or hoverPad:GetAttribute("S2rV4RuntimeOwner") ~= p378.hoverPadOwnerId then
+				if not hoverPad or not hoverPad.Parent or hoverPad:GetAttribute("SenaV4RuntimeOwner") ~= p378.hoverPadOwnerId then
 					return false
 				end
 
@@ -8746,7 +8684,7 @@ do
 		end
 		t46._purgeOrphanHoverPads = function(p386)
 			for _, child in ipairs(workspace:GetChildren()) do
-				if child.Name == "__S2rV4HoverPad" and child ~= p386.hoverPad then
+				if child.Name == "__SenaV4HoverPad" and child ~= p386.hoverPad then
 					pcall(child.Destroy, child)
 				end
 			end
@@ -8754,7 +8692,7 @@ do
 		t46._startHoverPad = function(p387)
 			local hoverPad = p387.hoverPad
 
-			if not hoverPad or not hoverPad.Parent or hoverPad:GetAttribute("S2rV4RuntimeOwner") ~= p387.hoverPadOwnerId then
+			if not hoverPad or not hoverPad.Parent or hoverPad:GetAttribute("SenaV4RuntimeOwner") ~= p387.hoverPadOwnerId then
 				p387:_purgeOrphanHoverPads()
 
 				if hoverPad and hoverPad.Parent then
@@ -8763,8 +8701,8 @@ do
 
 				local Part = Instance.new("Part")
 
-				Part.Name = "__S2rV4HoverPad"
-				Part:SetAttribute("S2rV4RuntimeOwner", p387.hoverPadOwnerId)
+				Part.Name = "__SenaV4HoverPad"
+				Part:SetAttribute("SenaV4RuntimeOwner", p387.hoverPadOwnerId)
 				Part.Anchored = true
 				Part.CanCollide = true
 				Part.CanQuery = true
@@ -9180,9 +9118,9 @@ do
 							if State ~= AreaEggs.States.Slot and State ~= AreaEggs.States.Dropped and State ~= "GuardCarried" and (not v1375 or v1375.CarrierUserId ~= LocalPlayer2.UserId) and not p397:_hasConfirmedCarry(Uid) then
 								v1373(false)
 
-								local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+								local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 
-								p397:_finish(State == "Carried" and __S2rV4PlayerSteal ~= nil and __S2rV4PlayerSteal:intercept(Uid) and "Target taken - chasing the carrier" or "Target taken by someone else")
+								p397:_finish(State == "Carried" and __SenaV4PlayerSteal ~= nil and __SenaV4PlayerSteal:intercept(Uid) and "Target taken - chasing the carrier" or "Target taken by someone else")
 
 								return
 							end
@@ -9194,8 +9132,8 @@ do
 
 						v795(Character, v1378 * 1.35)
 
-						local __S2rV4StealAnEggIntegritySpoof = v781().__S2rV4StealAnEggIntegritySpoof
-						local State = type(__S2rV4StealAnEggIntegritySpoof) == "table" and __S2rV4StealAnEggIntegritySpoof.State or nil
+						local __SenaV4StealAnEggIntegritySpoof = v781().__SenaV4StealAnEggIntegritySpoof
+						local State = type(__SenaV4StealAnEggIntegritySpoof) == "table" and __SenaV4StealAnEggIntegritySpoof.State or nil
 
 						if not v855(State, Humanoid, HumanoidRootPart) then
 							u1371 = nil
@@ -9402,8 +9340,8 @@ do
 				return
 			end
 
-			if genv.__S2rV4GodMode then
-				genv.__S2rV4GodMode:startDefend(p404)
+			if genv.__SenaV4GodMode then
+				genv.__SenaV4GodMode:startDefend(p404)
 			end
 
 			local v1414
@@ -9864,7 +9802,7 @@ do
 
 						if lastCarryReject ~= p412._lastCarryRejectLogged then
 							p412._lastCarryRejectLogged = lastCarryReject
-							warn("[S2r Hub] carry refused: " .. lastCarryReject)
+							warn("[Sena Steal] carry refused: " .. lastCarryReject)
 						end
 					end
 
@@ -10339,7 +10277,7 @@ do
 					return _walkTo(v1547, v1549, v1550, v1551)
 				end
 
-				local v1552 = p428.config.stealMode == "Fly" or p428.boostedUid == p429 and not s2rV4Config.HelpFriend
+				local v1552 = p428.config.stealMode == "Fly" or p428.boostedUid == p429 and not senaV4Config.HelpFriend
 				local v1553 = v1552 and 0.15 or 0.4
 				local v1554 = v1552 and 0.45 or 0.85
 				local v1555 = v1524()
@@ -10446,7 +10384,7 @@ do
 						return
 					end
 
-					if s2rV4Config.HelpFriend then
+					if senaV4Config.HelpFriend then
 						p428.skippedEggs[p429] = os.clock() + 1800
 						p428._forestDropInProgress = nil
 						p428.carry.active = false
@@ -10707,7 +10645,7 @@ do
 				return v1583 ~= nil and v1583.State == AreaEggs.States.Carried and v1583.CarrierUserId == LocalPlayer2.UserId
 			end
 			local function v1584()
-				return not p444.destroyed and p444.enabled and genv.__S2rV4AdminBoost == true and p444._adminBusyUid == Uid
+				return not p444.destroyed and p444.enabled and genv.__SenaV4AdminBoost == true and p444._adminBusyUid == Uid
 			end
 
 			local ok, result = pcall(function()
@@ -10783,7 +10721,7 @@ do
 			end
 
 			if not ok then
-				warn("[S2r Hub] admin steal error: " .. tostring(result))
+				warn("[Sena Steal] admin steal error: " .. tostring(result))
 
 				if not p444.destroyed and p444.enabled then
 					p444:_finish("Steal error — retrying")
@@ -10889,7 +10827,7 @@ do
 					return
 				end
 
-				if genv.__S2rV4AdminBoost == true then
+				if genv.__SenaV4AdminBoost == true then
 					local uid = p448.carry.uid or p448.activeTarget and p448.activeTarget.Uid
 
 					if uid and p448._adminBusyUid ~= uid then
@@ -10952,7 +10890,7 @@ do
 					return
 				end
 
-				if not s2rV4Config.HelpFriend then
+				if not senaV4Config.HelpFriend then
 					local v1612 = p448:_resolveSafeCFrame(HumanoidRootPart)
 
 					if not v1612 then
@@ -11137,15 +11075,15 @@ do
 
 					p453.stats.delivered = (p453.stats.delivered or 0) + 1
 
-					local __S2rV4Webhook = genv.__S2rV4Webhook
+					local __SenaV4Webhook = genv.__SenaV4Webhook
 
-					if not __S2rV4Webhook then
+					if not __SenaV4Webhook then
 						return
 					end
 
 					local ok, result = pcall(p453.catalog.resolve, activeTarget)
 
-					pcall(__S2rV4Webhook.stolen, activeTarget, ok and result or nil, nil)
+					pcall(__SenaV4Webhook.stolen, activeTarget, ok and result or nil, nil)
 				end)
 			end
 		end
@@ -11422,11 +11360,11 @@ do
 				return
 			end
 
-			local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+			local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 			local autoSteal = t25.blocker("auto_steal")
 			local autoSteal2 = not autoSteal and t25.holder("auto_steal") or nil
 
-			if autoSteal or autoSteal2 or __S2rV4PlayerSteal and __S2rV4PlayerSteal.running then
+			if autoSteal or autoSteal2 or __SenaV4PlayerSteal and __SenaV4PlayerSteal.running then
 				p460:_releaseOperation()
 				p460:_setStatus(autoSteal and "Yielding to " .. t25.TITLES[autoSteal] or autoSteal2 and "Waiting for " .. t25.TITLES[autoSteal2] .. " to hand over" or "Yielding to Steal Players")
 
@@ -11560,7 +11498,7 @@ do
 				return
 			end
 
-			if genv.__S2rV4AdminBoost == true and (not p460.captureObjectiveEnabled or not p460:_isCaptureEgg(v1655.Uid)) then
+			if genv.__SenaV4AdminBoost == true and (not p460.captureObjectiveEnabled or not p460:_isCaptureEgg(v1655.Uid)) then
 				p460.safeStarting = false
 				task.spawn(p460._adminSteal, p460, v1655)
 
@@ -11870,7 +11808,7 @@ do
 				for _, descendant in ipairs(p467:GetDescendants()) do
 					if descendant:IsA("BasePart") then
 						if p466.scramblePortalOriginals[descendant] == nil then
-							local attribute = descendant:GetAttribute("S2rV4PortalOrig")
+							local attribute = descendant:GetAttribute("SenaV4PortalOrig")
 
 							if type(attribute) == "string" then
 								p466.scramblePortalOriginals[descendant] = {
@@ -11882,7 +11820,7 @@ do
 									CanCollide = descendant.CanCollide,
 									CanTouch = descendant.CanTouch
 								}
-								pcall(descendant.SetAttribute, descendant, "S2rV4PortalOrig", (descendant.CanCollide and "1" or "0") .. (descendant.CanTouch and "1" or "0"))
+								pcall(descendant.SetAttribute, descendant, "SenaV4PortalOrig", (descendant.CanCollide and "1" or "0") .. (descendant.CanTouch and "1" or "0"))
 							end
 						end
 
@@ -11904,7 +11842,7 @@ do
 
 			if not p468.scramblePortalConn then
 				p468.scramblePortalConn = workspace.ChildAdded:Connect(function(child)
-					if p468.destroyed or not p468.userStealEnabled or p468._scramblePortalHold or s2rV4Config.ScrambleBossAuto == true then
+					if p468.destroyed or not p468.userStealEnabled or p468._scramblePortalHold or senaV4Config.ScrambleBossAuto == true then
 						return
 					end
 
@@ -11920,7 +11858,7 @@ do
 					}) do
 						task.delay(v, function()
 							if not p468.destroyed and p468.userStealEnabled and not p468._scramblePortalHold then
-								if s2rV4Config.ScrambleBossAuto ~= true and child.Parent then
+								if senaV4Config.ScrambleBossAuto ~= true and child.Parent then
 									p468:_neutralizeScramblePortal(child)
 								end
 							end
@@ -11941,7 +11879,7 @@ do
 						pcall(function()
 							k.CanCollide = scramblePortalOriginal.CanCollide
 							k.CanTouch = scramblePortalOriginal.CanTouch
-							k:SetAttribute("S2rV4PortalOrig", nil)
+							k:SetAttribute("SenaV4PortalOrig", nil)
 						end)
 					end
 				end
@@ -11964,7 +11902,7 @@ do
 		end
 
 		t46._reconcileScramblePortal = function(p472)
-			if not p472.userStealEnabled or p472._scramblePortalHold or s2rV4Config.ScrambleBossAuto == true then
+			if not p472.userStealEnabled or p472._scramblePortalHold or senaV4Config.ScrambleBossAuto == true then
 				p472:_stopScramblePortalBypass()
 			else
 				p472:_startScramblePortalBypass()
@@ -12186,7 +12124,7 @@ do
 					return
 				end
 
-				local v1726 = math.clamp(tonumber(s2rV4Config.StealHoldSeconds) or 5, 1, 10)
+				local v1726 = math.clamp(tonumber(senaV4Config.StealHoldSeconds) or 5, 1, 10)
 
 				p486.lowSpeedOutcomes = p486.lowSpeedOutcomes or {}
 
@@ -12240,7 +12178,7 @@ do
 				end)
 
 				local v1734, v1735, v1736 = p488:recommendLowSpeedLevel()
-				local v1737 = math.clamp(tonumber(s2rV4Config.StealHoldSeconds) or 5, 1, 10)
+				local v1737 = math.clamp(tonumber(senaV4Config.StealHoldSeconds) or 5, 1, 10)
 				local lowSpeedAdvice = p488.lowSpeedAdvice
 
 				if lowSpeedAdvice and v1737 <= lowSpeedAdvice.to then
@@ -12304,16 +12242,16 @@ do
 				end
 
 				for _, child in ipairs(AreaEggSlotsClient:GetChildren()) do
-					local __S2rV4EggEsp = child:FindFirstChild("__S2rV4EggEsp")
+					local __SenaV4EggEsp = child:FindFirstChild("__SenaV4EggEsp")
 
-					if __S2rV4EggEsp then
-						__S2rV4EggEsp:Destroy()
+					if __SenaV4EggEsp then
+						__SenaV4EggEsp:Destroy()
 					end
 
-					local __S2rV4EggHighlight = child:FindFirstChild("__S2rV4EggHighlight")
+					local __SenaV4EggHighlight = child:FindFirstChild("__SenaV4EggHighlight")
 
-					if __S2rV4EggHighlight then
-						__S2rV4EggHighlight:Destroy()
+					if __SenaV4EggHighlight then
+						__SenaV4EggHighlight:Destroy()
 					end
 				end
 			end
@@ -12335,23 +12273,23 @@ do
 					end
 
 					local Hitbox = v1752 and (child:FindFirstChild("Hitbox") or child:FindFirstChildWhichIsA("BasePart", true))
-					local __S2rV4EggEsp = child:FindFirstChild("__S2rV4EggEsp")
-					local __S2rV4EggHighlight = child:FindFirstChild("__S2rV4EggHighlight")
+					local __SenaV4EggEsp = child:FindFirstChild("__SenaV4EggEsp")
+					local __SenaV4EggHighlight = child:FindFirstChild("__SenaV4EggHighlight")
 
 					if v1752 and Hitbox then
-						if __S2rV4EggEsp and not __S2rV4EggEsp:FindFirstChild("Icon") then
-							__S2rV4EggEsp:Destroy()
-							__S2rV4EggEsp = nil
+						if __SenaV4EggEsp and not __SenaV4EggEsp:FindFirstChild("Icon") then
+							__SenaV4EggEsp:Destroy()
+							__SenaV4EggEsp = nil
 						end
 
-						if not __S2rV4EggEsp then
-							__S2rV4EggEsp = Instance.new("BillboardGui")
-							__S2rV4EggEsp.Name = "__S2rV4EggEsp"
-							__S2rV4EggEsp.AlwaysOnTop = true
-							__S2rV4EggEsp.Size = UDim2.fromOffset(220, 72)
-							__S2rV4EggEsp.StudsOffset = Vector3.new(0, 4.4, 0)
-							__S2rV4EggEsp.MaxDistance = 1000
-							__S2rV4EggEsp.Adornee = Hitbox
+						if not __SenaV4EggEsp then
+							__SenaV4EggEsp = Instance.new("BillboardGui")
+							__SenaV4EggEsp.Name = "__SenaV4EggEsp"
+							__SenaV4EggEsp.AlwaysOnTop = true
+							__SenaV4EggEsp.Size = UDim2.fromOffset(220, 72)
+							__SenaV4EggEsp.StudsOffset = Vector3.new(0, 4.4, 0)
+							__SenaV4EggEsp.MaxDistance = 1000
+							__SenaV4EggEsp.Adornee = Hitbox
 
 							local ImageLabel = Instance.new("ImageLabel")
 
@@ -12362,7 +12300,7 @@ do
 							ImageLabel.BackgroundTransparency = 1
 							ImageLabel.ScaleType = Enum.ScaleType.Fit
 							ImageLabel.Visible = false
-							ImageLabel.Parent = __S2rV4EggEsp
+							ImageLabel.Parent = __SenaV4EggEsp
 
 							local TextLabel = Instance.new("TextLabel")
 
@@ -12376,14 +12314,14 @@ do
 							TextLabel.TextStrokeTransparency = 0.35
 							TextLabel.TextXAlignment = Enum.TextXAlignment.Center
 							TextLabel.TextYAlignment = Enum.TextYAlignment.Top
-							TextLabel.Parent = __S2rV4EggEsp
-							__S2rV4EggEsp.Parent = child
+							TextLabel.Parent = __SenaV4EggEsp
+							__SenaV4EggEsp.Parent = child
 						end
 
-						__S2rV4EggEsp.Adornee = Hitbox
+						__SenaV4EggEsp.Adornee = Hitbox
 
 						local v1758 = p501.catalog.resolve(v1751)
-						local Icon = __S2rV4EggEsp:FindFirstChild("Icon")
+						local Icon = __SenaV4EggEsp:FindFirstChild("Icon")
 						local icon = config.espIcon and type(v1758.icon) == "string" and v1758.icon ~= "" and v1758.icon or nil
 
 						Icon.Image = icon or ""
@@ -12429,35 +12367,35 @@ do
 							end
 						end
 
-						local Text = __S2rV4EggEsp:FindFirstChild("Text")
+						local Text = __SenaV4EggEsp:FindFirstChild("Text")
 
 						Text.Text = table.concat(t58, " | ")
 						Text.TextColor3 = rarityColor
 
-						if __S2rV4EggHighlight and not __S2rV4EggHighlight:IsA("Highlight") then
-							__S2rV4EggHighlight:Destroy()
-							__S2rV4EggHighlight = nil
+						if __SenaV4EggHighlight and not __SenaV4EggHighlight:IsA("Highlight") then
+							__SenaV4EggHighlight:Destroy()
+							__SenaV4EggHighlight = nil
 						end
 
-						if not __S2rV4EggHighlight then
-							__S2rV4EggHighlight = Instance.new("Highlight")
-							__S2rV4EggHighlight.Name = "__S2rV4EggHighlight"
-							__S2rV4EggHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-							__S2rV4EggHighlight.Parent = child
+						if not __SenaV4EggHighlight then
+							__SenaV4EggHighlight = Instance.new("Highlight")
+							__SenaV4EggHighlight.Name = "__SenaV4EggHighlight"
+							__SenaV4EggHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+							__SenaV4EggHighlight.Parent = child
 						end
 
-						__S2rV4EggHighlight.Adornee = child
-						__S2rV4EggHighlight.FillColor = rarityColor
-						__S2rV4EggHighlight.FillTransparency = 0.72
-						__S2rV4EggHighlight.OutlineColor = rarityColor
-						__S2rV4EggHighlight.OutlineTransparency = 0
+						__SenaV4EggHighlight.Adornee = child
+						__SenaV4EggHighlight.FillColor = rarityColor
+						__SenaV4EggHighlight.FillTransparency = 0.72
+						__SenaV4EggHighlight.OutlineColor = rarityColor
+						__SenaV4EggHighlight.OutlineTransparency = 0
 					else
-						if __S2rV4EggEsp then
-							__S2rV4EggEsp:Destroy()
+						if __SenaV4EggEsp then
+							__SenaV4EggEsp:Destroy()
 						end
 
-						if __S2rV4EggHighlight then
-							__S2rV4EggHighlight:Destroy()
+						if __SenaV4EggHighlight then
+							__SenaV4EggHighlight:Destroy()
 						end
 					end
 				end
@@ -12483,15 +12421,15 @@ do
 					local t60 = {}
 
 					if type(EggInventory) == "table" and CenterPoint then
-						local S2rV4PlacedEggAnchors = workspace:FindFirstChild("S2rV4PlacedEggAnchors")
+						local SenaV4PlacedEggAnchors = workspace:FindFirstChild("SenaV4PlacedEggAnchors")
 
-						if not S2rV4PlacedEggAnchors then
-							S2rV4PlacedEggAnchors = Instance.new("Folder")
-							S2rV4PlacedEggAnchors.Name = "S2rV4PlacedEggAnchors"
-							S2rV4PlacedEggAnchors.Parent = workspace
+						if not SenaV4PlacedEggAnchors then
+							SenaV4PlacedEggAnchors = Instance.new("Folder")
+							SenaV4PlacedEggAnchors.Name = "SenaV4PlacedEggAnchors"
+							SenaV4PlacedEggAnchors.Parent = workspace
 						end
 
-						for _, child in ipairs(S2rV4PlacedEggAnchors:GetChildren()) do
+						for _, child in ipairs(SenaV4PlacedEggAnchors:GetChildren()) do
 							if child:IsA("Highlight") or child:IsA("BillboardGui") then
 								child:Destroy()
 							end
@@ -12523,14 +12461,14 @@ do
 									if typeof(v1790.anchor) ~= "Instance" then
 										local Part = Instance.new("Part")
 
-										Part.Name = "S2rV4PE_" .. k
+										Part.Name = "SenaV4PE_" .. k
 										Part.Size = Vector3.new(1.5, 1.5, 1.5)
 										Part.Transparency = 1
 										Part.Anchored = true
 										Part.CanCollide = false
 										Part.CanQuery = false
 										Part.CanTouch = false
-										Part.Parent = S2rV4PlacedEggAnchors
+										Part.Parent = SenaV4PlacedEggAnchors
 										v1790.anchor = Part
 									end
 
@@ -12574,15 +12512,15 @@ do
 											t61[#t61 + 1] = "READY"
 										end
 
-										local __S2rV4EggEsp = v1790.anchor:FindFirstChild("__S2rV4EggEsp")
+										local __SenaV4EggEsp = v1790.anchor:FindFirstChild("__SenaV4EggEsp")
 
-										if not __S2rV4EggEsp then
-											__S2rV4EggEsp = Instance.new("BillboardGui")
-											__S2rV4EggEsp.Name = "__S2rV4EggEsp"
-											__S2rV4EggEsp.AlwaysOnTop = true
-											__S2rV4EggEsp.Size = UDim2.fromOffset(220, 72)
-											__S2rV4EggEsp.StudsOffset = Vector3.new(0, 1.4, 0)
-											__S2rV4EggEsp.MaxDistance = 1000
+										if not __SenaV4EggEsp then
+											__SenaV4EggEsp = Instance.new("BillboardGui")
+											__SenaV4EggEsp.Name = "__SenaV4EggEsp"
+											__SenaV4EggEsp.AlwaysOnTop = true
+											__SenaV4EggEsp.Size = UDim2.fromOffset(220, 72)
+											__SenaV4EggEsp.StudsOffset = Vector3.new(0, 1.4, 0)
+											__SenaV4EggEsp.MaxDistance = 1000
 
 											local ImageLabel = Instance.new("ImageLabel")
 
@@ -12593,7 +12531,7 @@ do
 											ImageLabel.BackgroundTransparency = 1
 											ImageLabel.ScaleType = Enum.ScaleType.Fit
 											ImageLabel.Visible = false
-											ImageLabel.Parent = __S2rV4EggEsp
+											ImageLabel.Parent = __SenaV4EggEsp
 
 											local TextLabel = Instance.new("TextLabel")
 
@@ -12607,11 +12545,11 @@ do
 											TextLabel.TextStrokeTransparency = 0.35
 											TextLabel.TextXAlignment = Enum.TextXAlignment.Center
 											TextLabel.TextYAlignment = Enum.TextYAlignment.Top
-											TextLabel.Parent = __S2rV4EggEsp
-											__S2rV4EggEsp.Parent = v1790.anchor
+											TextLabel.Parent = __SenaV4EggEsp
+											__SenaV4EggEsp.Parent = v1790.anchor
 										end
 
-										local Icon = __S2rV4EggEsp:FindFirstChild("Icon")
+										local Icon = __SenaV4EggEsp:FindFirstChild("Icon")
 
 										if Icon then
 											local icon = config.espIcon and type(v1792.icon) == "string" and v1792.icon ~= "" and v1792.icon or nil
@@ -12620,15 +12558,15 @@ do
 											Icon.Visible = icon ~= nil
 										end
 
-										local Text = __S2rV4EggEsp:FindFirstChild("Text")
+										local Text = __SenaV4EggEsp:FindFirstChild("Text")
 
 										Text.Text = table.concat(t61, " | ")
 										Text.TextColor3 = rarityColor
 
-										local __S2rV4EggHighlight = v1790.anchor:FindFirstChild("__S2rV4EggHighlight")
+										local __SenaV4EggHighlight = v1790.anchor:FindFirstChild("__SenaV4EggHighlight")
 
-										if __S2rV4EggHighlight then
-											__S2rV4EggHighlight:Destroy()
+										if __SenaV4EggHighlight then
+											__SenaV4EggHighlight:Destroy()
 										end
 									else
 										t60[k] = nil
@@ -12683,7 +12621,7 @@ do
 
 			p506.config.speed = v1811 * 10
 
-			if genv.__S2rV4AdminBoost == true then
+			if genv.__SenaV4AdminBoost == true then
 				p506.config.speed = 3000
 			end
 
@@ -12787,10 +12725,10 @@ do
 					end
 				end
 
-				local S2rV4PlacedEggAnchors = workspace:FindFirstChild("S2rV4PlacedEggAnchors")
+				local SenaV4PlacedEggAnchors = workspace:FindFirstChild("SenaV4PlacedEggAnchors")
 
-				if S2rV4PlacedEggAnchors then
-					S2rV4PlacedEggAnchors:Destroy()
+				if SenaV4PlacedEggAnchors then
+					SenaV4PlacedEggAnchors:Destroy()
 				end
 			end)
 			v740(p514.connections)
@@ -12974,11 +12912,11 @@ do
 			task.spawn(function()
 				task.wait()
 
-				local __S2rV4ForestGate = genv.__S2rV4ForestGate
+				local __SenaV4ForestGate = genv.__SenaV4ForestGate
 
-				if type(__S2rV4ForestGate) == "table" and __S2rV4ForestGate.comp and __S2rV4ForestGate.orig then
-					pcall(rawset, __S2rV4ForestGate.comp, "_attackHandler", __S2rV4ForestGate.orig)
-					genv.__S2rV4ForestGate = nil
+				if type(__SenaV4ForestGate) == "table" and __SenaV4ForestGate.comp and __SenaV4ForestGate.orig then
+					pcall(rawset, __SenaV4ForestGate.comp, "_attackHandler", __SenaV4ForestGate.orig)
+					genv.__SenaV4ForestGate = nil
 				end
 
 				if type(getgc) ~= "function" then
@@ -13010,17 +12948,17 @@ do
 						comp = v,
 						orig = value
 					}
-					genv.__S2rV4ForestGate = p522._forestGate
+					genv.__SenaV4ForestGate = p522._forestGate
 					rawset(v, "_attackHandler", function(...)
-						if not p522.enabled or p522.destroyed or p522.eggRuntime and p522.eggRuntime.instantPhase == "priming" or genv.__S2rV4PlayerSteal and genv.__S2rV4PlayerSteal.running then
+						if not p522.enabled or p522.destroyed or p522.eggRuntime and p522.eggRuntime.instantPhase == "priming" or genv.__SenaV4PlayerSteal and genv.__SenaV4PlayerSteal.running then
 							return value(...)
 						end
 
 						p522.stats.blockedHits += 1
 						p522:_recoverBody(true)
 
-						if genv.__S2rV4GodMode then
-							genv.__S2rV4GodMode:startDefend()
+						if genv.__SenaV4GodMode then
+							genv.__SenaV4GodMode:startDefend()
 						end
 					end)
 
@@ -13156,9 +13094,9 @@ do
 					return
 				end
 
-				local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+				local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 
-				if __S2rV4PlayerSteal and __S2rV4PlayerSteal.running then
+				if __SenaV4PlayerSteal and __SenaV4PlayerSteal.running then
 					return
 				end
 
@@ -13175,8 +13113,8 @@ do
 					p533.stats.blockedDrops += 1
 					p533:_startSticky(Uid, lastHeldSlotKey)
 
-					if genv.__S2rV4GodMode then
-						genv.__S2rV4GodMode:startDefend(Uid)
+					if genv.__SenaV4GodMode then
+						genv.__SenaV4GodMode:startDefend(Uid)
 					end
 				end
 			end))
@@ -13216,7 +13154,7 @@ do
 				return false
 			end
 
-			getgenv().__S2rV4AntiGuard = p537
+			getgenv().__SenaV4AntiGuard = p537
 			p537:_installRagdollHooks()
 			p537:_bindSignals()
 			p537:_recoverBody()
@@ -13251,8 +13189,8 @@ do
 			if p538._forestGate then
 				pcall(rawset, p538._forestGate.comp, "_attackHandler", p538._forestGate.orig)
 
-				if genv.__S2rV4ForestGate == p538._forestGate then
-					genv.__S2rV4ForestGate = nil
+				if genv.__SenaV4ForestGate == p538._forestGate then
+					genv.__SenaV4ForestGate = nil
 				end
 
 				p538._forestGate = nil
@@ -13260,8 +13198,8 @@ do
 
 			p538.eggRuntime = nil
 
-			if getgenv().__S2rV4AntiGuard == p538 then
-				getgenv().__S2rV4AntiGuard = nil
+			if getgenv().__SenaV4AntiGuard == p538 then
+				getgenv().__SenaV4AntiGuard = nil
 			end
 		end
 
@@ -13289,7 +13227,7 @@ do
 			local obj = setmetatable({}, t66)
 
 			obj.eggRuntime = p540
-			obj.enabled = s2rV4Config.GodMode == nil and true or s2rV4Config.GodMode == true
+			obj.enabled = senaV4Config.GodMode == nil and true or senaV4Config.GodMode == true
 			obj.active = false
 			obj.activeDroppedUid = nil
 			obj.swingSequence = 0
@@ -13306,13 +13244,13 @@ do
 				return false
 			end
 
-			local __S2rV4IsBatTool = genv.__S2rV4IsBatTool
+			local __SenaV4IsBatTool = genv.__SenaV4IsBatTool
 
-			if __S2rV4IsBatTool and __S2rV4IsBatTool(p542) then
+			if __SenaV4IsBatTool and __SenaV4IsBatTool(p542) then
 				return true
 			end
 
-			if not __S2rV4IsBatTool and (p542:GetAttribute("IsBat") == true or p542:GetAttribute("GearName") == "Bat") then
+			if not __SenaV4IsBatTool and (p542:GetAttribute("IsBat") == true or p542:GetAttribute("GearName") == "Bat") then
 				return true
 			end
 
@@ -13484,9 +13422,9 @@ do
 				end
 			end
 
-			local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+			local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 
-			if __S2rV4PlayerSteal and __S2rV4PlayerSteal.running then
+			if __SenaV4PlayerSteal and __SenaV4PlayerSteal.running then
 				return
 			end
 
@@ -13498,9 +13436,9 @@ do
 					local v1920 = false
 
 					while p551.active and p551.enabled and (not p551.eggRuntime or not p551.eggRuntime.carry or not p551.eggRuntime.carry.active) do
-						local __S2rV4PlayerSteal2 = genv.__S2rV4PlayerSteal
+						local __SenaV4PlayerSteal2 = genv.__SenaV4PlayerSteal
 
-						if __S2rV4PlayerSteal2 and __S2rV4PlayerSteal2.running then
+						if __SenaV4PlayerSteal2 and __SenaV4PlayerSteal2.running then
 							v1920 = true
 
 							break
@@ -13737,9 +13675,9 @@ do
 				return true
 			end
 
-			local __S2rV4EggRuntime = genv.__S2rV4EggRuntime
+			local __SenaV4EggRuntime = genv.__SenaV4EggRuntime
 
-			if __S2rV4EggRuntime and __S2rV4EggRuntime._treadmillResetting then
+			if __SenaV4EggRuntime and __SenaV4EggRuntime._treadmillResetting then
 				return false
 			end
 
@@ -14209,7 +14147,7 @@ do
 							now = os.clock()
 							p586:_setStatus("Idle", "Yielding to Auto Steal")
 							task.wait(0.25)
-						elseif genv.__S2rV4IsAutoSellEggBusy and genv.__S2rV4IsAutoSellEggBusy() then
+						elseif genv.__SenaV4IsAutoSellEggBusy and genv.__SenaV4IsAutoSellEggBusy() then
 							now = os.clock()
 							p586:_setStatus("Idle", "Waiting for Auto Sell Egg")
 							task.wait(0.25)
@@ -14232,7 +14170,7 @@ do
 
 									local travel = p586.travel and p586.travel:travelAndWait(v2041, {
 										abort = function()
-											return p586.destroyed or p586.busy or not p586.config.idleFarm or idleGeneration ~= p586.idleGeneration or p586.coordinator and p586.coordinator:isBackgroundBusy() or genv.__S2rV4IsAutoSellEggBusy and genv.__S2rV4IsAutoSellEggBusy() or v1945()
+											return p586.destroyed or p586.busy or not p586.config.idleFarm or idleGeneration ~= p586.idleGeneration or p586.coordinator and p586.coordinator:isBackgroundBusy() or genv.__SenaV4IsAutoSellEggBusy and genv.__SenaV4IsAutoSellEggBusy() or v1945()
 										end
 									})
 
@@ -14250,7 +14188,7 @@ do
 											end
 										end
 
-										if (not genv.__S2rV4IsAutoSellEggBusy or not genv.__S2rV4IsAutoSellEggBusy()) and not v1945() then
+										if (not genv.__SenaV4IsAutoSellEggBusy or not genv.__SenaV4IsAutoSellEggBusy()) and not v1945() then
 											task.wait(0.35)
 
 											if not p586.busy and p586.config.idleFarm and idleGeneration == p586.idleGeneration then
@@ -14260,7 +14198,7 @@ do
 													end
 												end
 
-												if (not genv.__S2rV4IsAutoSellEggBusy or not genv.__S2rV4IsAutoSellEggBusy()) and not v1945() then
+												if (not genv.__SenaV4IsAutoSellEggBusy or not genv.__SenaV4IsAutoSellEggBusy()) and not v1945() then
 													p586.treadmillEquipPending = true
 
 													local ok, result, result2 = pcall(function()
@@ -14296,7 +14234,7 @@ do
 																break
 															end
 
-															if not genv.__S2rV4IsAutoSellEggBusy or not genv.__S2rV4IsAutoSellEggBusy() then
+															if not genv.__SenaV4IsAutoSellEggBusy or not genv.__SenaV4IsAutoSellEggBusy() then
 																if not v1945() then
 																	task.wait(0.25)
 
@@ -14336,7 +14274,7 @@ do
 																		break
 																	end
 
-																	if not genv.__S2rV4IsAutoSellEggBusy or not genv.__S2rV4IsAutoSellEggBusy() then
+																	if not genv.__SenaV4IsAutoSellEggBusy or not genv.__SenaV4IsAutoSellEggBusy() then
 																		if not v1945() then
 																			task.wait(0.25)
 
@@ -14365,7 +14303,7 @@ do
 																		break
 																	end
 
-																	if not genv.__S2rV4IsAutoSellEggBusy or not genv.__S2rV4IsAutoSellEggBusy() then
+																	if not genv.__SenaV4IsAutoSellEggBusy or not genv.__SenaV4IsAutoSellEggBusy() then
 																		if not v1945() then
 																			task.wait(0.25)
 
@@ -14397,7 +14335,7 @@ do
 																	break
 																end
 
-																if not genv.__S2rV4IsAutoSellEggBusy or not genv.__S2rV4IsAutoSellEggBusy() then
+																if not genv.__SenaV4IsAutoSellEggBusy or not genv.__SenaV4IsAutoSellEggBusy() then
 																	if not v1945() then
 																		task.wait(0.25)
 
@@ -14426,7 +14364,7 @@ do
 																	break
 																end
 
-																if not genv.__S2rV4IsAutoSellEggBusy or not genv.__S2rV4IsAutoSellEggBusy() then
+																if not genv.__SenaV4IsAutoSellEggBusy or not genv.__SenaV4IsAutoSellEggBusy() then
 																	if not v1945() then
 																		task.wait(0.25)
 
@@ -14621,21 +14559,21 @@ do
 	local v2063 = v662.new()
 
 	v612 = v1823.new(v611, v703, v2063)
-	genv.__S2rV4EggRuntime = v612
+	genv.__SenaV4EggRuntime = v612
 	v613 = v2062.new(v2063, v612)
-	genv.__S2rV4TreadmillManager = v613
+	genv.__SenaV4TreadmillManager = v613
 	v612:setTreadmillManager(v613)
 	v613:setDisableDuringAutomation(true)
 
-	if s2rV4Config.AutoTreadmillIdle then
+	if senaV4Config.AutoTreadmillIdle then
 		v613:setIdleFarm(true)
 	end
 
-	if s2rV4Config.AutoIndex then
+	if senaV4Config.AutoIndex then
 		v612:setIndexObjective(true)
 	end
 
-	if s2rV4Config.AutoTreadmillUpgrade then
+	if senaV4Config.AutoTreadmillUpgrade then
 		v613:setAutoUpgrade(true)
 	end
 
@@ -14727,7 +14665,7 @@ do
 		end
 		local function v2088()
 			if u2073 == nil then
-				u2073 = false -- old hub logo deliberately removed
+				u2073 = v2076("96240498384290") or false
 			end
 
 			return u2073 or nil
@@ -14880,7 +14818,7 @@ do
 				local t73 = {}
 				local v2114 = false
 				local ipairs_ = ipairs
-				local WebhookRarities = s2rV4Config.WebhookRarities or {}
+				local WebhookRarities = senaV4Config.WebhookRarities or {}
 
 				for _, WebhookRarity in ipairs_(WebhookRarities) do
 					if WebhookRarity ~= "None" and WebhookRarity ~= "" then
@@ -14893,7 +14831,7 @@ do
 					return false
 				end
 
-				local v2119 = tonumber(s2rV4Config.WebhookMinValue) or 0
+				local v2119 = tonumber(senaV4Config.WebhookMinValue) or 0
 
 				if v2119 > 0 and p610 < v2119 then
 					return false
@@ -14948,11 +14886,11 @@ do
 			return nil
 		end
 		t69.stolen = function(p612, p613, p614)
-			if s2rV4Config.WebhookEnabled ~= true then
+			if senaV4Config.WebhookEnabled ~= true then
 				return
 			end
 
-			local WebhookURL = s2rV4Config.WebhookURL
+			local WebhookURL = senaV4Config.WebhookURL
 
 			if type(WebhookURL) ~= "string" or WebhookURL == "" then
 				return
@@ -15036,7 +14974,7 @@ do
 				color = v2094(v2130.rarityColor),
 				timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
 				author = {
-					name = "S2r Hub",
+					name = "Sena Hub",
 					icon_url = v2143
 				},
 				footer = {
@@ -15059,7 +14997,7 @@ do
 			v2089()
 		end
 		t69.test = function()
-			local WebhookURL = s2rV4Config.WebhookURL
+			local WebhookURL = senaV4Config.WebhookURL
 
 			if type(WebhookURL) ~= "string" or WebhookURL == "" then
 				return false
@@ -15072,7 +15010,7 @@ do
 				color = 5814783,
 				timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
 				author = {
-					name = "S2r Hub",
+					name = "Sena Hub",
 					icon_url = v2146
 				},
 				footer = {
@@ -15102,7 +15040,7 @@ do
 					}
 				}
 			}
-			local v2148 = nil -- no old-brand webhook thumbnail
+			local v2148 = v2076("96240498384290")
 
 			if v2148 then
 				t84.thumbnail = {
@@ -15124,7 +15062,7 @@ do
 		return t69
 	end
 
-	genv.__S2rV4Webhook = v2064()
+	genv.__SenaV4Webhook = v2064()
 
 	local function v2149()
 		local Players2 = game:GetService("Players")
@@ -15215,7 +15153,7 @@ do
 			local t87 = {}
 			local v2162 = false
 			local ipairs_ = ipairs
-			local StealPlayerRarities = s2rV4Config.StealPlayerRarities or {}
+			local StealPlayerRarities = senaV4Config.StealPlayerRarities or {}
 
 			for _, StealPlayerRarity in ipairs_(StealPlayerRarities) do
 				if StealPlayerRarity ~= "None" and StealPlayerRarity ~= "" then
@@ -15226,7 +15164,7 @@ do
 
 			if not v2162 then
 				local ipairs_2 = ipairs
-				local StealRarities = s2rV4Config.StealRarities or {}
+				local StealRarities = senaV4Config.StealRarities or {}
 
 				for _, StealRarity in ipairs_2(StealRarities) do
 					if StealRarity ~= "None" and StealRarity ~= "" then
@@ -15240,10 +15178,10 @@ do
 				return false
 			end
 
-			local v2171 = tonumber(s2rV4Config.StealPlayerMinValue) or 0
+			local v2171 = tonumber(senaV4Config.StealPlayerMinValue) or 0
 
 			if v2171 > 0 then
-				if (genv.__S2rV4Webhook and genv.__S2rV4Webhook.rateOf(p630) or 0) < v2171 then
+				if (genv.__SenaV4Webhook and genv.__SenaV4Webhook.rateOf(p630) or 0) < v2171 then
 					return false
 				end
 			end
@@ -15419,7 +15357,7 @@ do
 			return t90
 		end
 		t85._pick = function(p639)
-			local StealPlayerTarget = s2rV4Config.StealPlayerTarget
+			local StealPlayerTarget = senaV4Config.StealPlayerTarget
 			local v2205
 			local v2206
 			local v2207, v2208, v2209 = ipairs(p639:carriers())
@@ -16460,10 +16398,10 @@ do
 						return false
 					end
 
-					if genv.__S2rV4Webhook then
+					if genv.__SenaV4Webhook then
 						local ok, result = pcall(p654.catalog.resolve, u2359)
 
-						pcall(genv.__S2rV4Webhook.stolen, u2359, ok and result or nil, "player carry")
+						pcall(genv.__SenaV4Webhook.stolen, u2359, ok and result or nil, "player carry")
 					end
 
 					return true
@@ -16525,7 +16463,7 @@ do
 				while true do
 					task.wait(0.4)
 
-					if genv.ChloeX_Running == nil and genv.__S2rV4PlayerSteal ~= p656 then
+					if genv.ChloeX_Running == nil and genv.__SenaV4PlayerSteal ~= p656 then
 						break
 					end
 
@@ -16536,9 +16474,9 @@ do
 					end
 
 					local eggRuntime = p656.eggRuntime
-					local __S2rV4ScrambleRuntime = genv.__S2rV4ScrambleRuntime
+					local __SenaV4ScrambleRuntime = genv.__SenaV4ScrambleRuntime
 
-					if p656.enabled and not p656.running and (not eggRuntime or not eggRuntime.running and (not eggRuntime.carry or not eggRuntime.carry.active)) and (__S2rV4ScrambleRuntime == nil or __S2rV4ScrambleRuntime.active ~= true) then
+					if p656.enabled and not p656.running and (not eggRuntime or not eggRuntime.running and (not eggRuntime.carry or not eggRuntime.carry.active)) and (__SenaV4ScrambleRuntime == nil or __SenaV4ScrambleRuntime.active ~= true) then
 						local v2372 = p656:_pick()
 
 						if v2372 then
@@ -16558,11 +16496,11 @@ do
 
 	v614 = v1885.new(v612)
 	v614:install()
-	v614:setEnabled(s2rV4Config.AntiGuardKnockback == true)
-	genv.__S2rV4AntiGuard = v614
+	v614:setEnabled(senaV4Config.AntiGuardKnockback == true)
+	genv.__SenaV4AntiGuard = v614
 	v615 = v1932.new(v612)
-	v615:setEnabled(s2rV4Config.GodMode == nil and true or s2rV4Config.GodMode == true)
-	genv.__S2rV4GodMode = v615
+	v615:setEnabled(senaV4Config.GodMode == nil and true or senaV4Config.GodMode == true)
+	genv.__SenaV4GodMode = v615
 
 	local v2374 = v2373.new(v612, v615, v611)
 
@@ -16625,9 +16563,9 @@ do
 		end
 
 		local function v2385()
-			local __S2rV4TreadmillManager = genv.__S2rV4TreadmillManager
+			local __SenaV4TreadmillManager = genv.__SenaV4TreadmillManager
 
-			return __S2rV4TreadmillManager ~= nil and not __S2rV4TreadmillManager.destroyed and __S2rV4TreadmillManager.config ~= nil and __S2rV4TreadmillManager.config.idleFarm == true
+			return __SenaV4TreadmillManager ~= nil and not __SenaV4TreadmillManager.destroyed and __SenaV4TreadmillManager.config ~= nil and __SenaV4TreadmillManager.config.idleFarm == true
 		end
 
 		local t94 = {
@@ -16706,9 +16644,9 @@ do
 						local running = not v2388() or v2385() or next(t9) ~= nil or v612 and (v612.running or v612.activeTween)
 
 						if not running then
-							local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+							local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 
-							if __S2rV4PlayerSteal and __S2rV4PlayerSteal.running then
+							if __SenaV4PlayerSteal and __SenaV4PlayerSteal.running then
 								running = true
 							end
 						end
@@ -17044,9 +16982,9 @@ do
 			end
 		end
 		t93._applySpeedMultiplier = function(p678)
-			local __S2rV4TreadmillManager = genv.__S2rV4TreadmillManager
+			local __SenaV4TreadmillManager = genv.__SenaV4TreadmillManager
 
-			if __S2rV4TreadmillManager and __S2rV4TreadmillManager.activeTreadmill ~= nil then
+			if __SenaV4TreadmillManager and __SenaV4TreadmillManager.activeTreadmill ~= nil then
 				return
 			end
 
@@ -17096,22 +17034,22 @@ do
 
 	local v2428 = v2375().new()
 
-	genv.__S2rV4MovementExtras = v2428
+	genv.__SenaV4MovementExtras = v2428
 
-	if s2rV4Config.FlyForCapture then
+	if senaV4Config.FlyForCapture then
 		v2428:setFlyForCapture(true)
 	end
 
-	if s2rV4Config.InstantGrab then
+	if senaV4Config.InstantGrab then
 		v2428:setInstantGrab(true)
 	end
 
-	if s2rV4Config.InfiniteJump then
+	if senaV4Config.InfiniteJump then
 		v2428:setInfiniteJump(true)
 	end
 
-	if (s2rV4Config.WalkSpeedMultiplier or 1) > 1 then
-		v2428:setSpeedMultiplier(s2rV4Config.WalkSpeedMultiplier)
+	if (senaV4Config.WalkSpeedMultiplier or 1) > 1 then
+		v2428:setSpeedMultiplier(senaV4Config.WalkSpeedMultiplier)
 	end
 
 	local function v2429()
@@ -17202,21 +17140,21 @@ do
 			return Guard
 		end
 		t95._skips = function(p685, p686)
-			local __S2rV4EggRuntime = genv.__S2rV4EggRuntime
+			local __SenaV4EggRuntime = genv.__SenaV4EggRuntime
 
-			if __S2rV4EggRuntime then
-				if __S2rV4EggRuntime.instantPhase == "priming" then
+			if __SenaV4EggRuntime then
+				if __SenaV4EggRuntime.instantPhase == "priming" then
 					return true
 				end
 
-				if __S2rV4EggRuntime.enabled or __S2rV4EggRuntime.running then
+				if __SenaV4EggRuntime.enabled or __SenaV4EggRuntime.running then
 					return true
 				end
 			end
 
-			local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+			local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 
-			if __S2rV4PlayerSteal and __S2rV4PlayerSteal.running then
+			if __SenaV4PlayerSteal and __SenaV4PlayerSteal.running then
 				return true
 			end
 
@@ -17480,13 +17418,13 @@ do
 
 	local v2489 = v2429().new()
 
-	genv.__S2rV4AntiHitGuard = v2489
+	genv.__SenaV4AntiHitGuard = v2489
 
-	if s2rV4Config.AntiHitGuard then
+	if senaV4Config.AntiHitGuard then
 		v2489:setEnabled(true)
 	end
 
-	genv.__S2rV4PlayerSteal = v2374
+	genv.__SenaV4PlayerSteal = v2374
 end
 
 do
@@ -17495,20 +17433,20 @@ do
 		value = false
 	}
 
-	genv.__S2rV4StealWantsCharacter = function()
-		local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+	genv.__SenaV4StealWantsCharacter = function()
+		local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 
-		if __S2rV4PlayerSteal and __S2rV4PlayerSteal.running then
+		if __SenaV4PlayerSteal and __SenaV4PlayerSteal.running then
 			return true
 		end
 
-		local __S2rV4EggRuntime = genv.__S2rV4EggRuntime
+		local __SenaV4EggRuntime = genv.__SenaV4EggRuntime
 
-		if not __S2rV4EggRuntime or not __S2rV4EggRuntime.enabled or __S2rV4EggRuntime.destroyed then
+		if not __SenaV4EggRuntime or not __SenaV4EggRuntime.enabled or __SenaV4EggRuntime.destroyed then
 			return false
 		end
 
-		if __S2rV4EggRuntime.running or __S2rV4EggRuntime.activeTween and not __S2rV4EggRuntime.activeTween.sharedTravel or __S2rV4EggRuntime.carry and __S2rV4EggRuntime.carry.active then
+		if __SenaV4EggRuntime.running or __SenaV4EggRuntime.activeTween and not __SenaV4EggRuntime.activeTween.sharedTravel or __SenaV4EggRuntime.carry and __SenaV4EggRuntime.carry.active then
 			return true
 		end
 
@@ -17521,31 +17459,31 @@ do
 		t97.at = now
 
 		local ok, result = pcall(function()
-			return __S2rV4EggRuntime:_wallOpen() and __S2rV4EggRuntime:_chooseTarget() or nil
+			return __SenaV4EggRuntime:_wallOpen() and __SenaV4EggRuntime:_chooseTarget() or nil
 		end)
 
 		t97.value = ok and result ~= nil
 
 		return t97.value
 	end
-	genv.__S2rV4DronesWantCharacter = function()
-		local __S2rV4ButterflyRuntime = genv.__S2rV4ButterflyRuntime
+	genv.__SenaV4DronesWantCharacter = function()
+		local __SenaV4ButterflyRuntime = genv.__SenaV4ButterflyRuntime
 
-		return __S2rV4ButterflyRuntime ~= nil and (__S2rV4ButterflyRuntime.active == true or __S2rV4ButterflyRuntime.wantsCharacter == true)
+		return __SenaV4ButterflyRuntime ~= nil and (__SenaV4ButterflyRuntime.active == true or __SenaV4ButterflyRuntime.wantsCharacter == true)
 	end
 end
 
-v612:setStealMode(s2rV4Config.StealMode == "Semi Teleport" and "Instant" or s2rV4Config.StealMode)
-v612:setSpeed(s2rV4Config.TweenSpeedMultiplier or 60)
+v612:setStealMode(senaV4Config.StealMode == "Semi Teleport" and "Instant" or senaV4Config.StealMode)
+v612:setSpeed(senaV4Config.TweenSpeedMultiplier or 60)
 
-if s2rV4Config.StealMinValue and s2rV4Config.StealMinValue > 0 then
-	v612:setMinValuePerSec(s2rV4Config.StealMinValue)
+if senaV4Config.StealMinValue and senaV4Config.StealMinValue > 0 then
+	v612:setMinValuePerSec(senaV4Config.StealMinValue)
 end
 
-if s2rV4Config.StealAreas and not table.find(s2rV4Config.StealAreas, "None") and #s2rV4Config.StealAreas > 0 then
+if senaV4Config.StealAreas and not table.find(senaV4Config.StealAreas, "None") and #senaV4Config.StealAreas > 0 then
 	local t98 = {}
 
-	for _, stealArea in ipairs(s2rV4Config.StealAreas) do
+	for _, stealArea in ipairs(senaV4Config.StealAreas) do
 		if stealArea ~= "None" then
 			table.insert(t98, stealArea)
 		end
@@ -17555,10 +17493,10 @@ if s2rV4Config.StealAreas and not table.find(s2rV4Config.StealAreas, "None") and
 	v612:setFilterEnabled("area", #t98 > 0)
 end
 
-if s2rV4Config.StealRarities and not table.find(s2rV4Config.StealRarities, "None") and #s2rV4Config.StealRarities > 0 then
+if senaV4Config.StealRarities and not table.find(senaV4Config.StealRarities, "None") and #senaV4Config.StealRarities > 0 then
 	local t99 = {}
 
-	for _, stealRarity in ipairs(s2rV4Config.StealRarities) do
+	for _, stealRarity in ipairs(senaV4Config.StealRarities) do
 		if stealRarity ~= "None" then
 			table.insert(t99, stealRarity)
 		end
@@ -17568,10 +17506,10 @@ if s2rV4Config.StealRarities and not table.find(s2rV4Config.StealRarities, "None
 	v612:setFilterEnabled("rarity", #t99 > 0)
 end
 
-if s2rV4Config.StealNamesFilter and not table.find(s2rV4Config.StealNamesFilter, "None") and #s2rV4Config.StealNamesFilter > 0 then
+if senaV4Config.StealNamesFilter and not table.find(senaV4Config.StealNamesFilter, "None") and #senaV4Config.StealNamesFilter > 0 then
 	local t100 = {}
 
-	for _, v in ipairs(s2rV4Config.StealNamesFilter) do
+	for _, v in ipairs(senaV4Config.StealNamesFilter) do
 		if v ~= "None" then
 			table.insert(t100, v)
 		end
@@ -17582,7 +17520,7 @@ if s2rV4Config.StealNamesFilter and not table.find(s2rV4Config.StealNamesFilter,
 end
 
 do
-	genv.__S2rV4EggRuntimeCleanup = function()
+	genv.__SenaV4EggRuntimeCleanup = function()
 		if v612 then
 			pcall(v612.destroy, v612)
 		end
@@ -17591,15 +17529,15 @@ do
 			pcall(v613.destroy, v613)
 		end
 
-		if genv.__S2rV4EggRuntime == v612 then
-			genv.__S2rV4EggRuntime = nil
+		if genv.__SenaV4EggRuntime == v612 then
+			genv.__SenaV4EggRuntime = nil
 		end
 
-		if genv.__S2rV4TreadmillManager == v613 then
-			genv.__S2rV4TreadmillManager = nil
+		if genv.__SenaV4TreadmillManager == v613 then
+			genv.__SenaV4TreadmillManager = nil
 		end
 	end
-	genv.__S2rV4AntiGuardCleanup = function()
+	genv.__SenaV4AntiGuardCleanup = function()
 		if v614 then
 			pcall(v614.destroy, v614)
 		end
@@ -17608,12 +17546,12 @@ do
 			pcall(v615.destroy, v615)
 		end
 
-		if genv.__S2rV4AntiGuard == v614 then
-			genv.__S2rV4AntiGuard = nil
+		if genv.__SenaV4AntiGuard == v614 then
+			genv.__SenaV4AntiGuard = nil
 		end
 
-		if genv.__S2rV4GodMode == v615 then
-			genv.__S2rV4GodMode = nil
+		if genv.__SenaV4GodMode == v615 then
+			genv.__SenaV4GodMode = nil
 		end
 	end
 end
@@ -17775,11 +17713,11 @@ do
 	local function v2524()
 		local genv2 = getgenv and getgenv() or _G
 
-		genv2.__S2rV4AntiAfkGeneration = (genv2.__S2rV4AntiAfkGeneration or 0) + 1
-		genv2.__S2rV4AntiAfkEnabled = s2rV4Config.AntiAFK
-		genv2.__S2rV4StartupProtection = t101
-		genv2.__S2rV4SetAntiAfkEnabled = function(p699)
-			genv2.__S2rV4AntiAfkEnabled = p699 == true
+		genv2.__SenaV4AntiAfkGeneration = (genv2.__SenaV4AntiAfkGeneration or 0) + 1
+		genv2.__SenaV4AntiAfkEnabled = senaV4Config.AntiAFK
+		genv2.__SenaV4StartupProtection = t101
+		genv2.__SenaV4SetAntiAfkEnabled = function(p699)
+			genv2.__SenaV4AntiAfkEnabled = p699 == true
 
 			if p699 then
 				t101.install()
@@ -17788,15 +17726,15 @@ do
 			end
 		end
 
-		if s2rV4Config.AntiAFK then
-			genv2.__S2rV4SetAntiAfkEnabled(true)
+		if senaV4Config.AntiAFK then
+			genv2.__SenaV4SetAntiAfkEnabled(true)
 		end
 	end
 
 	v2524()
 end
 
-local v2526 = s2rV4Config
+local v2526 = senaV4Config
 local t103 = {
 	TeleportService = TeleportService or game:GetService("TeleportService"),
 	LP = LocalPlayer or Players.LocalPlayer,
@@ -17807,41 +17745,17 @@ local function v2528()
 	pcall(function()
 		if writefile then
 			pcall(function()
-				writefile("autoexec/S2r_Hub.lua", [[repeat task.wait(0.5) until game:IsLoaded()
+				writefile("autoexec/Sena_StealAnEgg.lua", [[repeat task.wait(0.5) until game:IsLoaded()
 task.wait(1.5)
 if getgenv then getgenv().SNE_AutoExecute = true end
-local g = getgenv and getgenv() or _G
-if type(g.S2rHubSourceURL) == "string" and g.S2rHubSourceURL ~= "" then
-    loadstring(game:HttpGet(g.S2rHubSourceURL))()
-elseif type(readfile) == "function" then
-    local ok, src = pcall(readfile, "S2r_Hub.lua")
-    if ok and type(src) == "string" and #src > 0 then
-        loadstring(src)()
-    else
-        warn("[S2r Hub] Put S2r_Hub.lua in the executor workspace or set S2rHubSourceURL.")
-    end
-else
-    warn("[S2r Hub] Local re-execution requires readfile or S2rHubSourceURL.")
-end
+loadstring(game:HttpGet("https://senahub.xyz/raw/saev2"))()
 ]])
 			end)
 			pcall(function()
-				writefile("autoexecute/S2r_Hub.lua", [[repeat task.wait(0.5) until game:IsLoaded()
+				writefile("autoexecute/Sena_StealAnEgg.lua", [[repeat task.wait(0.5) until game:IsLoaded()
 task.wait(1.5)
 if getgenv then getgenv().SNE_AutoExecute = true end
-local g = getgenv and getgenv() or _G
-if type(g.S2rHubSourceURL) == "string" and g.S2rHubSourceURL ~= "" then
-    loadstring(game:HttpGet(g.S2rHubSourceURL))()
-elseif type(readfile) == "function" then
-    local ok, src = pcall(readfile, "S2r_Hub.lua")
-    if ok and type(src) == "string" and #src > 0 then
-        loadstring(src)()
-    else
-        warn("[S2r Hub] Put S2r_Hub.lua in the executor workspace or set S2rHubSourceURL.")
-    end
-else
-    warn("[S2r Hub] Local re-execution requires readfile or S2rHubSourceURL.")
-end
+loadstring(game:HttpGet("https://senahub.xyz/raw/saev2"))()
 ]])
 			end)
 		end
@@ -17854,19 +17768,7 @@ end
 			queue_on_teleport_([[repeat task.wait(0.5) until game:IsLoaded()
 task.wait(1.5)
 if getgenv then getgenv().SNE_AutoExecute = true end
-local g = getgenv and getgenv() or _G
-if type(g.S2rHubSourceURL) == "string" and g.S2rHubSourceURL ~= "" then
-    loadstring(game:HttpGet(g.S2rHubSourceURL))()
-elseif type(readfile) == "function" then
-    local ok, src = pcall(readfile, "S2r_Hub.lua")
-    if ok and type(src) == "string" and #src > 0 then
-        loadstring(src)()
-    else
-        warn("[S2r Hub] Put S2r_Hub.lua in the executor workspace or set S2rHubSourceURL.")
-    end
-else
-    warn("[S2r Hub] Local re-execution requires readfile or S2rHubSourceURL.")
-end
+loadstring(game:HttpGet("https://senahub.xyz/raw/saev2"))()
 ]])
 		end)
 	end
@@ -17875,17 +17777,17 @@ local function v2530()
 	pcall(function()
 		if delfile then
 			pcall(function()
-				delfile("autoexec/S2r_Hub.lua")
+				delfile("autoexec/Sena_StealAnEgg.lua")
 			end)
 			pcall(function()
-				delfile("autoexecute/S2r_Hub.lua")
+				delfile("autoexecute/Sena_StealAnEgg.lua")
 			end)
 		elseif writefile then
 			pcall(function()
-				writefile("autoexec/S2r_Hub.lua", "")
+				writefile("autoexec/Sena_StealAnEgg.lua", "")
 			end)
 			pcall(function()
-				writefile("autoexecute/S2r_Hub.lua", "")
+				writefile("autoexecute/Sena_StealAnEgg.lua", "")
 			end)
 		end
 	end)
@@ -18090,14 +17992,14 @@ local function v2540()
 						local DisplayName = v2571 and v2571.Rarity and (v2571.Rarity.DisplayName or v2571.Rarity._id)
 						local v2573 = false
 
-						if s2rV4Config.FavMode == "Species" then
-							local FavSpecies = s2rV4Config.FavSpecies or {}
+						if senaV4Config.FavMode == "Species" then
+							local FavSpecies = senaV4Config.FavSpecies or {}
 
 							if table.find(FavSpecies, "All") or table.find(FavSpecies, u2570.Category) or v2571 and table.find(FavSpecies, v2571.DisplayName) then
 								v2573 = true
 							end
 						else
-							local FavRarities = s2rV4Config.FavRarities or {}
+							local FavRarities = senaV4Config.FavRarities or {}
 
 							if table.find(FavRarities, "All") or DisplayName and table.find(FavRarities, DisplayName) then
 								v2573 = true
@@ -18157,7 +18059,7 @@ local function v2540()
 				return false, "Fusion locked"
 			end
 
-			local v2582 = v2542(s2rV4Config.FuseSelectedOnly, s2rV4Config.FuseSpecies, s2rV4Config.FuseRarities)
+			local v2582 = v2542(senaV4Config.FuseSelectedOnly, senaV4Config.FuseSpecies, senaV4Config.FuseRarities)
 
 			if not v2582 then
 				return false, "No eligible group of 3"
@@ -18204,20 +18106,20 @@ local function v2540()
 		while v16() do
 			local now = os.clock()
 
-			if s2rV4Config.AutoEquipBest and now - n49 > 6 then
+			if senaV4Config.AutoEquipBest and now - n49 > 6 then
 				n49 = now
 				pcall(t106.equipBest)
 			end
 
-			if s2rV4Config.AutoClaimOffline then
+			if senaV4Config.AutoClaimOffline then
 				pcall(t106.claimOffline)
 			end
 
-			if s2rV4Config.AutoFavorite then
+			if senaV4Config.AutoFavorite then
 				pcall(t106.favoriteSelected)
 			end
 
-			if s2rV4Config.AutoFusePets then
+			if senaV4Config.AutoFusePets then
 				pcall(t106.fuseOnePair)
 			end
 
@@ -18228,7 +18130,7 @@ local function v2540()
 	return t106
 end
 
-genv.__S2rV4PetBarn = v2540()
+genv.__SenaV4PetBarn = v2540()
 
 do
 	local function v2591()
@@ -18273,11 +18175,11 @@ do
 
 		task.spawn(function()
 			while v16() do
-				if s2rV4Config.AutoBaseUpgrade then
+				if senaV4Config.AutoBaseUpgrade then
 					pcall(t107.upgradeBase)
 				end
 
-				if s2rV4Config.AutoClaimAlmanac then
+				if senaV4Config.AutoClaimAlmanac then
 					pcall(t107.claimAlmanac)
 				end
 
@@ -18288,7 +18190,7 @@ do
 		return t107
 	end
 
-	genv.__S2rV4Upgrades = v2591()
+	genv.__SenaV4Upgrades = v2591()
 end
 
 local function v2604()
@@ -18297,7 +18199,7 @@ local function v2604()
 	}
 
 	t108.setNoclip = function(p704)
-		s2rV4Config.Noclip = p704 == true
+		senaV4Config.Noclip = p704 == true
 
 		if t108.noclipConn then
 			pcall(function()
@@ -18306,9 +18208,9 @@ local function v2604()
 			t108.noclipConn = nil
 		end
 
-		if s2rV4Config.Noclip then
+		if senaV4Config.Noclip then
 			t108.noclipConn = RunService.Stepped:Connect(function()
-				if not s2rV4Config.Noclip then
+				if not senaV4Config.Noclip then
 					return
 				end
 
@@ -18413,19 +18315,19 @@ local function v2604()
 		return true
 	end
 	t108.setBottingMode = function(p706)
-		s2rV4Config.BottingMode = p706 == true
+		senaV4Config.BottingMode = p706 == true
 
-		local __S2rV4BottingOverlay = genv.__S2rV4BottingOverlay
+		local __SenaV4BottingOverlay = genv.__SenaV4BottingOverlay
 
-		if __S2rV4BottingOverlay and __S2rV4BottingOverlay.Parent then
+		if __SenaV4BottingOverlay and __SenaV4BottingOverlay.Parent then
 			pcall(function()
-				__S2rV4BottingOverlay:Destroy()
+				__SenaV4BottingOverlay:Destroy()
 			end)
 		end
 
-		genv.__S2rV4BottingOverlay = nil
+		genv.__SenaV4BottingOverlay = nil
 
-		if not s2rV4Config.BottingMode then
+		if not senaV4Config.BottingMode then
 			pcall(function()
 				RunService:Set3dRenderingEnabled(true)
 			end)
@@ -18450,7 +18352,7 @@ local function v2604()
 
 		local ScreenGui = Instance.new("ScreenGui")
 
-		ScreenGui.Name = "S2rBottingOverlay"
+		ScreenGui.Name = "SenaBottingOverlay"
 		ScreenGui.ResetOnSpawn = false
 		ScreenGui.IgnoreGuiInset = true
 		ScreenGui.DisplayOrder = -1
@@ -18464,11 +18366,11 @@ local function v2604()
 		Frame.BorderSizePixel = 0
 		Frame.Active = false
 		Frame.Parent = ScreenGui
-		genv.__S2rV4BottingOverlay = ScreenGui
+		genv.__SenaV4BottingOverlay = ScreenGui
 	end
 	task.spawn(function()
 		while v16() do
-			if s2rV4Config.AntiCutscene then
+			if senaV4Config.AntiCutscene then
 				pcall(function()
 					local PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
 
@@ -18489,7 +18391,7 @@ local function v2604()
 	return t108
 end
 
-genv.__S2rV4Roaming = v2604()
+genv.__SenaV4Roaming = v2604()
 
 do
 	local function v2639()
@@ -18556,7 +18458,7 @@ do
 			return 0, 0, 0
 		end
 		t110.buyTick = function()
-			local ScrambleBuyList = s2rV4Config.ScrambleBuyList
+			local ScrambleBuyList = senaV4Config.ScrambleBuyList
 
 			if not ScrambleBuyList or #ScrambleBuyList == 0 then
 				return
@@ -18575,7 +18477,7 @@ do
 			local Samples = v2651.State.Samples or 0
 
 			for _, v in pairs(v2651.Shop) do
-				if not s2rV4Config.ScrambleAutoBuy then
+				if not senaV4Config.ScrambleAutoBuy then
 					return
 				end
 
@@ -18652,7 +18554,7 @@ do
 				t110.wantsCharacter = false
 				t110.active = false
 
-				if s2rV4Config.ScrambleAutoBuy then
+				if senaV4Config.ScrambleAutoBuy then
 					pcall(function()
 						if t110.live() then
 							t110.buyTick()
@@ -18662,14 +18564,14 @@ do
 					end)
 				end
 
-				task.wait(s2rV4Config.ScrambleAutoBuy and 0.5 or 1)
+				task.wait(senaV4Config.ScrambleAutoBuy and 0.5 or 1)
 			end
 		end)
 
 		return t110
 	end
 
-	genv.__S2rV4ScrambleRuntime = v2639()
+	genv.__SenaV4ScrambleRuntime = v2639()
 end
 
 local function v2666()
@@ -18705,7 +18607,7 @@ local function v2666()
 				return "mech_boss"
 			end
 
-			if s2rV4Config.ScrambleBossAuto == true then
+			if senaV4Config.ScrambleBossAuto == true then
 				local ScrambleArena = workspace:FindFirstChild("ScrambleArena")
 
 				if workspace:FindFirstChild("ScrambleArenaPortal") or ScrambleArena and ScrambleArena:GetAttribute("Phase") ~= "Defeated" then
@@ -18713,16 +18615,16 @@ local function v2666()
 				end
 			end
 
-			local __S2rV4StealWantsCharacter = genv.__S2rV4StealWantsCharacter
+			local __SenaV4StealWantsCharacter = genv.__SenaV4StealWantsCharacter
 
-			if __S2rV4StealWantsCharacter and __S2rV4StealWantsCharacter() then
+			if __SenaV4StealWantsCharacter and __SenaV4StealWantsCharacter() then
 				return "auto_steal"
 			end
 
 			return nil
 		end,
 		holder = function()
-			if s2rV4Config.IsPlacing == true then
+			if senaV4Config.IsPlacing == true then
 				return "auto_place"
 			end
 
@@ -18965,7 +18867,7 @@ local function v2666()
 			return false
 		end
 
-		local ButterflyTradeRecipe = s2rV4Config.ButterflyTradeRecipe
+		local ButterflyTradeRecipe = senaV4Config.ButterflyTradeRecipe
 
 		if ButterflyTradeRecipe == "Smart" then
 			return t111.smartNext(snap.counts) ~= nil
@@ -19007,7 +18909,7 @@ local function v2666()
 	end
 
 	local function v2736()
-		local ButterflyTiers = s2rV4Config.ButterflyTiers
+		local ButterflyTiers = senaV4Config.ButterflyTiers
 
 		if type(ButterflyTiers) ~= "table" or #ButterflyTiers == 0 then
 			return nil
@@ -19317,9 +19219,9 @@ local function v2666()
 		return v2794 and v2794.Position + Vector3.new(0, 4, 0) or nil
 	end
 	local function v2795()
-		local __S2rV4TreadmillManager = genv.__S2rV4TreadmillManager
+		local __SenaV4TreadmillManager = genv.__SenaV4TreadmillManager
 
-		if not __S2rV4TreadmillManager or __S2rV4TreadmillManager.activeTreadmill == nil then
+		if not __SenaV4TreadmillManager or __SenaV4TreadmillManager.activeTreadmill == nil then
 			return
 		end
 
@@ -19327,8 +19229,8 @@ local function v2666()
 
 		local v2797 = os.clock() + 5
 
-		while __S2rV4TreadmillManager.activeTreadmill ~= nil and os.clock() < v2797 do
-			__S2rV4TreadmillManager:_requestUnequip()
+		while __SenaV4TreadmillManager.activeTreadmill ~= nil and os.clock() < v2797 do
+			__SenaV4TreadmillManager:_requestUnequip()
 			task.wait(0.3)
 		end
 
@@ -19341,15 +19243,15 @@ local function v2666()
 		end
 	end
 	local function v2799()
-		local __S2rV4TreadmillManager = genv.__S2rV4TreadmillManager
+		local __SenaV4TreadmillManager = genv.__SenaV4TreadmillManager
 
-		if not __S2rV4TreadmillManager or __S2rV4TreadmillManager.destroyed or not __S2rV4TreadmillManager.config.idleFarm then
+		if not __SenaV4TreadmillManager or __SenaV4TreadmillManager.destroyed or not __SenaV4TreadmillManager.config.idleFarm then
 			return false
 		end
 
-		if not __S2rV4TreadmillManager.busy and not __S2rV4TreadmillManager.idleRunning then
+		if not __SenaV4TreadmillManager.busy and not __SenaV4TreadmillManager.idleRunning then
 			task.defer(function()
-				__S2rV4TreadmillManager:_startIdle()
+				__SenaV4TreadmillManager:_startIdle()
 			end)
 		end
 
@@ -19438,7 +19340,7 @@ local function v2666()
 		end
 
 		local v2814 = t111.tiers()
-		local ButterflyTradeRecipe = s2rV4Config.ButterflyTradeRecipe
+		local ButterflyTradeRecipe = senaV4Config.ButterflyTradeRecipe
 		local n51 = 0
 
 		if ButterflyTradeRecipe == "Smart" then
@@ -19604,7 +19506,7 @@ local function v2666()
 			end
 		end
 
-		s2rV4Config.ButterflyTiers = butterflyTiers
+		senaV4Config.ButterflyTiers = butterflyTiers
 	end
 
 	local t121 = {
@@ -19625,7 +19527,7 @@ local function v2666()
 		return t121
 	end
 	t111.setRecipe = function(p725)
-		s2rV4Config.ButterflyTradeRecipe = t122[tostring(p725)] or "All"
+		senaV4Config.ButterflyTradeRecipe = t122[tostring(p725)] or "All"
 	end
 
 	local t123 = {
@@ -19645,7 +19547,7 @@ local function v2666()
 		return t123
 	end
 	t111.setMode = function(p726)
-		s2rV4Config.ButterflyCatchMode = t124[tostring(p726)] or "Tween"
+		senaV4Config.ButterflyCatchMode = t124[tostring(p726)] or "Tween"
 	end
 
 	local Folder
@@ -19889,11 +19791,11 @@ local function v2666()
 		v23()
 	end
 	t126.keepGoing = function(p734, p735, p736)
-		if not v16() or not s2rV4Config.ButterflyAutoCatch or not (t111.bloomLeft() > 0) or not p734.Parent or not (p735.Health > 0) then
+		if not v16() or not senaV4Config.ButterflyAutoCatch or not (t111.bloomLeft() > 0) or not p734.Parent or not (p735.Health > 0) then
 			return false
 		end
 
-		if (s2rV4Config.ButterflyCatchMode or "Tween") == p736 then
+		if (senaV4Config.ButterflyCatchMode or "Tween") == p736 then
 			return not (t111.manual or v2767() or v177() or t114.blocker("butterfly") ~= nil)
 		end
 
@@ -20239,9 +20141,9 @@ local function v2666()
 			return
 		end
 
-		local __S2rV4TreadmillManager = genv.__S2rV4TreadmillManager
+		local __SenaV4TreadmillManager = genv.__SenaV4TreadmillManager
 
-		if __S2rV4TreadmillManager and __S2rV4TreadmillManager.activeTreadmill ~= nil then
+		if __SenaV4TreadmillManager and __SenaV4TreadmillManager.activeTreadmill ~= nil then
 			v2795()
 		end
 
@@ -20251,7 +20153,7 @@ local function v2666()
 			return
 		end
 
-		local ButterflyCatchMode = s2rV4Config.ButterflyCatchMode or "Tween"
+		local ButterflyCatchMode = senaV4Config.ButterflyCatchMode or "Tween"
 		local v2999
 
 		if ButterflyCatchMode == "Tween" then
@@ -20293,7 +20195,7 @@ local function v2666()
 			t111.bloomBase = nil
 		end
 
-		if s2rV4Config.ButterflyEsp and v3002.active then
+		if senaV4Config.ButterflyEsp and v3002.active then
 			v2858()
 		elseif next(t111.cards) or Folder then
 			v2855()
@@ -20301,13 +20203,13 @@ local function v2666()
 
 		local s7
 
-		if s2rV4Config.ButterflyAutoNet and not v3002.net and v3002.treeUnlocked and v2691("net") then
+		if senaV4Config.ButterflyAutoNet and not v3002.net and v3002.treeUnlocked and v2691("net") then
 			s7 = "net"
-		elseif s2rV4Config.ButterflyAutoCatch and v3002.active and v3002.net then
+		elseif senaV4Config.ButterflyAutoCatch and v3002.active and v3002.net then
 			s7 = "catch"
-		elseif not v3002.active and s2rV4Config.ButterflyAutoTrade and v3002.net and t111.canTrade() and v2691("trade") then
+		elseif not v3002.active and senaV4Config.ButterflyAutoTrade and v3002.net and t111.canTrade() and v2691("trade") then
 			s7 = "trade"
-		elseif not v3002.active and s2rV4Config.ButterflyAutoCraft and v3002.net and t111.canCraft() and v2691("craft") then
+		elseif not v3002.active and senaV4Config.ButterflyAutoCraft and v3002.net and t111.canCraft() and v2691("craft") then
 			s7 = "craft"
 		end
 
@@ -20401,7 +20303,7 @@ local function v2666()
 		v2751()
 		v2855()
 	end)
-	genv.__S2rV4ButterflyRuntime = t111
+	genv.__SenaV4ButterflyRuntime = t111
 end
 
 v2666()
@@ -20470,7 +20372,7 @@ local function v3016()
 	return v3026
 end
 
-genv.__S2rV4IsBatTool = v3016()
+genv.__SenaV4IsBatTool = v3016()
 
 do
 	local Players2 = game:GetService("Players")
@@ -20585,7 +20487,7 @@ do
 		end
 
 		t129.pinConn = RunService2.PreSimulation:Connect(function()
-			if not s2rV4Config.AutoStealCapture then
+			if not senaV4Config.AutoStealCapture then
 				return
 			end
 
@@ -20628,7 +20530,7 @@ do
 
 		t129.status = "Flying to capture egg"
 		pcall(v232, v3068, v3069, cFrameNew(v3070) * v3068.CFrame.Rotation, function()
-			return not s2rV4Config.AutoStealCapture or v3049() ~= p759 or v3054(p759)
+			return not senaV4Config.AutoStealCapture or v3049() ~= p759 or v3054(p759)
 		end)
 
 		local v3071 = v3045()
@@ -20662,7 +20564,7 @@ do
 
 	task.spawn(function()
 		while v16() do
-			if s2rV4Config.AutoStealCapture then
+			if senaV4Config.AutoStealCapture then
 				if not pcall(function()
 					local v3076 = v3049()
 					local v3077 = v3050(v3076)
@@ -20708,7 +20610,7 @@ do
 			end
 		end
 	end)
-	genv.__S2rV4AutoCapture = t129
+	genv.__SenaV4AutoCapture = t129
 end
 
 do
@@ -21035,7 +20937,7 @@ do
 			end
 		end
 	end
-	genv.__S2rV4VisualSAE = t130
+	genv.__SenaV4VisualSAE = t130
 end
 
 do
@@ -21345,7 +21247,7 @@ do
 			pcall(function()
 				if v3213 then
 					settings().Rendering.QualityLevel = Enum.QualityLevel.Level10
-				elseif s2rV4Config.StartupBoost then
+				elseif senaV4Config.StartupBoost then
 					settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 				end
 			end)
@@ -22108,7 +22010,7 @@ do
 		return t132
 	end
 
-	genv.__S2rV4Visual = v3143()
+	genv.__SenaV4Visual = v3143()
 end
 
 do
@@ -22201,7 +22103,7 @@ do
 	end
 	t145.privateStatus = "Pick a max player count, then Hop Server Now."
 	t145.privateMax = function()
-		return math.max(1, math.floor(tonumber(tostring(s2rV4Config.PrivateServerMax or "2"):match("%d+")) or 2))
+		return math.max(1, math.floor(tonumber(tostring(senaV4Config.PrivateServerMax or "2"):match("%d+")) or 2))
 	end
 	t145.findPrivateTargets = function()
 		local v3426 = t145.privateMax()
@@ -22283,7 +22185,7 @@ do
 
 		t145.privateAutoRunning = true
 		task.spawn(function()
-			while v16() and s2rV4Config.PrivateServerAuto do
+			while v16() and senaV4Config.PrivateServerAuto do
 				local v3439 = t145.privateMax()
 
 				if v3439 >= #Players:GetPlayers() then
@@ -22297,26 +22199,26 @@ do
 
 			t145.privateAutoRunning = false
 
-			if not s2rV4Config.PrivateServerAuto then
+			if not senaV4Config.PrivateServerAuto then
 				t145.privateStatus = "Auto hop stopped."
 			end
 		end)
 	end
 
 	local function hubBusy()
-		if s2rV4Config.IsStealing or s2rV4Config.IsPlacing then
+		if senaV4Config.IsStealing or senaV4Config.IsPlacing then
 			return true
 		end
 
-		local __S2rV4EggRuntime = genv.__S2rV4EggRuntime
+		local __SenaV4EggRuntime = genv.__SenaV4EggRuntime
 
-		if __S2rV4EggRuntime and (__S2rV4EggRuntime.running or __S2rV4EggRuntime.travelBusy or __S2rV4EggRuntime.carry and __S2rV4EggRuntime.carry.active) then
+		if __SenaV4EggRuntime and (__SenaV4EggRuntime.running or __SenaV4EggRuntime.travelBusy or __SenaV4EggRuntime.carry and __SenaV4EggRuntime.carry.active) then
 			return true
 		end
 
-		local __S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+		local __SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 
-		if __S2rV4PlayerSteal and __S2rV4PlayerSteal.running then
+		if __SenaV4PlayerSteal and __SenaV4PlayerSteal.running then
 			return true
 		end
 
@@ -22334,11 +22236,11 @@ do
 			while v16() do
 				task.wait(2)
 
-				if s2rV4Config.HopNoMatch and not t145.hubBusy() then
-					if (tonumber(s2rV4Config.HopCooldown) or 5) < os.clock() - t145.lastHopAt then
-						local __S2rV4EggRuntime = genv.__S2rV4EggRuntime
+				if senaV4Config.HopNoMatch and not t145.hubBusy() then
+					if (tonumber(senaV4Config.HopCooldown) or 5) < os.clock() - t145.lastHopAt then
+						local __SenaV4EggRuntime = genv.__SenaV4EggRuntime
 
-						if s2rV4Config.AutoSteal and (__S2rV4EggRuntime and __S2rV4EggRuntime.stats and __S2rV4EggRuntime.stats.matching or 0) <= 0 and not v177() then
+						if senaV4Config.AutoSteal and (__SenaV4EggRuntime and __SenaV4EggRuntime.stats and __SenaV4EggRuntime.stats.matching or 0) <= 0 and not v177() then
 							t145.lastHopAt = os.clock()
 							t145.hopEmptiest()
 						end
@@ -22357,13 +22259,13 @@ do
 		t145.antiTreadmillRunning = true
 		task.spawn(function()
 			while v16() do
-				if s2rV4Config.AntiTreadmill then
-					local __S2rV4TreadmillManager = genv.__S2rV4TreadmillManager
+				if senaV4Config.AntiTreadmill then
+					local __SenaV4TreadmillManager = genv.__SenaV4TreadmillManager
 
 					pcall(function()
-						if __S2rV4TreadmillManager and __S2rV4TreadmillManager.activeTreadmill ~= nil then
-							__S2rV4TreadmillManager:_cancelIdle(true)
-							__S2rV4TreadmillManager:_requestUnequip()
+						if __SenaV4TreadmillManager and __SenaV4TreadmillManager.activeTreadmill ~= nil then
+							__SenaV4TreadmillManager:_cancelIdle(true)
+							__SenaV4TreadmillManager:_requestUnequip()
 						end
 					end)
 
@@ -22384,7 +22286,7 @@ do
 		end)
 	end
 	t145.setBackpackRates = function(p831)
-		s2rV4Config.BackpackRateEsp = p831 == true
+		senaV4Config.BackpackRateEsp = p831 == true
 
 		if not t145.backpackRatesRunning then
 			t145.backpackRatesRunning = true
@@ -22404,13 +22306,13 @@ do
 						ScrollingFrame = LocalPlayer.PlayerGui.BackpackGui.Backpack.Main.Inventory.ScrollingFrame
 					end)
 
-					local __S2rV4Webhook = genv.__S2rV4Webhook
-					local S2rDiscord = ScrollingFrame and ScrollingFrame.Parent:FindFirstChild("S2rDiscord")
+					local __SenaV4Webhook = genv.__SenaV4Webhook
+					local SenaDiscord = ScrollingFrame and ScrollingFrame.Parent:FindFirstChild("SenaDiscord")
 
-					if ScrollingFrame and s2rV4Config.BackpackRateEsp and not S2rDiscord then
+					if ScrollingFrame and senaV4Config.BackpackRateEsp and not SenaDiscord then
 						local TextLabel = Instance.new("TextLabel")
 
-						TextLabel.Name = "S2rDiscord"
+						TextLabel.Name = "SenaDiscord"
 						TextLabel.BackgroundTransparency = 1
 						TextLabel.Position = UDim2.new(0.34, 0, 0.017, 0)
 						TextLabel.Size = UDim2.new(0.3, 0, 0.09, 0)
@@ -22422,14 +22324,14 @@ do
 						TextLabel.TextStrokeTransparency = 0
 						TextLabel.ZIndex = 40
 						TextLabel.Parent = ScrollingFrame.Parent
-					elseif S2rDiscord and not s2rV4Config.BackpackRateEsp then
-						S2rDiscord:Destroy()
+					elseif SenaDiscord and not senaV4Config.BackpackRateEsp then
+						SenaDiscord:Destroy()
 					end
 
 					if ScrollingFrame then
 						local t149 = {}
 
-						if s2rV4Config.BackpackRateEsp and EggRecords and Save and __S2rV4Webhook then
+						if senaV4Config.BackpackRateEsp and EggRecords and Save and __SenaV4Webhook then
 							local v3454 = (Save.Peek or Save.Get)()
 							local pairs_ = pairs
 							local EggInventory = v3454 and v3454.EggInventory or {}
@@ -22484,7 +22386,7 @@ do
 										SenaRate.Parent = child
 									end
 
-									SenaRate.Text = __S2rV4Webhook.compact(__S2rV4Webhook.rateOf(v3467)) .. "/s"
+									SenaRate.Text = __SenaV4Webhook.compact(__SenaV4Webhook.rateOf(v3467)) .. "/s"
 								elseif SenaRate then
 									SenaRate:Destroy()
 								end
@@ -22492,7 +22394,7 @@ do
 						end
 					end
 
-					if not s2rV4Config.BackpackRateEsp then
+					if not senaV4Config.BackpackRateEsp then
 						break
 					end
 
@@ -22551,7 +22453,7 @@ do
 			return v3480
 		end
 		local function v3481()
-			return s2rV4Config.ScrambleTradeInTrade or s2rV4Config.ScrambleTradeInReroll
+			return senaV4Config.ScrambleTradeInTrade or senaV4Config.ScrambleTradeInReroll
 		end
 		local function v3482(p832)
 			return ((tostring(p832 or ""):lower():match("^%s*(.-)%s*$") or ""):gsub("%s*egg$", ""))
@@ -22621,7 +22523,7 @@ do
 		end
 
 		local function v3498(p839)
-			local ScrambleTradeInBanners = s2rV4Config.ScrambleTradeInBanners
+			local ScrambleTradeInBanners = senaV4Config.ScrambleTradeInBanners
 
 			if type(ScrambleTradeInBanners) ~= "table" or #ScrambleTradeInBanners == 0 then
 				return true
@@ -22968,7 +22870,7 @@ do
 			t151.missing = #v3577 > 0 and v3490(v3577, ", ") or "None"
 
 			if #v3577 == 0 then
-				if s2rV4Config.ScrambleTradeInTrade then
+				if senaV4Config.ScrambleTradeInTrade then
 					t151.status = "Requirements complete, submitting"
 
 					local v3579, v3580 = v3557(v3574, v3576)
@@ -22981,7 +22883,7 @@ do
 				return
 			end
 
-			if s2rV4Config.ScrambleTradeInReroll and t151.free > 0 and os.clock() - t151.lastReroll > 3 then
+			if senaV4Config.ScrambleTradeInReroll and t151.free > 0 and os.clock() - t151.lastReroll > 3 then
 				t151.lastReroll = os.clock()
 				t151.status = "Rerolling the recipe"
 				t151.reroll()
@@ -23006,7 +22908,7 @@ do
 				task.wait(1)
 			end
 		end)
-		genv.__S2rV4ScrambleTradeIn = t151
+		genv.__SenaV4ScrambleTradeIn = t151
 	end
 
 	v3471()
@@ -23074,9 +22976,9 @@ do
 		t163.amInArena = amInArena
 
 		local function v3599()
-			local __S2rV4StealWantsCharacter = genv.__S2rV4StealWantsCharacter
+			local __SenaV4StealWantsCharacter = genv.__SenaV4StealWantsCharacter
 
-			return s2rV4Config.AutoSteal == true and __S2rV4StealWantsCharacter ~= nil and __S2rV4StealWantsCharacter() == true
+			return senaV4Config.AutoSteal == true and __SenaV4StealWantsCharacter ~= nil and __SenaV4StealWantsCharacter() == true
 		end
 
 		local t164 = {}
@@ -23213,12 +23115,12 @@ do
 				return nil
 			end
 
-			local __S2rV4IsBatTool = genv.__S2rV4IsBatTool or function(p860)
+			local __SenaV4IsBatTool = genv.__SenaV4IsBatTool or function(p860)
 				return p860:IsA("Tool") and p860:GetAttribute("IsBat") == true
 			end
 
 			for _, child in ipairs(v3634:GetChildren()) do
-				if not __S2rV4IsBatTool(child) then
+				if not __SenaV4IsBatTool(child) then
 					continue
 				end
 
@@ -23229,7 +23131,7 @@ do
 
 			if Backpack and v3633 then
 				for _, child in ipairs(Backpack:GetChildren()) do
-					if not __S2rV4IsBatTool(child) then
+					if not __SenaV4IsBatTool(child) then
 						continue
 					end
 
@@ -23458,8 +23360,8 @@ do
 
 		task.spawn(function()
 			while v16() do
-				if not s2rV4Config.ScrambleBossAuto or v3599() then
-					if s2rV4Config.ScrambleBossAuto and v3599() then
+				if not senaV4Config.ScrambleBossAuto or v3599() then
+					if senaV4Config.ScrambleBossAuto and v3599() then
 						t163.status = "Yielding to Auto Steal"
 
 						if amInArena() and os.clock() - n64 > 3 then
@@ -23536,7 +23438,7 @@ do
 		end)
 		task.spawn(function()
 			while v16() do
-				if s2rV4Config.AutoSteal and not s2rV4Config.ScrambleBossAuto and amInArena() then
+				if senaV4Config.AutoSteal and not senaV4Config.ScrambleBossAuto and amInArena() then
 					leaveArena()
 					task.wait(0.5)
 				end
@@ -23544,12 +23446,12 @@ do
 				task.wait(0.25)
 			end
 		end)
-		genv.__S2rV4ScrambleBoss = t163
+		genv.__SenaV4ScrambleBoss = t163
 	end
 
 	v3583()
 
-	local s2rPanels = { uiScale = 1 }
+	local senaPanels = {}
 
 	local function v3692()
 		game:GetService("UserInputService")
@@ -23557,26 +23459,25 @@ do
 		local Assets = require(ReplicatedStorage.Data.Assets)
 		local EggState2 = require(ReplicatedStorage.Client.EggState)
 		local Save = require(ReplicatedStorage.Shared.Save)
-		-- S2r Hub: near-black surfaces, violet accents, transparent outer canvas.
 		local t166 = {
-			strokeCol = Color3.fromRGB(117, 57, 190),
-			accent = Color3.fromRGB(156, 82, 255),
-			accentA = Color3.fromRGB(110, 48, 208),
-			accentB = Color3.fromRGB(190, 125, 255),
-			surface = Color3.fromRGB(13, 10, 20),
-			surfaceHi = Color3.fromRGB(27, 17, 41),
-			text = Color3.fromRGB(247, 243, 255),
-			btnText = Color3.fromRGB(222, 205, 243),
-			muted = Color3.fromRGB(174, 157, 192),
-			shadow = Color3.fromRGB(0, 0, 0),
-			obsTop = Color3.fromRGB(21, 12, 34),
-			obsMid = Color3.fromRGB(12, 9, 20),
-			obsLow = Color3.fromRGB(6, 5, 12),
-			btnBg = Color3.fromRGB(31, 20, 47),
-			btnHover = Color3.fromRGB(61, 32, 92),
-			inputBg = Color3.fromRGB(12, 9, 18),
-			switchOff = Color3.fromRGB(44, 32, 57),
-			good = Color3.fromRGB(196, 146, 255)
+			strokeCol = Color3.fromRGB(128, 71, 201),
+			accent = Color3.fromRGB(162, 91, 255),
+			accentA = Color3.fromRGB(117, 54, 199),
+			accentB = Color3.fromRGB(203, 142, 255),
+			surface = Color3.fromRGB(17, 12, 25),
+			surfaceHi = Color3.fromRGB(29, 20, 41),
+			text = Color3.fromRGB(235, 236, 245),
+			btnText = Color3.fromRGB(186, 184, 198),
+			muted = Color3.fromRGB(156, 154, 170),
+			shadow = Color3.fromRGB(4, 4, 8),
+			obsTop = Color3.fromRGB(24, 16, 36),
+			obsMid = Color3.fromRGB(16, 11, 25),
+			obsLow = Color3.fromRGB(11, 8, 19),
+			btnBg = Color3.fromRGB(33, 23, 47),
+			btnHover = Color3.fromRGB(48, 29, 73),
+			inputBg = Color3.fromRGB(13, 10, 21),
+			switchOff = Color3.fromRGB(46, 35, 59),
+			good = Color3.fromRGB(163, 230, 53)
 		}
 		local v3697 = t166
 
@@ -23584,8 +23485,8 @@ do
 			pcall(function()
 				if type(setthreadidentity) == "function" then
 					setthreadidentity(8)
-				elseif genv and type(genv.__S2rV4IdentitySetter) == "function" then
-					genv.__S2rV4IdentitySetter(8)
+				elseif genv and type(genv.__SenaV4IdentitySetter) == "function" then
+					genv.__SenaV4IdentitySetter(8)
 				end
 			end)
 		end
@@ -23775,7 +23676,7 @@ do
 			local n65 = 0
 
 			pcall(function()
-				n65 = s2rV4Config:getAreaEggValue(p879) or 0
+				n65 = senaV4Config:getAreaEggValue(p879) or 0
 			end)
 
 			if n65 > 0 then
@@ -24616,7 +24517,7 @@ do
 					if type(applyAutoPlace) == "function" then
 						applyAutoPlace(true)
 					elseif type(t24) == "table" and type(t24.AutoPlaceLoop) == "function" then
-						s2rV4Config.AutoPlace = true
+						senaV4Config.AutoPlace = true
 						task.spawn(t24.AutoPlaceLoop)
 					end
 				end)
@@ -25128,12 +25029,12 @@ do
 				sortBtn.TextColor3 = v3976 and Color3.fromRGB(255, 255, 255) or v3697.btnText
 			end
 
-			local __S2rV4StealMode = genv.__S2rV4StealMode or "Fly"
+			local __SenaV4StealMode = genv.__SenaV4StealMode or "Fly"
 			local pairs_2 = pairs
 			local modeBtns = t175.modeBtns or {}
 
 			for k, modeBtn in pairs_2(modeBtns) do
-				local v3982 = __S2rV4StealMode == k
+				local v3982 = __SenaV4StealMode == k
 
 				modeBtn.BackgroundColor3 = v3982 and v3697.accent or Color3.fromRGB(255, 255, 255)
 				modeBtn.BackgroundTransparency = v3982 and 0.12 or 0.9
@@ -25552,7 +25453,7 @@ do
 				UIStroke.Transparency = 0.7
 				TextButton2.MouseButton1Click:Connect(function()
 					v3698()
-					genv.__S2rV4StealMode = p932
+					genv.__SenaV4StealMode = p932
 					pcall(function()
 						if type(applyStealMode) == "function" then
 							applyStealMode(p932)
@@ -25643,10 +25544,10 @@ do
 					return
 				end
 
-				local __S2rV4EggRuntime = genv.__S2rV4EggRuntime
+				local __SenaV4EggRuntime = genv.__SenaV4EggRuntime
 
-				if __S2rV4EggRuntime and type(__S2rV4EggRuntime.queueManual) == "function" then
-					local v4044 = __S2rV4EggRuntime:queueManual(t189)
+				if __SenaV4EggRuntime and type(__SenaV4EggRuntime.queueManual) == "function" then
+					local v4044 = __SenaV4EggRuntime:queueManual(t189)
 
 					t175.picked = {}
 					t175.statusBtn.Text = "Queued " .. v4044
@@ -27229,7 +27130,7 @@ do
 					v4264 = 0.82
 				end
 
-				UIScale.Scale = math.clamp(v4264 * (s2rPanels.uiScale or 1), 0.42, 1)
+				UIScale.Scale = math.clamp(v4264, 0.48, 1)
 
 				local Scale = UIScale.Scale
 				local v4266 = v4242.w * Scale
@@ -27266,7 +27167,7 @@ do
 			ImageLabel.Position = UDim2.fromScale(0.5, 0.5)
 			ImageLabel.Size = UDim2.new(1, 40, 1, 40)
 			ImageLabel.BackgroundTransparency = 1
-			ImageLabel.Image = "" -- no drop-shadow/background artwork
+			ImageLabel.Image = ""
 			ImageLabel.ImageColor3 = t166.shadow
 			ImageLabel.ImageTransparency = 0.52
 			ImageLabel.ScaleType = Enum.ScaleType.Slice
@@ -27278,8 +27179,8 @@ do
 
 			Frame2.Size = UDim2.fromScale(1, 1)
 			Frame2.Position = UDim2.fromScale(0, 0)
-			Frame2.BackgroundColor3 = t166.surface
-			Frame2.BackgroundTransparency = 0.08
+			Frame2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+			Frame2.BackgroundTransparency = 0
 			Frame2.BorderSizePixel = 0
 			Frame2.ZIndex = 1
 			Frame2.Parent = Frame
@@ -27298,13 +27199,13 @@ do
 
 			UIStroke.Color = t166.strokeCol
 			UIStroke.Thickness = 1
-			UIStroke.Transparency = 0.35
+			UIStroke.Transparency = 0.72
 
 			local TextLabel5 = Instance.new("TextLabel")
 
 			TextLabel5.BackgroundTransparency = 1
-			TextLabel5.Position = UDim2.fromOffset(52, 12)
-			TextLabel5.Size = UDim2.fromOffset(160, 22)
+			TextLabel5.Position = UDim2.fromOffset(42, 12)
+			TextLabel5.Size = UDim2.fromOffset(200, 22)
 			TextLabel5.Font = Enum.Font.GothamBold
 			TextLabel5.TextSize = 16
 			TextLabel5.TextXAlignment = Enum.TextXAlignment.Left
@@ -27312,17 +27213,24 @@ do
 			TextLabel5.Text = "S2r Hub"
 			TextLabel5.Parent = Frame2
 
-			-- Clear 30px S2r logo, generated directly with Roblox UI widgets.
-			s2rMakeBrandmark(Frame2, UDim2.fromOffset(12, 8), 30)
+			local ImageLabel2 = Instance.new("ImageLabel")
 
-			local accentRule = Instance.new("Frame")
-			accentRule.Name = "S2rAccentRule"
-			accentRule.Position = UDim2.new(0, 12, 0, 39)
-			accentRule.Size = UDim2.new(1, -24, 0, 1)
-			accentRule.BackgroundColor3 = t166.accentA
-			accentRule.BackgroundTransparency = 0.35
-			accentRule.BorderSizePixel = 0
-			accentRule.Parent = Frame2
+			ImageLabel2.AnchorPoint = Vector2.new(0, 0.5)
+			ImageLabel2.Position = UDim2.fromOffset(11, 23)
+			ImageLabel2.Size = UDim2.fromOffset(20, 20)
+			ImageLabel2.BackgroundTransparency = 1
+			ImageLabel2.Image = ""
+			ImageLabel2.ScaleType = Enum.ScaleType.Fit
+			ImageLabel2.Parent = Frame2
+			local mark = Instance.new("TextLabel")
+			mark.Name = "S2rInlineMark"
+			mark.BackgroundTransparency = 1
+			mark.Size = UDim2.fromScale(1, 1)
+			mark.Font = Enum.Font.GothamBlack
+			mark.Text = "S²"
+			mark.TextColor3 = t166.accent
+			mark.TextScaled = true
+			mark.Parent = ImageLabel2
 
 			local Frame3 = Instance.new("Frame")
 
@@ -27368,17 +27276,15 @@ do
 			UIStroke3.Thickness = 1
 			UIStroke3.Transparency = 0.6
 
-			local copyIcon = Instance.new("TextLabel")
-			copyIcon.Name = "S2rCopyIcon"
-			copyIcon.AnchorPoint = Vector2.new(0, 0.5)
-			copyIcon.Position = UDim2.new(0, 10, 0.5, 0)
-			copyIcon.Size = UDim2.fromOffset(14, 15)
-			copyIcon.BackgroundTransparency = 1
-			copyIcon.Text = "◆"
-			copyIcon.Font = Enum.Font.GothamBold
-			copyIcon.TextSize = 13
-			copyIcon.TextColor3 = t166.accentB
-			copyIcon.Parent = TextButton
+			local ImageLabel3 = Instance.new("ImageLabel")
+
+			ImageLabel3.AnchorPoint = Vector2.new(0.5, 0.5)
+			ImageLabel3.Position = UDim2.new(0, 12, 0.5, 0)
+			ImageLabel3.Size = UDim2.fromOffset(12, 12)
+			ImageLabel3.BackgroundTransparency = 1
+			ImageLabel3.Image = "rbxassetid://94434236999817"
+			ImageLabel3.ScaleType = Enum.ScaleType.Fit
+			ImageLabel3.Parent = TextButton
 
 			local TextLabel7 = Instance.new("TextLabel")
 
@@ -27389,7 +27295,7 @@ do
 			TextLabel7.TextSize = 12
 			TextLabel7.TextXAlignment = Enum.TextXAlignment.Center
 			TextLabel7.TextColor3 = t166.text
-			TextLabel7.Text = "Copy S2r Hub Name"
+			TextLabel7.Text = "Copy S2r Hub"
 			TextLabel7.Parent = TextButton
 			TextButton.MouseButton1Click:Connect(function()
 				pcall(function()
@@ -27554,377 +27460,34 @@ do
 				task.wait(2)
 			end
 		end)
-		s2rPanels.windows = windows
-		s2rPanels.openLogs = function()
+		senaPanels.windows = windows
+		senaPanels.openLogs = function()
 			v4301("logs")
 		end
-		s2rPanels.openBoard = function()
+		senaPanels.openBoard = function()
 			v4301("eggs")
 		end
-		s2rPanels.openInventory = function()
+		senaPanels.openInventory = function()
 			v4301("inventory")
 		end
-		s2rPanels.openChecker = function()
+		senaPanels.openChecker = function()
 			v4301("checker")
 		end
-		s2rPanels.openAnalyst = function()
+		senaPanels.openAnalyst = function()
 			v4301("eggdata")
 		end
-		s2rPanels.openAll = function()
+		senaPanels.openAll = function()
 			v4304()
 		end
-		s2rPanels.closeAll = function()
+		senaPanels.closeAll = function()
 			v4307()
 		end
-		-- UI quality-of-life controls: fit on mobile, recenter, and refresh existing panels.
-		s2rPanels.setScale = function(percent)
-			s2rPanels.uiScale = math.clamp((tonumber(percent) or 100) / 100, 0.6, 1)
-			for _, panel in pairs(windows) do
-				if panel.gui and panel.gui.Parent and panel.fitScale then
-					pcall(panel.fitScale, false)
-				end
-			end
-		end
-		s2rPanels.resetPositions = function()
-			for _, panel in pairs(windows) do
-				if panel.gui and panel.gui.Parent and panel.fitScale then
-					pcall(panel.fitScale, true)
-				end
-			end
-		end
-		s2rPanels.refreshOpen = function()
-			for id, panel in pairs(windows) do
-				if panel.gui and panel.gui.Parent and panel.gui.Enabled then
-					pcall(v3771, id)
-				end
-			end
-		end
 		pcall(function()
-			getgenv().S2rPanels = s2rPanels
+			getgenv().SenaPanels = senaPanels
 		end)
 	end
 
 	v3692()
-
-	-- Persistent, mobile-friendly launcher. This ScreenGui remains enabled when the
-	-- library closes or hides its own interface. It contains its own S2r logo.
-	local function createS2rDock()
-		local UIS = game:GetService("UserInputService")
-		local TweenService = game:GetService("TweenService")
-		local host = LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
-		for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui"), game:GetService("CoreGui")}) do
-			if root then
-				local old = root:FindFirstChild("S2rHubPersistentDock")
-				if old then pcall(function() old:Destroy() end) end
-			end
-		end
-
-		local dockGui = Instance.new("ScreenGui")
-		dockGui.Name = "S2rHubPersistentDock"
-		dockGui.ResetOnSpawn = false
-		dockGui.IgnoreGuiInset = true
-		dockGui.DisplayOrder = 1000000
-		dockGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-		dockGui.Parent = host
-
-		local pill = Instance.new("TextButton")
-		pill.Name = "S2rReopenButton"
-		pill.Position = UDim2.new(0, 16, 0.25, 0)
-		pill.Size = UDim2.fromOffset(54, 54)
-		pill.BorderSizePixel = 0
-		pill.BackgroundColor3 = Color3.fromRGB(15, 9, 25)
-		pill.BackgroundTransparency = 0.05
-		pill.Text = ""
-		pill.Active = true
-		pill.AutoButtonColor = false
-		pill.Parent = dockGui
-		Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 14)
-
-		local stroke = Instance.new("UIStroke")
-		stroke.Name = "VioletOutline"
-		stroke.Color = Color3.fromRGB(164, 88, 255)
-		stroke.Thickness = 1.5
-		stroke.Transparency = 0.12
-		stroke.Parent = pill
-
-		local highlight = Instance.new("UIGradient")
-		highlight.Rotation = 0
-		highlight.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromRGB(38, 19, 56)),
-			ColorSequenceKeypoint.new(1, Color3.fromRGB(11, 8, 20))
-		})
-		highlight.Parent = pill
-
-		s2rMakeBrandmark(pill, UDim2.fromOffset(6, 6), 42)
-
-		local title = Instance.new("TextLabel")
-		title.Name = "S2rDockTitle"
-		title.BackgroundTransparency = 1
-		title.Position = UDim2.fromOffset(50, 5)
-		title.Size = UDim2.fromOffset(78, 20)
-		title.Text = "S2r Hub"
-		title.Font = Enum.Font.GothamBold
-		title.TextSize = 14
-		title.TextXAlignment = Enum.TextXAlignment.Left
-		title.TextColor3 = Color3.fromRGB(245, 236, 255)
-		title.Parent = pill
-
-		local caption = Instance.new("TextLabel")
-		caption.Name = "S2rDockHint"
-		caption.BackgroundTransparency = 1
-		caption.Position = UDim2.fromOffset(50, 25)
-		caption.Size = UDim2.fromOffset(82, 14)
-		caption.Text = "TAP TO HIDE"
-		caption.Font = Enum.Font.GothamMedium
-		caption.TextSize = 9
-		caption.TextXAlignment = Enum.TextXAlignment.Left
-		caption.TextColor3 = Color3.fromRGB(195, 149, 250)
-		caption.Parent = pill
-
-		local compact = Instance.new("TextButton")
-		compact.Name = "S2rCompactToggle"
-		compact.Position = UDim2.new(1, -22, 0, 5)
-		compact.Size = UDim2.fromOffset(17, 17)
-		compact.BackgroundTransparency = 1
-		compact.Text = "−"
-		compact.Font = Enum.Font.GothamBold
-		compact.TextSize = 16
-		compact.TextColor3 = Color3.fromRGB(199, 156, 255)
-		compact.ZIndex = 60
-		compact.Parent = pill
-
-		local compactMode = true
-		title.Visible = false
-		caption.Visible = false
-		compact.Visible = false
-		local lastMainGui = nil
-		local lastMainRoot = nil
-		local lastMainChain = {}
-		local nextGuiSearchAt = 0
-		local busy = false
-		local dead = false
-		local dragStart, startPos, dragging, dragInput
-		local suppressClickUntil = 0
-		local connections = {}
-
-		local function captureTitle(gui, label)
-			lastMainGui = gui
-			lastMainRoot = nil
-			lastMainChain = {}
-			local item = label
-			while item and item ~= gui do
-				if item:IsA("GuiObject") then
-					lastMainChain[#lastMainChain + 1] = item
-					lastMainRoot = item
-				end
-				item = item.Parent
-			end
-		end
-
-		local function getGui()
-			if lastMainGui and lastMainGui.Parent then
-				local alive = lastMainRoot and lastMainRoot.Parent
-				if alive then
-					for _, item in ipairs(lastMainChain) do
-						if not item.Parent then alive = false break end
-					end
-				end
-				if alive then return lastMainGui, lastMainRoot end
-			end
-			if os.clock() < nextGuiSearchAt then return nil, nil end
-			nextGuiSearchAt = os.clock() + 1.5
-			lastMainGui, lastMainRoot, lastMainChain = nil, nil, {}
-			for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui"), game:GetService("CoreGui")}) do
-				for _, descendant in ipairs(root:GetDescendants()) do
-					if (descendant:IsA("TextLabel") or descendant:IsA("TextButton")) and
-						(descendant.Text == "S2r Hub" or descendant.Text == "      S2r Hub") then
-						local gui = descendant:FindFirstAncestorWhichIsA("ScreenGui")
-						if gui and gui ~= dockGui and not gui.Name:find("__SNE_Panel_", 1, true) then
-							captureTitle(gui, descendant)
-							return lastMainGui, lastMainRoot
-						end
-					end
-				end
-			end
-			return nil, nil
-		end
-
-		local function isOpen()
-			local gui = getGui()
-			if not gui or not gui.Enabled then return false end
-			for _, item in ipairs(lastMainChain) do
-				if not item.Visible then return false end
-			end
-			return true
-		end
-
-		local function updateHint()
-			if dead then return end
-			local open = isOpen()
-			caption.Text = busy and "RESTORING..." or open and "TAP TO HIDE" or "TAP TO OPEN"
-			-- Keep the game screen clean: reveal the launcher only after the hub is closed.
-			pill.Visible = not open or busy
-		end
-
-		local function fitOnScreen()
-			local camera = workspace.CurrentCamera
-			local vp = camera and camera.ViewportSize or Vector2.new(800, 500)
-			local width = pill.Size.X.Offset
-			local px = pill.Position.X.Scale * vp.X + pill.Position.X.Offset
-			local py = pill.Position.Y.Scale * vp.Y + pill.Position.Y.Offset
-			pill.Position = UDim2.fromOffset(
-				math.floor(math.clamp(px, 8, math.max(8, vp.X - width - 8))),
-				math.floor(math.clamp(py, 36, math.max(36, vp.Y - 60)))
-			)
-		end
-
-		local function toggle(forceShow)
-			if dead or busy then return end
-			local gui, root = getGui()
-			local show = forceShow
-			if show == nil then show = not isOpen() end
-			if gui then
-				gui.Enabled = show
-				if show then
-					for _, item in ipairs(lastMainChain) do
-						if item and item.Parent and not item.Visible then
-							item.Visible = true
-						end
-					end
-				end
-				updateHint()
-				return
-			end
-			if show then
-				-- The library may destroy its window when X is clicked. Restore
-				-- from the GitHub source provided by the user, not a random URL.
-				busy = true
-				updateHint()
-				task.spawn(function()
-					local source = genv.S2rHubSourceURL or "https://raw.githubusercontent.com/preexmon-collab/Khay-Hub/refs/heads/main/S2r_Hub.lua"
-					local ok, result = pcall(function()
-						local code = game:HttpGet(source)
-						local chunk = loadstring(code)
-						assert(type(chunk) == "function", "Invalid S2r Hub source")
-						chunk()
-					end)
-					busy = false
-					if not ok then
-						warn("[S2r Hub] Could not restore the main GUI: " .. tostring(result))
-					end
-					updateHint()
-				end)
-			end
-		end
-
-		local function toggleCompact()
-			compactMode = not compactMode
-			local targetWidth = compactMode and 54 or 154
-			pill.Size = UDim2.fromOffset(targetWidth, 54)
-			title.Visible = not compactMode
-			caption.Visible = not compactMode
-			compact.Visible = not compactMode
-			compact.Text = compactMode and "+" or "−"
-			compact.Position = UDim2.new(1, -19, 0, 2)
-			compact.TextSize = compactMode and 11 or 16
-			fitOnScreen()
-		end
-
-		local function recordConnection(connection)
-			connections[#connections + 1] = connection
-		end
-		recordConnection(compact.MouseButton1Click:Connect(function()
-			suppressClickUntil = os.clock() + 0.22
-			toggleCompact()
-		end))
-		recordConnection(pill.MouseButton1Click:Connect(function()
-			if not dragging and os.clock() >= suppressClickUntil then
-				toggle()
-			end
-		end))
-		recordConnection(pill.MouseEnter:Connect(function()
-			TweenService:Create(stroke, TweenInfo.new(0.15), {Transparency = 0, Thickness = 2.3}):Play()
-		end))
-		recordConnection(pill.MouseLeave:Connect(function()
-			TweenService:Create(stroke, TweenInfo.new(0.2), {Transparency = 0.12, Thickness = 1.5}):Play()
-		end))
-
-		recordConnection(pill.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				dragStart = input.Position
-				startPos = pill.Position
-				dragInput = input
-				dragging = false
-			end
-		end))
-		recordConnection(UIS.InputChanged:Connect(function(input)
-			if dragStart and startPos and
-				(input == dragInput or input.UserInputType == Enum.UserInputType.MouseMovement and dragInput and dragInput.UserInputType == Enum.UserInputType.MouseButton1) then
-				local delta = input.Position - dragStart
-				if delta.Magnitude >= 7 then
-					dragging = true
-					suppressClickUntil = os.clock() + 0.3
-				end
-				if dragging then
-					pill.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-					fitOnScreen()
-				end
-			end
-		end))
-		recordConnection(UIS.InputEnded:Connect(function(input)
-			if dragInput and (input == dragInput or input.UserInputType == Enum.UserInputType.MouseButton1) then
-					if dragging then suppressClickUntil = os.clock() + 0.3 end
-					dragInput, dragStart, startPos, dragging = nil, nil, nil, false
-			end
-		end))
-		recordConnection(UIS.InputBegan:Connect(function(input, processed)
-			if not processed and input.KeyCode == Enum.KeyCode.RightShift then
-				toggle()
-			end
-		end))
-		if workspace.CurrentCamera then
-			recordConnection(workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fitOnScreen))
-		end
-
-		task.spawn(function()
-			while not dead and dockGui.Parent and v16() do
-				updateHint()
-				task.wait(0.8)
-			end
-		end)
-
-		local dock = {}
-		dock.capture = function(gui, titleLabel)
-			if gui and gui.Parent and titleLabel then
-				captureTitle(gui, titleLabel)
-				updateHint()
-			end
-		end
-		dock.toggle = toggle
-		dock.mainGui = function()
-			return getGui()
-		end
-		dock.show = function() toggle(true) end
-		dock.hide = function() toggle(false) end
-		dock.compact = toggleCompact
-		dock.center = function()
-			pill.Position = UDim2.new(0, 16, 0.25, 0)
-			fitOnScreen()
-		end
-		dock.destroy = function()
-			if dead then return end
-			dead = true
-			for _, conn in ipairs(connections) do pcall(function() conn:Disconnect() end) end
-			if dockGui and dockGui.Parent then dockGui:Destroy() end
-		end
-		genv.__S2rHubDockCleanup = dock.destroy
-		genv.S2rHubUI = dock
-		fitOnScreen()
-		updateHint()
-		return dock
-	end
-
-	local s2rDock = createS2rDock()
 
 	local function v4315()
 		pcall(function()
@@ -27938,20 +27501,20 @@ do
 		genv.ChloeX_ReopenPrompt = nil
 		genv.ChloeX_Instance = nil
 
-		local S2rLibOverride = genv.S2rLibOverride or genv.SenaLibOverride -- legacy library compatibility
+		local SenaLibOverride = genv.SenaLibOverride
 
 		do
-			if type(S2rLibOverride) ~= "table" then
+			if type(SenaLibOverride) ~= "table" then
 				local ok, result = pcall(function()
 					return loadstring(game:HttpGet("https://senahub.xyz/raw/libsenuy"))()
 				end)
 
-				S2rLibOverride = ok and type(result) == "table" and result or nil
+				SenaLibOverride = ok and type(result) == "table" and result or nil
 			end
 		end
 
-		if not S2rLibOverride then
-			warn("[S2r Hub] UI library failed to load")
+		if not SenaLibOverride then
+			warn("[Sena] UI library failed to load")
 
 			return
 		end
@@ -28132,17 +27695,17 @@ do
 		end
 
 		t24.AutoPlaceLoop = function()
-			if s2rV4Config.IsAutoPlaceWorkerRunning then
+			if senaV4Config.IsAutoPlaceWorkerRunning then
 				return
 			end
 
-			s2rV4Config.IsAutoPlaceWorkerRunning = true
+			senaV4Config.IsAutoPlaceWorkerRunning = true
 
-			while s2rV4Config.AutoPlace and v16() do
+			while senaV4Config.AutoPlace and v16() do
 				task.wait(1.5)
 
 				local ok, result = pcall(function()
-					if s2rV4Config.IsStealing then
+					if senaV4Config.IsStealing then
 						return
 					end
 
@@ -28220,10 +27783,10 @@ do
 
 								local v4394
 
-								if #s2rV4Config.PlaceRarities == 0 or table.find(s2rV4Config.PlaceRarities, "None") or table.find(s2rV4Config.PlaceRarities, "All") then
+								if #senaV4Config.PlaceRarities == 0 or table.find(senaV4Config.PlaceRarities, "None") or table.find(senaV4Config.PlaceRarities, "All") then
 									v4394 = true
 								else
-									v4394 = table.find(s2rV4Config.PlaceRarities, s17) ~= nil
+									v4394 = table.find(senaV4Config.PlaceRarities, s17) ~= nil
 								end
 
 								local v4395 = tonumber(v.Kg) or tonumber(v.Weight) or tonumber(v.kg)
@@ -28268,31 +27831,31 @@ do
 					end
 
 					local function v4399()
-						local __S2rV4StealWantsCharacter = genv.__S2rV4StealWantsCharacter
+						local __SenaV4StealWantsCharacter = genv.__SenaV4StealWantsCharacter
 
-						if __S2rV4StealWantsCharacter and __S2rV4StealWantsCharacter() then
+						if __SenaV4StealWantsCharacter and __SenaV4StealWantsCharacter() then
 							return true
 						end
 
-						local __S2rV4DronesWantCharacter = genv.__S2rV4DronesWantCharacter
+						local __SenaV4DronesWantCharacter = genv.__SenaV4DronesWantCharacter
 
-						return __S2rV4DronesWantCharacter ~= nil and __S2rV4DronesWantCharacter() == true
+						return __SenaV4DronesWantCharacter ~= nil and __SenaV4DronesWantCharacter() == true
 					end
 
-					if s2rV4Config.IsStealing or v4399() then
+					if senaV4Config.IsStealing or v4399() then
 						return
 					end
 
-					s2rV4Config.IsPlacing = true
+					senaV4Config.IsPlacing = true
 
-					local __S2rV4TreadmillManager = genv.__S2rV4TreadmillManager
+					local __SenaV4TreadmillManager = genv.__SenaV4TreadmillManager
 
-					if __S2rV4TreadmillManager and __S2rV4TreadmillManager.activeTreadmill ~= nil then
+					if __SenaV4TreadmillManager and __SenaV4TreadmillManager.activeTreadmill ~= nil then
 						local v4403 = os.clock() + 5
 
-						while __S2rV4TreadmillManager.activeTreadmill ~= nil and os.clock() < v4403 do
+						while __SenaV4TreadmillManager.activeTreadmill ~= nil and os.clock() < v4403 do
 							pcall(function()
-								__S2rV4TreadmillManager:_requestUnequip()
+								__SenaV4TreadmillManager:_requestUnequip()
 							end)
 							task.wait(0.3)
 						end
@@ -28319,7 +27882,7 @@ do
 					end
 
 					local function v4407()
-						return not s2rV4Config.AutoPlace or s2rV4Config.IsStealing or v4399()
+						return not senaV4Config.AutoPlace or senaV4Config.IsStealing or v4399()
 					end
 
 					if HumanoidRootPart then
@@ -28377,7 +27940,7 @@ do
 					local v4419, v4420, v4421 = ipairs(t207)
 
 					for _, v in v4419, v4420, v4421 do
-						if not s2rV4Config.AutoPlace or v4410 then
+						if not senaV4Config.AutoPlace or v4410 then
 							break
 						end
 
@@ -28465,8 +28028,8 @@ do
 								continue
 							end
 
-							if s2rV4Config.AutoPlace then
-								s2rV4Config.AutoPlace = false
+							if senaV4Config.AutoPlace then
+								senaV4Config.AutoPlace = false
 							end
 
 							v4410 = true
@@ -28489,27 +28052,27 @@ do
 					end
 				end)
 
-				s2rV4Config.IsPlacing = false
+				senaV4Config.IsPlacing = false
 
 				if not ok then
 					warn("Auto Place Error: " .. tostring(result))
 				end
 			end
 
-			s2rV4Config.IsAutoPlaceWorkerRunning = false
+			senaV4Config.IsAutoPlaceWorkerRunning = false
 		end
 
 		do
 			t24.AutoHatchLoop = function()
-				if s2rV4Config.IsAutoHatchWorkerRunning then
+				if senaV4Config.IsAutoHatchWorkerRunning then
 					return
 				end
 
-				s2rV4Config.IsAutoHatchWorkerRunning = true
+				senaV4Config.IsAutoHatchWorkerRunning = true
 				task.spawn(function()
 					local t209 = {}
 
-					while s2rV4Config.AutoHatch and v16() do
+					while senaV4Config.AutoHatch and v16() do
 						task.wait(1.5)
 						pcall(function()
 							local EggState2 = require(game:GetService("ReplicatedStorage").Client.EggState)
@@ -28530,7 +28093,7 @@ do
 							local now = os.time()
 
 							for _, v in ipairs(t210) do
-								if not s2rV4Config.AutoHatch then
+								if not senaV4Config.AutoHatch then
 									break
 								end
 
@@ -28558,7 +28121,7 @@ do
 						end)
 					end
 
-					s2rV4Config.IsAutoHatchWorkerRunning = false
+					senaV4Config.IsAutoHatchWorkerRunning = false
 				end)
 			end
 		end
@@ -28592,26 +28155,26 @@ do
 					return Rarity and (Rarity.DisplayName or Rarity._id) or nil
 				end
 				local function v4466()
-					if s2rV4Config.IsStealing == true or s2rV4Config.IsPlacing == true then
+					if senaV4Config.IsStealing == true or senaV4Config.IsPlacing == true then
 						return true
 					end
 
-					local __S2rV4StealWantsCharacter = genv.__S2rV4StealWantsCharacter
+					local __SenaV4StealWantsCharacter = genv.__SenaV4StealWantsCharacter
 
-					if __S2rV4StealWantsCharacter and __S2rV4StealWantsCharacter() then
+					if __SenaV4StealWantsCharacter and __SenaV4StealWantsCharacter() then
 						return true
 					end
 
-					local __S2rV4DronesWantCharacter = genv.__S2rV4DronesWantCharacter
+					local __SenaV4DronesWantCharacter = genv.__SenaV4DronesWantCharacter
 
-					if __S2rV4DronesWantCharacter ~= nil and __S2rV4DronesWantCharacter() == true then
+					if __SenaV4DronesWantCharacter ~= nil and __SenaV4DronesWantCharacter() == true then
 						return true
 					end
 
 					return false
 				end
 
-				local v4469 = s2rV4Config.MutationChoice == "Fractured" and "Boss" or "Scrambled"
+				local v4469 = senaV4Config.MutationChoice == "Fractured" and "Boss" or "Scrambled"
 
 				local function v4470()
 					for _, v in ipairs({
@@ -28665,7 +28228,7 @@ do
 
 				if not v4481 then
 					if not u4453 then
-						warn("[AutoMutation] " .. tostring(s2rV4Config.MutationChoice or "Scrambled") .. " consumable habis / gak ada di inventory - ronde di-skip.")
+						warn("[AutoMutation] " .. tostring(senaV4Config.MutationChoice or "Scrambled") .. " consumable habis / gak ada di inventory - ronde di-skip.")
 						u4453 = true
 					end
 
@@ -28694,9 +28257,9 @@ do
 					return
 				end
 
-				local MutationSpecies = s2rV4Config.MutationSpecies
+				local MutationSpecies = senaV4Config.MutationSpecies
 				local v4486 = type(MutationSpecies) == "table" and #MutationSpecies > 0
-				local MutationRarities = s2rV4Config.MutationRarities
+				local MutationRarities = senaV4Config.MutationRarities
 				local v4488 = type(MutationRarities) == "table" and #MutationRarities > 0
 
 				for k, v in pairs(v4484) do
@@ -28787,7 +28350,7 @@ do
 									if result.Success == true then
 										task.wait(0.25)
 
-										if not v4508 and s2rV4Config.MutationRetry and not (n80 >= 40) then
+										if not v4508 and senaV4Config.MutationRetry and not (n80 >= 40) then
 											continue
 										end
 									end
@@ -28807,33 +28370,33 @@ do
 
 		do
 			t24.AutoMutationLoop = function()
-				if s2rV4Config.IsAutoMutationWorkerRunning then
+				if senaV4Config.IsAutoMutationWorkerRunning then
 					return
 				end
 
-				s2rV4Config.IsAutoMutationWorkerRunning = true
+				senaV4Config.IsAutoMutationWorkerRunning = true
 				task.spawn(function()
-					while s2rV4Config.AutoMutation and v16() do
+					while senaV4Config.AutoMutation and v16() do
 						task.wait(1)
 						pcall(t24.mutationSweep)
 					end
 
-					s2rV4Config.IsAutoMutationWorkerRunning = false
+					senaV4Config.IsAutoMutationWorkerRunning = false
 				end)
 			end
 		end
 
 		do
 			t24.RingEventLoop = function()
-				if not s2rV4Config.IsRingEventRunning then
-					s2rV4Config.IsRingEventRunning = true
+				if not senaV4Config.IsRingEventRunning then
+					senaV4Config.IsRingEventRunning = true
 					task.spawn(function()
 						local cFrame = cFrameNew(544.76, 71.5, -416.48)
 						local cFrame2 = cFrameNew(602, 70.78, -372)
 						local cFrame3 = cFrameNew(5573, 70.77, -363)
 
 						local function v4514()
-							return not s2rV4Config.AutoRingEvent or not v16()
+							return not senaV4Config.AutoRingEvent or not v16()
 						end
 						local function v4515(p974)
 							if v4514() then
@@ -28869,7 +28432,7 @@ do
 							break
 						end
 
-						s2rV4Config.IsRingEventRunning = false
+						senaV4Config.IsRingEventRunning = false
 					end)
 
 					return
@@ -28986,7 +28549,7 @@ do
 						return t211
 					end
 					local function v4603(p977, p978)
-						if not s2rV4Config.AutoSell then
+						if not senaV4Config.AutoSell then
 							return false, "toggle Auto Sell Pet udah OFF", "global"
 						end
 
@@ -29020,7 +28583,7 @@ do
 							return false, "pet ini udah gak ada di inventory", "pet"
 						end
 
-						local SellPetMaxRate = s2rV4Config.SellPetMaxRate or 0
+						local SellPetMaxRate = senaV4Config.SellPetMaxRate or 0
 
 						if SellPetMaxRate > 0 then
 							if SellPetMaxRate < v4579({
@@ -29047,7 +28610,7 @@ do
 						return false, "pet ini sedang dipasang", "pet"
 					end
 
-					while s2rV4Config.AutoSell and v16() do
+					while senaV4Config.AutoSell and v16() do
 						local ok, result = pcall(function()
 							if not v198() then
 								return
@@ -29082,7 +28645,7 @@ do
 									if n82 % 250 == 0 then
 										RunService.Heartbeat:Wait()
 
-										if not s2rV4Config.AutoSell then
+										if not senaV4Config.AutoSell then
 											return
 										end
 									end
@@ -29099,7 +28662,7 @@ do
 										local DisplayName2 = Rarity and (Rarity.DisplayName or Rarity._id or Rarity.Name) or "Unknown"
 										local v4629 = v211(DisplayName, DisplayName2, v4611, v4612)
 										local v4630 = true
-										local SellPetMaxRate = s2rV4Config.SellPetMaxRate or 0
+										local SellPetMaxRate = senaV4Config.SellPetMaxRate or 0
 
 										if SellPetMaxRate > 0 then
 											v4630 = v4579({
@@ -29201,7 +28764,7 @@ do
 			local u4650 = false
 
 			local function v4651()
-				if not s2rV4Config.AutoSellEgg then
+				if not senaV4Config.AutoSellEgg then
 					return false
 				end
 
@@ -29240,7 +28803,7 @@ do
 					local v4663 = type(v) == "table" and Directory[v.AssetCategory]
 					local DisplayName = v4663 and v4663.Rarity and (v4663.Rarity.DisplayName or v4663.Rarity._id)
 					local v4665 = true
-					local SellEggMaxRate = s2rV4Config.SellEggMaxRate or 0
+					local SellEggMaxRate = senaV4Config.SellEggMaxRate or 0
 
 					if SellEggMaxRate > 0 and type(v) == "table" then
 						v4665 = v4579({
@@ -29262,7 +28825,7 @@ do
 				return false
 			end
 
-			genv.__S2rV4IsAutoSellEggBusy = function()
+			genv.__SenaV4IsAutoSellEggBusy = function()
 				return u4650 or v4651()
 			end
 			t24.startAutoSellEggLoop = function()
@@ -29275,18 +28838,18 @@ do
 						local Remotes = require(ReplicatedStorage2.Shared.Remotes)
 						local Save = require(ReplicatedStorage2.Shared.Save)
 
-						while s2rV4Config.AutoSellEgg and v16() do
+						while senaV4Config.AutoSellEgg and v16() do
 							local v4672 = v205(v4521)
 							local v4673 = (Save.Peek or Save.Get)()
 							local EggInventory = v4673 and v4673.EggInventory
 
 							if v4672 and type(EggInventory) == "table" and v198() then
 								for k, v in pairs(EggInventory) do
-									if s2rV4Config.AutoSellEgg and v198() then
+									if senaV4Config.AutoSellEgg and v198() then
 										local v4677 = type(v) == "table" and Directory[v.AssetCategory]
 										local DisplayName = v4677 and v4677.Rarity and (v4677.Rarity.DisplayName or v4677.Rarity._id)
 										local v4679 = true
-										local SellEggMaxRate = s2rV4Config.SellEggMaxRate or 0
+										local SellEggMaxRate = senaV4Config.SellEggMaxRate or 0
 
 										if SellEggMaxRate > 0 and type(v) == "table" then
 											v4679 = v4579({
@@ -29307,8 +28870,8 @@ do
 										if v198() then
 											u4650 = true
 
-											if genv.__S2rV4TreadmillManager and genv.__S2rV4TreadmillManager.activeTreadmill ~= nil then
-												genv.__S2rV4TreadmillManager:_cancelIdle(true)
+											if genv.__SenaV4TreadmillManager and genv.__SenaV4TreadmillManager.activeTreadmill ~= nil then
+												genv.__SenaV4TreadmillManager:_cancelIdle(true)
 												task.wait(0.25)
 											end
 
@@ -29392,59 +28955,59 @@ do
 			v4524 = v4326()
 			v4525 = v4330(v4320(t213))
 			v4526 = function(p981)
-				s2rV4Config.AutoSteal = p981 == true
+				senaV4Config.AutoSteal = p981 == true
 
 				if v612 then
-					v612:setEnabled(s2rV4Config.AutoSteal)
+					v612:setEnabled(senaV4Config.AutoSteal)
 				end
 
-				if type(genv.__S2rV4SetStealDeclutter) == "function" then
-					pcall(genv.__S2rV4SetStealDeclutter, s2rV4Config.AutoSteal)
+				if type(genv.__SenaV4SetStealDeclutter) == "function" then
+					pcall(genv.__SenaV4SetStealDeclutter, senaV4Config.AutoSteal)
 				end
 			end
 			v4527 = function(p982)
-				s2rV4Config.StealHoldSeconds = math.clamp(math.floor((tonumber(p982) or 5) + 0.5), 1, 10)
+				senaV4Config.StealHoldSeconds = math.clamp(math.floor((tonumber(p982) or 5) + 0.5), 1, 10)
 			end
 			v4528 = function(p983)
-				s2rV4Config.GodMode = p983 == true
+				senaV4Config.GodMode = p983 == true
 
 				if v615 then
-					v615:setEnabled(s2rV4Config.GodMode)
+					v615:setEnabled(senaV4Config.GodMode)
 				end
 			end
 
 			local function v4688()
-				return genv.__S2rV4TreadmillManager
+				return genv.__SenaV4TreadmillManager
 			end
 
 			v4529 = function(p984)
-				s2rV4Config.AutoTreadmillIdle = p984 == true
+				senaV4Config.AutoTreadmillIdle = p984 == true
 
 				local v4689 = v4688()
 
 				if v4689 then
-					v4689:setIdleFarm(s2rV4Config.AutoTreadmillIdle and not s2rV4Config.AntiTreadmill)
+					v4689:setIdleFarm(senaV4Config.AutoTreadmillIdle and not senaV4Config.AntiTreadmill)
 				end
 			end
 			v4530 = function(p985)
-				s2rV4Config.AntiTreadmill = p985 == true
+				senaV4Config.AntiTreadmill = p985 == true
 
 				local v4690 = v4688()
 
-				if s2rV4Config.AntiTreadmill then
+				if senaV4Config.AntiTreadmill then
 					if v4690 then
 						v4690:setIdleFarm(false)
 					end
 
 					t145.startAntiTreadmillLoop()
 				elseif v4690 then
-					v4690:setIdleFarm(s2rV4Config.AutoTreadmillIdle)
+					v4690:setIdleFarm(senaV4Config.AutoTreadmillIdle)
 				end
 			end
 			v4531 = function(p986)
-				s2rV4Config.HopNoMatch = p986 == true
+				senaV4Config.HopNoMatch = p986 == true
 
-				if s2rV4Config.HopNoMatch then
+				if senaV4Config.HopNoMatch then
 					t145.startHopLoop()
 				end
 			end
@@ -29453,25 +29016,25 @@ do
 					p987 = p987[1]
 				end
 
-				s2rV4Config.PrivateServerMax = tostring(p987 or "2")
+				senaV4Config.PrivateServerMax = tostring(p987 or "2")
 			end
 			v4533 = function(p988)
-				s2rV4Config.PrivateServerAuto = p988 == true
+				senaV4Config.PrivateServerAuto = p988 == true
 
-				if s2rV4Config.PrivateServerAuto then
+				if senaV4Config.PrivateServerAuto then
 					t145.startPrivateAutoHop()
 				end
 			end
 			v4534 = function(p989)
-				s2rV4Config.HopCooldown = math.max(1, math.floor(tonumber(p989) or 5))
+				senaV4Config.HopCooldown = math.max(1, math.floor(tonumber(p989) or 5))
 			end
 			v4535 = function(p990)
-				s2rV4Config.AutoTreadmillUpgrade = p990 == true
+				senaV4Config.AutoTreadmillUpgrade = p990 == true
 
 				local v4691 = v4688()
 
 				if v4691 then
-					v4691:setAutoUpgrade(s2rV4Config.AutoTreadmillUpgrade)
+					v4691:setAutoUpgrade(senaV4Config.AutoTreadmillUpgrade)
 				end
 			end
 			v4536 = function(p991)
@@ -29479,8 +29042,8 @@ do
 				local stealMode = (v4692:find("Fly") or v4692:find("High")) and "Fly" or "Instant"
 				local flyAerial = stealMode == "Fly" and (v4692:find("%(Fly%)") ~= nil or v4692:lower():find("aerial") ~= nil)
 
-				s2rV4Config.StealMode = stealMode
-				s2rV4Config.FlyAerial = flyAerial
+				senaV4Config.StealMode = stealMode
+				senaV4Config.FlyAerial = flyAerial
 
 				if v612 then
 					v612:setStealMode(stealMode, flyAerial)
@@ -29499,11 +29062,11 @@ do
 				local v4696 = v4320(p995)
 
 				if p993 == "names" then
-					s2rV4Config.StealNamesFilter = v4696
+					senaV4Config.StealNamesFilter = v4696
 				elseif p993 == "areas" then
-					s2rV4Config.StealAreas = v4696
+					senaV4Config.StealAreas = v4696
 				elseif p993 == "rarities" then
-					s2rV4Config.StealRarities = v4696
+					senaV4Config.StealRarities = v4696
 				end
 
 				if v612 then
@@ -29512,16 +29075,16 @@ do
 				end
 			end
 			v4539 = function(p996)
-				s2rV4Config:applyStealValueInput(p996)
+				senaV4Config:applyStealValueInput(p996)
 
 				if v612 then
-					v612:setMinValuePerSec(s2rV4Config.StealMinValue or 0)
+					v612:setMinValuePerSec(senaV4Config.StealMinValue or 0)
 				end
 			end
 			v4540 = function(p997)
 				local v4697 = v4320(p997)
 
-				s2rV4Config.StealMutations = v4697
+				senaV4Config.StealMutations = v4697
 
 				if v612 then
 					v612:setFilter("mutations", v4697)
@@ -29533,31 +29096,31 @@ do
 				local v4699 = tostring(p998 or ""):gsub("[^%d%.]", "")
 				local stealMinWeight = tonumber_(v4699) or 0
 
-				s2rV4Config.StealMinWeight = stealMinWeight
+				senaV4Config.StealMinWeight = stealMinWeight
 
 				if v612 then
 					v612:setMinWeightKg(stealMinWeight)
 				end
 			end
 			v4542 = function(p999)
-				s2rV4Config.StealPriority = tostring(p999 or "Rarity")
+				senaV4Config.StealPriority = tostring(p999 or "Rarity")
 
 				if v612 then
-					v612:setHighestValueFirst(s2rV4Config.StealPriority == "Highest Value")
-					v612:setHeaviestFirst(s2rV4Config.StealPriority == "Heaviest")
+					v612:setHighestValueFirst(senaV4Config.StealPriority == "Highest Value")
+					v612:setHeaviestFirst(senaV4Config.StealPriority == "Heaviest")
 				end
 			end
 			v4543 = function(p1000)
-				s2rV4Config.EggESP = p1000 == true
+				senaV4Config.EggESP = p1000 == true
 
 				if v612 then
-					v612:setEggEsp(s2rV4Config.EggESP)
+					v612:setEggEsp(senaV4Config.EggESP)
 				end
 			end
 			v4544 = function(p1001)
 				local v4701 = v4320(p1001)
 
-				s2rV4Config.EspDetails = v4701
+				senaV4Config.EspDetails = v4701
 
 				if not v612 then
 					return
@@ -29577,86 +29140,86 @@ do
 				v612:setEspOption("placed", t215["Placed Eggs"] == true)
 			end
 			v4545 = function(p1002)
-				s2rV4Config.ScrambleTradeInBanners = v4320(p1002)
+				senaV4Config.ScrambleTradeInBanners = v4320(p1002)
 			end
 			v4546 = function(p1003)
 				t145.setBackpackRates(p1003 == true)
 			end
 			v4547 = function(p1004)
-				s2rV4Config.AntiGuardKnockback = p1004 == true
+				senaV4Config.AntiGuardKnockback = p1004 == true
 
-				local __S2rV4AntiGuard = genv.__S2rV4AntiGuard
+				local __SenaV4AntiGuard = genv.__SenaV4AntiGuard
 
-				if __S2rV4AntiGuard and type(__S2rV4AntiGuard.setEnabled) == "function" then
-					pcall(__S2rV4AntiGuard.setEnabled, __S2rV4AntiGuard, s2rV4Config.AntiGuardKnockback)
+				if __SenaV4AntiGuard and type(__SenaV4AntiGuard.setEnabled) == "function" then
+					pcall(__SenaV4AntiGuard.setEnabled, __SenaV4AntiGuard, senaV4Config.AntiGuardKnockback)
 				end
 			end
 			v4548 = function(p1005)
-				s2rV4Config.AutoFavorite = p1005 == true
+				senaV4Config.AutoFavorite = p1005 == true
 			end
 			v4549 = function(p1006)
-				s2rV4Config.FavMode = p1006 == "Species" and "Species" or "Rarity"
+				senaV4Config.FavMode = p1006 == "Species" and "Species" or "Rarity"
 			end
 			v4550 = function(p1007)
-				s2rV4Config.FavRarities = v4320(p1007)
+				senaV4Config.FavRarities = v4320(p1007)
 			end
 			v4551 = function(p1008)
-				s2rV4Config.FavSpecies = v4320(p1008)
+				senaV4Config.FavSpecies = v4320(p1008)
 			end
 			v4552 = function(p1009)
-				s2rV4Config.AutoEquipBest = p1009 == true
+				senaV4Config.AutoEquipBest = p1009 == true
 			end
 			v4553 = function(p1010)
-				s2rV4Config.AutoClaimOffline = p1010 == true
+				senaV4Config.AutoClaimOffline = p1010 == true
 			end
 			v4554 = function(p1011)
-				s2rV4Config.AutoBaseUpgrade = p1011 == true
+				senaV4Config.AutoBaseUpgrade = p1011 == true
 			end
 			v4555 = function(p1012)
-				s2rV4Config.AutoClaimAlmanac = p1012 == true
+				senaV4Config.AutoClaimAlmanac = p1012 == true
 			end
 			v4556 = function(p1013)
-				s2rV4Config.AutoFusePets = p1013 == true
+				senaV4Config.AutoFusePets = p1013 == true
 			end
 			v4557 = function(p1014)
-				s2rV4Config.FuseSelectedOnly = p1014 == "Selected Species"
+				senaV4Config.FuseSelectedOnly = p1014 == "Selected Species"
 			end
 			v4558 = function(p1015)
-				s2rV4Config.FuseRarities = v4320(p1015)
+				senaV4Config.FuseRarities = v4320(p1015)
 			end
 			v4559 = function(p1016)
-				s2rV4Config.FuseSpecies = v4320(p1016)
+				senaV4Config.FuseSpecies = v4320(p1016)
 			end
 			v4560 = function(p1017)
-				local __S2rV4Roaming = genv.__S2rV4Roaming
+				local __SenaV4Roaming = genv.__SenaV4Roaming
 
-				if __S2rV4Roaming and type(__S2rV4Roaming.setNoclip) == "function" then
-					pcall(__S2rV4Roaming.setNoclip, p1017 == true)
+				if __SenaV4Roaming and type(__SenaV4Roaming.setNoclip) == "function" then
+					pcall(__SenaV4Roaming.setNoclip, p1017 == true)
 				end
 			end
 			v4561 = function(p1018)
-				local __S2rV4Roaming = genv.__S2rV4Roaming
+				local __SenaV4Roaming = genv.__SenaV4Roaming
 
-				if __S2rV4Roaming and type(__S2rV4Roaming.setBottingMode) == "function" then
-					pcall(__S2rV4Roaming.setBottingMode, p1018 == true)
+				if __SenaV4Roaming and type(__SenaV4Roaming.setBottingMode) == "function" then
+					pcall(__SenaV4Roaming.setBottingMode, p1018 == true)
 				end
 			end
 			v4562 = function(p1019)
-				s2rV4Config.AntiCutscene = p1019 == true
+				senaV4Config.AntiCutscene = p1019 == true
 			end
 			runOnce = function(p1020, p1021, p1022)
-				local v4708 = s2rV4Config[p1020]
+				local v4708 = senaV4Config[p1020]
 
-				s2rV4Config[p1020] = true
+				senaV4Config[p1020] = true
 				task.spawn(p1021)
 				task.delay(2.4, function()
 					local v4709 = os.clock() + 30
 
-					while s2rV4Config.IsPlacing and os.clock() < v4709 do
+					while senaV4Config.IsPlacing and os.clock() < v4709 do
 						task.wait(0.25)
 					end
 
-					s2rV4Config[p1020] = v4708
+					senaV4Config[p1020] = v4708
 
 					if p1022 then
 						pcall(p1022)
@@ -29666,102 +29229,102 @@ do
 			t24.runOnce = runOnce
 
 			local function v4710(p1023)
-				s2rV4Config.ScrambleFarmDrones = p1023 == true
+				senaV4Config.ScrambleFarmDrones = p1023 == true
 			end
 			local function v4711(p1024)
-				s2rV4Config.ScrambleLostParts = p1024 == true
+				senaV4Config.ScrambleLostParts = p1024 == true
 			end
 			local function v4712(p1025)
-				s2rV4Config.ScrambleCollectSamples = p1025 == true
+				senaV4Config.ScrambleCollectSamples = p1025 == true
 			end
 			local function v4713(p1026)
-				s2rV4Config.ScrambleAutoVault = p1026 == true
+				senaV4Config.ScrambleAutoVault = p1026 == true
 			end
 
 			v4564 = function(p1027)
-				s2rV4Config.ScrambleAutoBuy = p1027 == true
+				senaV4Config.ScrambleAutoBuy = p1027 == true
 			end
 
 			local function v4714(p1028)
-				s2rV4Config.ScrambleAreas = v4320(p1028)
+				senaV4Config.ScrambleAreas = v4320(p1028)
 			end
 			local function v4715(p1029)
-				s2rV4Config.ScrambleDroneTypes = v4320(p1029)
+				senaV4Config.ScrambleDroneTypes = v4320(p1029)
 			end
 
 			v4565 = function(p1030)
-				s2rV4Config.ScrambleBuyList = v4320(p1030)
+				senaV4Config.ScrambleBuyList = v4320(p1030)
 			end
 			v4566 = function(p1031)
-				s2rV4Config.AutoPlace = p1031 == true
+				senaV4Config.AutoPlace = p1031 == true
 
-				if s2rV4Config.AutoPlace then
+				if senaV4Config.AutoPlace then
 					task.spawn(t24.AutoPlaceLoop)
 				end
 			end
 			v4567 = function(p1032)
-				s2rV4Config.AutoHatch = p1032 == true
+				senaV4Config.AutoHatch = p1032 == true
 
-				if s2rV4Config.AutoHatch then
+				if senaV4Config.AutoHatch then
 					task.spawn(t24.AutoHatchLoop)
 				end
 			end
 			v4568 = function(p1033)
-				s2rV4Config.AutoMutation = p1033 == true
+				senaV4Config.AutoMutation = p1033 == true
 
-				if s2rV4Config.AutoMutation then
+				if senaV4Config.AutoMutation then
 					task.spawn(t24.AutoMutationLoop)
 				end
 			end
 			v4569 = function(p1034)
-				s2rV4Config.AutoRingEvent = p1034 == true
+				senaV4Config.AutoRingEvent = p1034 == true
 
-				if s2rV4Config.AutoRingEvent then
+				if senaV4Config.AutoRingEvent then
 					t24.RingEventLoop()
 				end
 			end
 			v4570 = function(p1035)
-				s2rV4Config.MutationChoice = p1035 == "Fractured" and "Fractured" or "Scrambled"
+				senaV4Config.MutationChoice = p1035 == "Fractured" and "Fractured" or "Scrambled"
 			end
 			v4571 = function(p1036)
-				s2rV4Config.MutationSpecies = v4320(p1036)
+				senaV4Config.MutationSpecies = v4320(p1036)
 			end
 			v4572 = function(p1037)
-				s2rV4Config.MutationRarities = v4320(p1037)
+				senaV4Config.MutationRarities = v4320(p1037)
 			end
 			v4573 = function(p1038)
-				s2rV4Config.MutationRetry = p1038 == true
+				senaV4Config.MutationRetry = p1038 == true
 			end
 			v4574 = function(p1039)
-				s2rV4Config.AutoSell = p1039 == true
+				senaV4Config.AutoSell = p1039 == true
 
-				if s2rV4Config.AutoSell then
+				if senaV4Config.AutoSell then
 					t24.startAutoSellLoop()
 				end
 			end
 			v4575 = function(p1040)
-				s2rV4Config.AutoSellEgg = p1040 == true
+				senaV4Config.AutoSellEgg = p1040 == true
 
-				if s2rV4Config.AutoSellEgg then
+				if senaV4Config.AutoSellEgg then
 					t24.startAutoSellEggLoop()
 				end
 			end
 			v4576 = function(p1041)
-				s2rV4Config.SellPetMaxRate = v4584(p1041)
+				senaV4Config.SellPetMaxRate = v4584(p1041)
 			end
 			v4577 = function(p1042)
-				s2rV4Config.SellEggMaxRate = v4584(p1042)
+				senaV4Config.SellEggMaxRate = v4584(p1042)
 			end
 		end
 
 		local u4716 = false
 
 		local function v4717(p1043)
-			local v4718 = s2rV4Config.StartupBoost == true
+			local v4718 = senaV4Config.StartupBoost == true
 
-			s2rV4Config.StartupBoost = p1043 == true
+			senaV4Config.StartupBoost = p1043 == true
 
-			if not s2rV4Config.StartupBoost then
+			if not senaV4Config.StartupBoost then
 				u4716 = false
 
 				if v4718 or t15.snapshot then
@@ -29771,18 +29334,18 @@ do
 				return
 			end
 
-			if s2rV4Config.StartupBoost and not u4716 then
+			if senaV4Config.StartupBoost and not u4716 then
 				u4716 = true
 				task.spawn(function()
 					task.wait(1.5)
 
-					if v16() and s2rV4Config.StartupBoost then
+					if v16() and senaV4Config.StartupBoost then
 						v390()
 					end
 
 					task.wait(4)
 
-					if v16() and s2rV4Config.StartupBoost then
+					if v16() and senaV4Config.StartupBoost then
 						v390()
 					end
 				end)
@@ -29794,51 +29357,51 @@ do
 			end
 		end
 		local function v4720(p1045)
-			local __S2rV4SetCapFps = genv.__S2rV4SetCapFps
+			local __SenaV4SetCapFps = genv.__SenaV4SetCapFps
 
-			if type(__S2rV4SetCapFps) == "function" then
-				__S2rV4SetCapFps(p1045 == true and 240 or 60)
+			if type(__SenaV4SetCapFps) == "function" then
+				__SenaV4SetCapFps(p1045 == true and 240 or 60)
 			end
 		end
 
 		local v4722, v4723, v4724, v4725, v4726, v4727, v4728, v4729, v4730, v4731
-		local v4732, __S2rV4PlayerSteal, v4734, v4735, v4736, v4737, v4738, v4739, v4740, v4741
+		local v4732, __SenaV4PlayerSteal, v4734, v4735, v4736, v4737, v4738, v4739, v4740, v4741
 		local v4742, t216, t217, u4745, t218
 
 		do
 			local function v4747()
-				return genv.__S2rV4MovementExtras
+				return genv.__SenaV4MovementExtras
 			end
 
 			v4722 = function(p1046)
-				s2rV4Config.FlyForCapture = p1046 == true
+				senaV4Config.FlyForCapture = p1046 == true
 
 				local v4748 = v4747()
 
 				if v4748 then
-					v4748:setFlyForCapture(s2rV4Config.FlyForCapture)
+					v4748:setFlyForCapture(senaV4Config.FlyForCapture)
 				end
 			end
 			v4723 = function(p1047)
-				s2rV4Config.InstantGrab = p1047 == true
+				senaV4Config.InstantGrab = p1047 == true
 
 				local v4749 = v4747()
 
 				if v4749 then
-					v4749:setInstantGrab(s2rV4Config.InstantGrab)
+					v4749:setInstantGrab(senaV4Config.InstantGrab)
 				end
 			end
 
 			local function v4750(p1048)
-				genv.__S2rV4AdminBoost = p1048 == true
+				genv.__SenaV4AdminBoost = p1048 == true
 
 				if v612 then
-					v612:setSpeed(s2rV4Config.TweenSpeedMultiplier or 60)
+					v612:setSpeed(senaV4Config.TweenSpeedMultiplier or 60)
 				end
 
-				genv.__S2rV4AdminBoostSpeedGen = (genv.__S2rV4AdminBoostSpeedGen or 0) + 1
+				genv.__SenaV4AdminBoostSpeedGen = (genv.__SenaV4AdminBoostSpeedGen or 0) + 1
 
-				local __S2rV4AdminBoostSpeedGen = genv.__S2rV4AdminBoostSpeedGen
+				local __SenaV4AdminBoostSpeedGen = genv.__SenaV4AdminBoostSpeedGen
 
 				if p1048 == true then
 					task.spawn(function()
@@ -29846,7 +29409,7 @@ do
 						local v4753
 						local v4754
 
-						while genv.__S2rV4AdminBoostSpeedGen == __S2rV4AdminBoostSpeedGen and v16() do
+						while genv.__SenaV4AdminBoostSpeedGen == __SenaV4AdminBoostSpeedGen and v16() do
 							local Character = LocalPlayer.Character
 							local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
 
@@ -29875,59 +29438,59 @@ do
 			end
 
 			v4724 = function(p1049)
-				s2rV4Config.AutoStealCapture = p1049 == true
+				senaV4Config.AutoStealCapture = p1049 == true
 			end
 			v4725 = function(p1050)
-				s2rV4Config.InfiniteJump = p1050 == true
+				senaV4Config.InfiniteJump = p1050 == true
 
 				local v4759 = v4747()
 
 				if v4759 then
-					v4759:setInfiniteJump(s2rV4Config.InfiniteJump)
+					v4759:setInfiniteJump(senaV4Config.InfiniteJump)
 				end
 			end
 
 			local function v4760(p1051)
-				s2rV4Config.WalkSpeedMultiplier = math.clamp(tonumber(p1051) or 1, 1, 2.1)
+				senaV4Config.WalkSpeedMultiplier = math.clamp(tonumber(p1051) or 1, 1, 2.1)
 
 				local v4761 = v4747()
 
 				if v4761 then
-					v4761:setSpeedMultiplier(s2rV4Config.WalkSpeedMultiplier)
+					v4761:setSpeedMultiplier(senaV4Config.WalkSpeedMultiplier)
 				end
 			end
 
 			v4726 = function(p1052)
-				s2rV4Config.AntiHitGuard = p1052 == true
+				senaV4Config.AntiHitGuard = p1052 == true
 
-				local __S2rV4AntiHitGuard = genv.__S2rV4AntiHitGuard
+				local __SenaV4AntiHitGuard = genv.__SenaV4AntiHitGuard
 
-				if __S2rV4AntiHitGuard then
-					__S2rV4AntiHitGuard:setEnabled(s2rV4Config.AntiHitGuard)
+				if __SenaV4AntiHitGuard then
+					__SenaV4AntiHitGuard:setEnabled(senaV4Config.AntiHitGuard)
 				end
 			end
 			v4727 = function(p1053)
-				s2rV4Config.AntiAFK = p1053 == true
-				genv.__S2rV4AntiAfkEnabled = s2rV4Config.AntiAFK
+				senaV4Config.AntiAFK = p1053 == true
+				genv.__SenaV4AntiAfkEnabled = senaV4Config.AntiAFK
 
-				if type(genv.__S2rV4SetAntiAfkEnabled) == "function" then
-					genv.__S2rV4SetAntiAfkEnabled(s2rV4Config.AntiAFK)
+				if type(genv.__SenaV4SetAntiAfkEnabled) == "function" then
+					genv.__SenaV4SetAntiAfkEnabled(senaV4Config.AntiAFK)
 				end
 			end
 			v4728 = function(p1054)
-				s2rV4Config.AutoReconnect = p1054 == true
-				v2526.autoReconnect = s2rV4Config.AutoReconnect
+				senaV4Config.AutoReconnect = p1054 == true
+				v2526.autoReconnect = senaV4Config.AutoReconnect
 
 				if getgenv then
-					getgenv().SNE_AutoReconnect = s2rV4Config.AutoReconnect
+					getgenv().SNE_AutoReconnect = senaV4Config.AutoReconnect
 				end
 			end
 			v4729 = function(p1055)
-				s2rV4Config.AutoExecute = p1055 == true
-				v2526.autoExecute = s2rV4Config.AutoExecute
+				senaV4Config.AutoExecute = p1055 == true
+				v2526.autoExecute = senaV4Config.AutoExecute
 
 				if getgenv then
-					getgenv().SNE_AutoExecute = s2rV4Config.AutoExecute
+					getgenv().SNE_AutoExecute = senaV4Config.AutoExecute
 				end
 
 				if p1055 then
@@ -29938,12 +29501,12 @@ do
 			end
 
 			local function v4763()
-				local __S2rV4IdentitySetter = genv.__S2rV4IdentitySetter or type(setthreadidentity) == "function" and setthreadidentity or type(set_thread_identity) == "function" and set_thread_identity or type(setidentity) == "function" and setidentity or type(syn) == "table" and type(syn.set_thread_identity) == "function" and syn.set_thread_identity
-				local __S2rV4UICapabilityIdentity = genv.__S2rV4UICapabilityIdentity or 8
+				local __SenaV4IdentitySetter = genv.__SenaV4IdentitySetter or type(setthreadidentity) == "function" and setthreadidentity or type(set_thread_identity) == "function" and set_thread_identity or type(setidentity) == "function" and setidentity or type(syn) == "table" and type(syn.set_thread_identity) == "function" and syn.set_thread_identity
+				local __SenaV4UICapabilityIdentity = genv.__SenaV4UICapabilityIdentity or 8
 
 				local function v4766()
-					if type(__S2rV4IdentitySetter) == "function" then
-						pcall(__S2rV4IdentitySetter, __S2rV4UICapabilityIdentity)
+					if type(__SenaV4IdentitySetter) == "function" then
+						pcall(__SenaV4IdentitySetter, __SenaV4UICapabilityIdentity)
 					end
 				end
 
@@ -29969,16 +29532,16 @@ do
 
 				return v4767
 			end
-			__S2rV4PlayerSteal = genv.__S2rV4PlayerSteal
+			__SenaV4PlayerSteal = genv.__SenaV4PlayerSteal
 			v4734 = function(p1058)
-				s2rV4Config.StealPlayers = p1058 == true
+				senaV4Config.StealPlayers = p1058 == true
 
-				if __S2rV4PlayerSteal then
-					__S2rV4PlayerSteal:setEnabled(s2rV4Config.StealPlayers)
+				if __SenaV4PlayerSteal then
+					__SenaV4PlayerSteal:setEnabled(senaV4Config.StealPlayers)
 				end
 			end
 			v4735 = function(p1059)
-				s2rV4Config.StealPlayerRarities = v4320(p1059)
+				senaV4Config.StealPlayerRarities = v4320(p1059)
 			end
 
 			local function v4768(p1060)
@@ -30011,26 +29574,26 @@ do
 			end
 
 			v4736 = function(p1061)
-				s2rV4Config.StealPlayerMinValue = v4768(p1061)
+				senaV4Config.StealPlayerMinValue = v4768(p1061)
 			end
 			v4737 = function(p1062)
-				s2rV4Config.AutoIndex = p1062 == true
+				senaV4Config.AutoIndex = p1062 == true
 
 				if v612 then
-					v612:setIndexObjective(s2rV4Config.AutoIndex)
+					v612:setIndexObjective(senaV4Config.AutoIndex)
 				end
 			end
 			v4738 = function(p1063)
-				s2rV4Config.WebhookEnabled = p1063 == true
+				senaV4Config.WebhookEnabled = p1063 == true
 			end
 			v4739 = function(p1064)
-				s2rV4Config.WebhookURL = type(p1064) == "string" and p1064 or ""
+				senaV4Config.WebhookURL = type(p1064) == "string" and p1064 or ""
 			end
 			v4740 = function(p1065)
-				s2rV4Config.WebhookRarities = v4320(p1065)
+				senaV4Config.WebhookRarities = v4320(p1065)
 			end
 			v4741 = function(p1066)
-				s2rV4Config.WebhookMinValue = v4768(p1066)
+				senaV4Config.WebhookMinValue = v4768(p1066)
 			end
 
 			local t219 = {
@@ -30053,7 +29616,7 @@ do
 					return p1067
 				end
 
-				if rawget(p1067, "__s2rElevated") then
+				if rawget(p1067, "__senaElevated") then
 					return p1067
 				end
 
@@ -30069,7 +29632,7 @@ do
 					end
 				end
 
-				rawset(p1067, "__s2rElevated", true)
+				rawset(p1067, "__senaElevated", true)
 
 				return p1067
 			end
@@ -30099,7 +29662,7 @@ do
 
 				v4774(p1068)
 
-				if rawget(p1068, "__s2rFactoryGuarded") then
+				if rawget(p1068, "__senaFactoryGuarded") then
 					return p1068
 				end
 
@@ -30121,224 +29684,28 @@ do
 					end
 				end
 
-				rawset(p1068, "__s2rFactoryGuarded", true)
+				rawset(p1068, "__senaFactoryGuarded", true)
 
 				return p1068
 			end
 
 			v4730()
-			v4742 = S2rLibOverride:Window({
+			v4742 = SenaLibOverride:Window({
 				Title = "S2r Hub",
-				Footer = "", -- prevent library subtitle overlapping the main title
-				Folder = "S2rHub",
+				Footer = "",
+				Folder = "SenaSAEv4", -- keep original settings folder for compatibility
 				Version = 1,
-				Color = Color3.fromRGB(156, 82, 255),
-				Image = "" -- no background image
+				Color = Color3.fromRGB(159, 83, 255),
+				Image = "" -- clean background; the UI library still owns interaction logic
 			})
 			v4779(v4742)
-			-- Premium main-window styling. Only touches the S2r window; no game UI is changed.
-			-- The original library owns tabs and callbacks, so its gameplay features stay intact.
-			local Ui = game:GetService("UserInputService")
-			local s2rPalette = {
-				window = Color3.fromRGB(12, 10, 19),
-				sidebar = Color3.fromRGB(18, 14, 28),
-				card = Color3.fromRGB(24, 20, 35),
-				raised = Color3.fromRGB(34, 26, 49),
-				violet = Color3.fromRGB(159, 83, 255),
-				border = Color3.fromRGB(101, 62, 154),
-				white = Color3.fromRGB(246, 241, 255),
-				muted = Color3.fromRGB(179, 163, 204)
-			}
-			genv.S2rHubAppearance = type(genv.S2rHubAppearance) == "table" and genv.S2rHubAppearance or {}
-			local look = genv.S2rHubAppearance
-			look.Scale = math.clamp(tonumber(look.Scale) or 100, 65, 110)
-			local appearance = { window = nil, scaler = nil, viewportConn = nil }
-
-			local function s2rMainSurface(label, gui)
-				local node = label and label.Parent
-				local fallback
-				while node and node ~= gui do
-					if node:IsA("GuiObject") then
-						fallback = fallback or node
-						local size = node.AbsoluteSize
-						if size.X >= 380 and size.Y >= 230 then
-							return node
-						end
-					end
-					node = node.Parent
-				end
-				return fallback
-			end
-
-			local function styleS2rWidget(widget)
-				if widget:FindFirstAncestor("S2rSignatureHeader") then return end
-				if widget.Name == "S2rSignatureHeader" or widget.Name == "S2rResponsiveScale" then return end
-				if widget:IsA("Frame") or widget:IsA("ScrollingFrame") then
-					if widget.BackgroundTransparency < 0.92 then
-						local original = widget.BackgroundColor3
-						local bright = (original.R + original.G + original.B) / 3
-						widget.BackgroundColor3 = bright > 0.32 and s2rPalette.raised or bright > 0.18 and s2rPalette.card or s2rPalette.sidebar
-						widget.BackgroundTransparency = math.min(widget.BackgroundTransparency, 0.06)
-					end
-					if widget:IsA("ScrollingFrame") then
-						widget.ScrollBarImageColor3 = s2rPalette.violet
-						widget.ScrollBarThickness = 3
-					end
-				elseif widget:IsA("TextButton") or widget:IsA("TextBox") then
-					if widget.BackgroundTransparency < 0.92 then
-						local _, saturation, value = widget.BackgroundColor3:ToHSV()
-						widget.BackgroundColor3 = saturation > 0.38 and value > 0.33 and s2rPalette.violet or s2rPalette.raised
-					end
-					if widget:IsA("TextBox") then
-						widget.PlaceholderColor3 = s2rPalette.muted
-					end
-					-- Do not overwrite icon fonts or their text glyphs.
-					if widget.Text ~= "" then widget.TextColor3 = s2rPalette.white end
-				elseif widget:IsA("TextLabel") then
-					if widget.TextColor3.R < 0.57 and widget.TextColor3.G < 0.57 then
-						widget.TextColor3 = s2rPalette.muted
-					end
-				elseif widget:IsA("UIStroke") then
-					widget.Color = s2rPalette.border
-					widget.Transparency = math.max(widget.Transparency, 0.30)
-				elseif widget:IsA("ImageLabel") and string.lower(widget.Image or ""):find("sena_bg", 1, true) then
-					widget.Image = ""
-					widget.BackgroundTransparency = 1
-				end
-			end
-
-			local function s2rHeader(surface, original)
-				if not surface or surface:FindFirstChild("S2rSignatureHeader") then return end
-				-- Hide the library's overlapping title while keeping its original text
-				-- searchable so the reopen controller can detect the main GUI.
-				if original then original.TextTransparency = 1 end
-				local header = Instance.new("Frame")
-				header.Name = "S2rSignatureHeader"
-				header.BackgroundColor3 = s2rPalette.window
-				header.BorderSizePixel = 0
-				header.Position = UDim2.fromOffset(12, 8)
-				header.Size = UDim2.fromOffset(206, 46)
-				header.ZIndex = 60
-				header.Parent = surface
-				Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
-				s2rMakeBrandmark(header, UDim2.fromOffset(5, 6), 34)
-				local primary = Instance.new("TextLabel")
-				primary.BackgroundTransparency = 1
-				primary.Position = UDim2.fromOffset(47, 5)
-				primary.Size = UDim2.fromOffset(153, 23)
-				primary.Text = "S2r Hub"
-				primary.Font = Enum.Font.GothamBold
-				primary.TextSize = 18
-				primary.TextColor3 = s2rPalette.white
-				primary.TextXAlignment = Enum.TextXAlignment.Left
-				primary.ZIndex = 62
-				primary.Parent = header
-				local subtitle = Instance.new("TextLabel")
-				subtitle.BackgroundTransparency = 1
-				subtitle.Position = UDim2.fromOffset(48, 27)
-				subtitle.Size = UDim2.fromOffset(150, 12)
-				subtitle.Text = "STEAL AN EGG  /  V3"
-				subtitle.Font = Enum.Font.GothamMedium
-				subtitle.TextSize = 9
-				subtitle.TextColor3 = s2rPalette.muted
-				subtitle.TextXAlignment = Enum.TextXAlignment.Left
-				subtitle.ZIndex = 62
-				subtitle.Parent = header
-			end
-
-			local function fitMainToViewport(recenter)
-				local surface = appearance.window
-				if not surface or not surface.Parent then return end
-				local cam = workspace.CurrentCamera
-				local vp = cam and cam.ViewportSize or Vector2.new(900, 600)
-				local scaler = appearance.scaler
-				local current = scaler and math.max(scaler.Scale, 0.05) or 1
-				local rendered = surface.AbsoluteSize
-				if rendered.X < 100 or rendered.Y < 100 then return end
-				local baseWidth, baseHeight = rendered.X / current, rendered.Y / current
-				local requested = (look.Scale or 100) / 100
-				-- Keep the full interface above the game HUD on phone landscape.
-				local availableWidth = math.max(320, vp.X - 30)
-				local availableHeight = math.max(230, vp.Y - (Ui.TouchEnabled and 96 or 55))
-				local autoFit = math.min(availableWidth / baseWidth, availableHeight / baseHeight)
-				if scaler then scaler.Scale = math.clamp(math.min(requested, autoFit), 0.45, 1.1) end
-				if recenter then
-					local parent = surface.Parent
-					local parentSize = parent and parent:IsA("GuiObject") and parent.AbsoluteSize or vp
-					if parentSize.X >= vp.X * 0.8 and parentSize.Y >= vp.Y * 0.8 then
-						surface.AnchorPoint = Vector2.new(0.5, 0.5)
-						surface.Position = UDim2.fromScale(0.5, 0.53)
-					end
-				end
-			end
-			local function mainThemeAttach(gui, label)
-				local surface = s2rMainSurface(label, gui)
-				if not surface or surface.AbsoluteSize.Y < 200 then return false end
-				appearance.window = surface
-				if not gui:GetAttribute("S2rMainThemeAppliedV3") then
-					gui:SetAttribute("S2rMainThemeAppliedV3", true)
-					for _, widget in ipairs(gui:GetDescendants()) do
-						pcall(styleS2rWidget, widget)
-					end
-					gui.DescendantAdded:Connect(function(widget)
-						pcall(styleS2rWidget, widget)
-					end)
-				end
-				s2rHeader(surface, label)
-				local scaler = surface:FindFirstChild("S2rResponsiveScale")
-				if not scaler then
-					scaler = Instance.new("UIScale")
-					scaler.Name = "S2rResponsiveScale"
-					scaler.Parent = surface
-				end
-				appearance.scaler = scaler
-				fitMainToViewport(false)
-				if not appearance.viewportConn and workspace.CurrentCamera then
-					appearance.viewportConn = workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-						fitMainToViewport(true)
-					end)
-				end
-				return true
-			end
-			local function applyS2rMainTheme()
-				for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui"), game:GetService("CoreGui")}) do
-					if root then
-						for _, label in ipairs(root:GetDescendants()) do
-							if (label:IsA("TextLabel") or label:IsA("TextButton")) and label.Text == "S2r Hub" then
-								local gui = label:FindFirstAncestorWhichIsA("ScreenGui")
-								if gui and gui.Name ~= "S2rHubPersistentDock" and not gui.Name:find("__SNE_Panel_", 1, true) then
-									s2rDock.capture(gui, label)
-									if mainThemeAttach(gui, label) then return true end
-								end
-							end
-						end
-					end
-				end
-				return false
-			end
-			task.spawn(function()
-				for attempt = 1, 30 do
-					local ok, ready = pcall(applyS2rMainTheme)
-					if ok and ready then break end
-					task.wait(0.20)
-				end
-			end)
-			-- Let the settings tab control the real GUI, not just the floating panels.
-			genv.S2rHubResizeMain = function(percent)
-				look.Scale = math.clamp(tonumber(percent) or 100, 65, 110)
-				fitMainToViewport(true)
-			end
-			genv.S2rHubCenterMain = function()
-				fitMainToViewport(true)
-			end
-
 			t216 = {}
 			t217 = { "Respawn Point" }
 
-			local __S2rV4Roaming = genv.__S2rV4Roaming
+			local __SenaV4Roaming = genv.__SenaV4Roaming
 
-			if __S2rV4Roaming and type(__S2rV4Roaming.waypointList) == "function" then
-				local ok, result = pcall(__S2rV4Roaming.waypointList)
+			if __SenaV4Roaming and type(__SenaV4Roaming.waypointList) == "function" then
+				local ok, result = pcall(__SenaV4Roaming.waypointList)
 
 				if ok and type(result) == "table" and #result > 0 then
 					t217 = result
@@ -30347,60 +29714,12 @@ do
 
 			u4745 = t217[1]
 			t218 = {}
-			-- A useful starting page instead of dropping users into a long toggle list.
-			do
-				local homeTab = v4742:AddTab({Name = "Home", Icon = "house"})
-				local welcome = homeTab:AddSection("S2r Control Center")
-				local summary = welcome:AddParagraph({
-					Title = "READY  /  S2r Hub V3",
-					Content = "Black + Violet  |  Responsive mobile GUI  |  Tap any tab to begin"
-				})
-				local quick = homeTab:AddSection("Quick Access")
-				quick:AddButton({
-					Title = "Egg Checker",
-					Content = "Inspect all eggs currently available in the game.",
-					Callback = v4732(function() s2rPanels.openChecker() end)
-				})
-				quick:AddButton({
-					Title = "Egg Spawn Board",
-					Content = "Open the live spawn display.",
-					Callback = v4732(function() s2rPanels.openBoard() end)
-				})
-				quick:AddButton({
-						Title = "Inventory",
-						Content = "Open the separate inventory information window.",
-						Callback = v4732(function() s2rPanels.openInventory() end)
-				})
-				quick:AddButton({
-					Title = "Hide Hub",
-					Content = "A small draggable S2r launcher will appear for reopening.",
-					Callback = v4732(function() s2rDock.hide() end)
-				})
-				task.spawn(function()
-					while v16() and summary do
-						pcall(function()
-							local active = {}
-							for _, key in ipairs({"AutoSteal", "AutoPlace", "AutoHatch", "AutoFavorite", "AutoSell", "AutoSellEgg", "Noclip"}) do
-								if s2rV4Config[key] == true then table.insert(active, key) end
-							end
-							local ping = math.floor((LocalPlayer:GetNetworkPing() or 0) * 1000)
-							summary:SetContent(string.format(
-								"%s  |  %d players  |  %dms ping\nActive: %s",
-								LocalPlayer.DisplayName, #Players:GetPlayers(), ping,
-								#active > 0 and table.concat(active, ", ") or "None"
-							))
-						end)
-						task.wait(4)
-					end
-				end)
-			end
 
+			local __SenaV4ScrambleRuntime = genv.__SenaV4ScrambleRuntime
 
-			local __S2rV4ScrambleRuntime = genv.__S2rV4ScrambleRuntime
-
-			if __S2rV4ScrambleRuntime and type(__S2rV4ScrambleRuntime.snapshot) == "function" then
+			if __SenaV4ScrambleRuntime and type(__SenaV4ScrambleRuntime.snapshot) == "function" then
 				pcall(function()
-					local v4788 = __S2rV4ScrambleRuntime.snapshot()
+					local v4788 = __SenaV4ScrambleRuntime.snapshot()
 
 					if v4788 and type(v4788.Shop) == "table" then
 						for _, v in pairs(v4788.Shop) do
@@ -30482,21 +29801,21 @@ do
 				Content = "Instead of banking a stolen egg, drops it just before the safe zone line so a friend can pick it up.",
 				Default = false,
 				Callback = v4732(function(p1069)
-					s2rV4Config.HelpFriend = p1069 == true
+					senaV4Config.HelpFriend = p1069 == true
 				end)
 			})
 			v4794:AddButton({
 				Title = "Egg Checker",
 				Content = "Every egg on the field right now, best money first. Pick one and steal it.",
 				Callback = v4732(function()
-					s2rPanels.openChecker()
+					senaPanels.openChecker()
 				end)
 			})
 			v4794:AddButton({
 				Title = "Egg Spawn Analyst",
 				Content = "Live global spawn tracker, timeline & forecast synced across active online players.",
 				Callback = v4732(function()
-					s2rPanels.openAnalyst()
+					senaPanels.openAnalyst()
 				end)
 			})
 			t216.godMode = v4794:AddToggle({
@@ -30519,8 +29838,8 @@ do
 				Callback = v4732(v4536)
 			})
 
-			if (tonumber(s2rV4Config.StealHoldSeconds) or 5) > 10 then
-				s2rV4Config.StealHoldSeconds = 5
+			if (tonumber(senaV4Config.StealHoldSeconds) or 5) > 10 then
+				senaV4Config.StealHoldSeconds = 5
 			end
 
 			t216.stealHold = v4794:AddSlider({
@@ -30676,10 +29995,10 @@ do
 				Title = "Test Webhook",
 				Content = "Sends one test embed so you can confirm the URL works.",
 				Callback = v4732(function()
-					local __S2rV4Webhook = genv.__S2rV4Webhook
+					local __SenaV4Webhook = genv.__SenaV4Webhook
 
-					if not __S2rV4Webhook or not __S2rV4Webhook.test() then
-						S2rLibOverride:Notify({
+					if not __SenaV4Webhook or not __SenaV4Webhook.test() then
+						SenaLibOverride:Notify({
 							Title = "Steal Webhook",
 							Content = "Enter a webhook URL first",
 							Duration = 3
@@ -30688,7 +30007,7 @@ do
 						return
 					end
 
-					S2rLibOverride:Notify({
+					SenaLibOverride:Notify({
 						Title = "Steal Webhook",
 						Content = "Test embed sent",
 						Duration = 3
@@ -30724,7 +30043,7 @@ do
 				Multi = true,
 				Default = {},
 				Callback = v4732(function(p1073)
-					s2rV4Config.PlaceRarities = v4320(p1073)
+					senaV4Config.PlaceRarities = v4320(p1073)
 				end)
 			})
 			v4800:AddSubSection("Hatch")
@@ -30804,7 +30123,7 @@ do
 				Multi = true,
 				Default = {},
 				Callback = v4732(function(p1074)
-					s2rV4Config.SellNames = v4320(p1074)
+					senaV4Config.SellNames = v4320(p1074)
 				end)
 			})
 			v4520 = v4802:AddDropdown({
@@ -30814,7 +30133,7 @@ do
 				Multi = true,
 				Default = {},
 				Callback = v4732(function(p1075)
-					s2rV4Config.SellRarities = v4320(p1075)
+					senaV4Config.SellRarities = v4320(p1075)
 				end)
 			})
 			t216.sellPetValue = v4802:AddInput({
@@ -30841,7 +30160,7 @@ do
 				Multi = true,
 				Default = {},
 				Callback = v4732(function(p1076)
-					s2rV4Config.SellEggRarities = v4320(p1076)
+					senaV4Config.SellEggRarities = v4320(p1076)
 				end)
 			})
 			t216.sellEggValue = v4803:AddInput({
@@ -30897,14 +30216,14 @@ do
 				Title = "Unfavorite Everything",
 				Content = "Clears the favorite flag on every pet you own.",
 				Callback = v4732(function()
-					local __S2rV4PetBarn = genv.__S2rV4PetBarn
+					local __SenaV4PetBarn = genv.__SenaV4PetBarn
 					local n83 = 0
 
-					if __S2rV4PetBarn and type(__S2rV4PetBarn.unfavoriteAll) == "function" then
-						n83 = __S2rV4PetBarn.unfavoriteAll() or 0
+					if __SenaV4PetBarn and type(__SenaV4PetBarn.unfavoriteAll) == "function" then
+						n83 = __SenaV4PetBarn.unfavoriteAll() or 0
 					end
 
-					S2rLibOverride:Notify({
+					SenaLibOverride:Notify({
 						Title = "Pet Favorite",
 						Content = n83 .. " pets unfavorited",
 						Duration = 3
@@ -30978,16 +30297,16 @@ do
 				Title = "Upgrade Base Now",
 				Content = "Buys one base tier right away.",
 				Callback = v4732(function()
-					local __S2rV4Upgrades = genv.__S2rV4Upgrades
+					local __SenaV4Upgrades = genv.__SenaV4Upgrades
 					local v4811 = false
 					local s18 = "Upgrades not ready"
 
-					if __S2rV4Upgrades and type(__S2rV4Upgrades.upgradeBase) == "function" then
-						v4811, s18 = __S2rV4Upgrades.upgradeBase()
+					if __SenaV4Upgrades and type(__SenaV4Upgrades.upgradeBase) == "function" then
+						v4811, s18 = __SenaV4Upgrades.upgradeBase()
 					end
 
-					local v4813 = S2rLibOverride
-					local Notify = S2rLibOverride.Notify
+					local v4813 = SenaLibOverride
+					local Notify = SenaLibOverride.Notify
 					local t221 = {
 						Title = "Base"
 					}
@@ -31003,7 +30322,7 @@ do
 				end)
 			})
 
-			local __S2rV4ButterflyRuntime = genv.__S2rV4ButterflyRuntime
+			local __SenaV4ButterflyRuntime = genv.__SenaV4ButterflyRuntime
 			local v4818 = v4804:AddSection("Butterfly Bloom")
 			local v4819 = v4818:AddParagraph({
 				Title = "Bloom Status",
@@ -31015,7 +30334,7 @@ do
 				Content = "Goes into the Enchanted Tree and claims your free Butterfly Net once.",
 				Default = false,
 				Callback = v4732(function(p1077)
-					s2rV4Config.ButterflyAutoNet = p1077 == true
+					senaV4Config.ButterflyAutoNet = p1077 == true
 				end)
 			})
 			t216.bloomAutoCatch = v4818:AddToggle({
@@ -31023,11 +30342,11 @@ do
 				Content = "During every Bloom (every 30 min, 5 min long) flies to the Enchanted Forest, equips the net and catches with the Catch Mode below.",
 				Default = false,
 				Callback = v4732(function(p1078)
-					s2rV4Config.ButterflyAutoCatch = p1078 == true
+					senaV4Config.ButterflyAutoCatch = p1078 == true
 				end)
 			})
 
-			local v4820 = __S2rV4ButterflyRuntime and __S2rV4ButterflyRuntime.modeOptions() or { "Tween to Butterfly" }
+			local v4820 = __SenaV4ButterflyRuntime and __SenaV4ButterflyRuntime.modeOptions() or { "Tween to Butterfly" }
 
 			t216.bloomMode = v4818:AddDropdown({
 				Title = "Catch Mode",
@@ -31036,15 +30355,15 @@ do
 				Multi = false,
 				Default = v4820[1],
 				Callback = v4732(function(p1079)
-					if __S2rV4ButterflyRuntime then
-						__S2rV4ButterflyRuntime.setMode(p1079)
+					if __SenaV4ButterflyRuntime then
+						__SenaV4ButterflyRuntime.setMode(p1079)
 					end
 				end)
 			})
 			t216.bloomTiers = v4818:AddDropdown({
 				Title = "Catch Tiers",
 				Content = "Only swing at these butterflies. Leave empty to catch every tier.",
-				Options = __S2rV4ButterflyRuntime and __S2rV4ButterflyRuntime.tierOptions() or {
+				Options = __SenaV4ButterflyRuntime and __SenaV4ButterflyRuntime.tierOptions() or {
 					"Radiant",
 					"Amethyst",
 					"Sapphire",
@@ -31053,8 +30372,8 @@ do
 				Multi = true,
 				Default = {},
 				Callback = v4732(function(p1080)
-					if __S2rV4ButterflyRuntime then
-						__S2rV4ButterflyRuntime.setTiers(v4320(p1080))
+					if __SenaV4ButterflyRuntime then
+						__SenaV4ButterflyRuntime.setTiers(v4320(p1080))
 					end
 				end)
 			})
@@ -31063,7 +30382,7 @@ do
 				Content = "Shows every butterfly's tier and distance while a Bloom is live.",
 				Default = false,
 				Callback = v4732(function(p1081)
-					s2rV4Config.ButterflyEsp = p1081 == true
+					senaV4Config.ButterflyEsp = p1081 == true
 				end)
 			})
 			v4818:AddSubSection("Trade & Craft")
@@ -31072,11 +30391,11 @@ do
 				Content = "After each Bloom, trades your butterflies up at the machine inside the Enchanted Tree.",
 				Default = false,
 				Callback = v4732(function(p1082)
-					s2rV4Config.ButterflyAutoTrade = p1082 == true
+					senaV4Config.ButterflyAutoTrade = p1082 == true
 				end)
 			})
 
-			local v4821 = __S2rV4ButterflyRuntime and __S2rV4ButterflyRuntime.recipeOptions() or { "All Recipes" }
+			local v4821 = __SenaV4ButterflyRuntime and __SenaV4ButterflyRuntime.recipeOptions() or { "All Recipes" }
 
 			t216.bloomRecipe = v4818:AddDropdown({
 				Title = "Trade Recipe",
@@ -31085,8 +30404,8 @@ do
 				Multi = false,
 				Default = v4821[1],
 				Callback = v4732(function(p1083)
-					if __S2rV4ButterflyRuntime then
-						__S2rV4ButterflyRuntime.setRecipe(p1083)
+					if __SenaV4ButterflyRuntime then
+						__SenaV4ButterflyRuntime.setRecipe(p1083)
 					end
 				end)
 			})
@@ -31095,7 +30414,7 @@ do
 				Content = "After each Bloom, crafts Enchanted Essence at the shrine once you hold the full recipe.",
 				Default = false,
 				Callback = v4732(function(p1084)
-					s2rV4Config.ButterflyAutoCraft = p1084 == true
+					senaV4Config.ButterflyAutoCraft = p1084 == true
 				end)
 			})
 
@@ -31104,16 +30423,16 @@ do
 					Title = p1085,
 					Content = p1086,
 					Callback = v4732(function()
-						if not __S2rV4ButterflyRuntime then
+						if not __SenaV4ButterflyRuntime then
 							return
 						end
 
 						task.spawn(function()
-							__S2rV4ButterflyRuntime.manual = true
+							__SenaV4ButterflyRuntime.manual = true
 
 							local ok, result, result2 = pcall(p1087)
 
-							__S2rV4ButterflyRuntime.manual = false
+							__SenaV4ButterflyRuntime.manual = false
 
 							if not ok then
 								local v4826 = result
@@ -31122,8 +30441,8 @@ do
 								result2 = v4826
 							end
 
-							local v4827 = S2rLibOverride
-							local Notify = S2rLibOverride.Notify
+							local v4827 = SenaLibOverride
+							local Notify = SenaLibOverride.Notify
 							local t222 = {
 								Title = "Butterfly Bloom"
 							}
@@ -31142,26 +30461,26 @@ do
 			end
 
 			v4822("Claim Net Now", "Claims the Butterfly Net right now.", function()
-				return __S2rV4ButterflyRuntime.claimNet()
+				return __SenaV4ButterflyRuntime.claimNet()
 			end, function()
 				return "Butterfly Net claimed"
 			end)
 			v4822("Trade Up Now", "Runs the trade recipe once, even with Auto Trade Up off.", function()
-				return __S2rV4ButterflyRuntime.tradeUp()
+				return __SenaV4ButterflyRuntime.tradeUp()
 			end, function(p1089)
 				return ("Traded up %d time(s)"):format(tonumber(p1089) or 0)
 			end)
 			v4822("Craft Essence Now", "Crafts Enchanted Essence right now if you hold the full recipe.", function()
-				return __S2rV4ButterflyRuntime.craft()
+				return __SenaV4ButterflyRuntime.craft()
 			end, function(p1090)
 				return ("Crafted %d Enchanted Essence"):format(tonumber(p1090) or 0)
 			end)
 			task.spawn(function()
 				while v16() do
-					if __S2rV4ButterflyRuntime then
+					if __SenaV4ButterflyRuntime then
 						pcall(function()
-							local snap = __S2rV4ButterflyRuntime.snap
-							local v4832 = __S2rV4ButterflyRuntime.tiers() or {}
+							local snap = __SenaV4ButterflyRuntime.snap
+							local v4832 = __SenaV4ButterflyRuntime.tiers() or {}
 							local v4833
 
 							if snap.active then
@@ -31189,7 +30508,7 @@ do
 								t223[#t223 + 1] = ("%s %d"):format(v4832[v] and v4832[v].name or v, snap.counts and snap.counts[v] or 0)
 							end
 
-							v4819:SetContent(("%s\n%s  ·  Essence %d  ·  Caught %d\n%s\n%s"):format(v4833, snap.net and (snap.holding and "Net equipped" or "Net owned") or "No Butterfly Net", snap.essence or 0, snap.caught or 0, table.concat(t223, "  ·  "), tostring(__S2rV4ButterflyRuntime.status or "Idle")))
+							v4819:SetContent(("%s\n%s  ·  Essence %d  ·  Caught %d\n%s\n%s"):format(v4833, snap.net and (snap.holding and "Net equipped" or "Net owned") or "No Butterfly Net", snap.essence or 0, snap.caught or 0, table.concat(t223, "  ·  "), tostring(__SenaV4ButterflyRuntime.status or "Idle")))
 						end)
 					end
 
@@ -31223,7 +30542,7 @@ do
 				Content = "When the recipe's three requirements are covered, sacrifices the cheapest pet that fits each slot. Favorited, equipped, placed and fusing pets are never spent.",
 				Default = false,
 				Callback = v4732(function(p1091)
-					s2rV4Config.ScrambleTradeInTrade = p1091 == true
+					senaV4Config.ScrambleTradeInTrade = p1091 == true
 				end)
 			})
 			t216.scrambleTradeInReroll = v4839:AddToggle({
@@ -31231,7 +30550,7 @@ do
 				Content = "When pets are missing and a free reroll is left, rerolls the recipe instead of waiting.",
 				Default = false,
 				Callback = v4732(function(p1092)
-					s2rV4Config.ScrambleTradeInReroll = p1092 == true
+					senaV4Config.ScrambleTradeInReroll = p1092 == true
 				end)
 			})
 			t216.scrambleTradeInBanners = v4839:AddDropdown({
@@ -31250,15 +30569,15 @@ do
 				Title = "Trade-In Once",
 				Content = "Runs one sacrifice right now, even with Auto Trade-In off.",
 				Callback = v4732(function()
-					local __S2rV4ScrambleTradeIn = genv.__S2rV4ScrambleTradeIn
+					local __SenaV4ScrambleTradeIn = genv.__SenaV4ScrambleTradeIn
 					local v4841 = false
 					local s19 = "Trade-In not ready"
 
-					if __S2rV4ScrambleTradeIn then
-						v4841, s19 = __S2rV4ScrambleTradeIn.tradeOnce()
+					if __SenaV4ScrambleTradeIn then
+						v4841, s19 = __SenaV4ScrambleTradeIn.tradeOnce()
 					end
 
-					S2rLibOverride:Notify({
+					SenaLibOverride:Notify({
 						Title = "Dr Scramble",
 						Content = v4841 and "Sacrifice complete" or tostring(s19),
 						Duration = 4
@@ -31269,15 +30588,15 @@ do
 				Title = "Use Free Reroll",
 				Content = "Spends one of today's free rerolls on a new recipe.",
 				Callback = v4732(function()
-					local __S2rV4ScrambleTradeIn = genv.__S2rV4ScrambleTradeIn
+					local __SenaV4ScrambleTradeIn = genv.__SenaV4ScrambleTradeIn
 					local v4844 = false
 					local s20 = "Trade-In not ready"
 
-					if __S2rV4ScrambleTradeIn then
-						v4844, s20 = __S2rV4ScrambleTradeIn.reroll()
+					if __SenaV4ScrambleTradeIn then
+						v4844, s20 = __SenaV4ScrambleTradeIn.reroll()
 					end
 
-					S2rLibOverride:Notify({
+					SenaLibOverride:Notify({
 						Title = "Dr Scramble",
 						Content = v4844 and "Recipe rerolled" or tostring(s20),
 						Duration = 4
@@ -31291,7 +30610,7 @@ do
 					if not pcall(function()
 						require(ReplicatedStorage.Client.Tabs).Activate("DrScrambleTradeIn")
 					end) then
-						S2rLibOverride:Notify({
+						SenaLibOverride:Notify({
 							Title = "Dr Scramble",
 							Content = "Could not open the trade-in window",
 							Duration = 3
@@ -31307,15 +30626,15 @@ do
 
 			task.spawn(function()
 				while v16() do
-					local __S2rV4ScrambleTradeIn = genv.__S2rV4ScrambleTradeIn
+					local __SenaV4ScrambleTradeIn = genv.__SenaV4ScrambleTradeIn
 
-					if __S2rV4ScrambleTradeIn then
+					if __SenaV4ScrambleTradeIn then
 						pcall(function()
 							v4846:SetContent(string.format([[%s  ·  %s
 Rotates in %02d:%02d  ·  Pity %d/%d  ·  Free rerolls %d  ·  Traded %d
 Recipe (%d/%d): %s
 Held: %s
-Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, math.floor(__S2rV4ScrambleTradeIn.rotation / 60), __S2rV4ScrambleTradeIn.rotation % 60, __S2rV4ScrambleTradeIn.pity, __S2rV4ScrambleTradeIn.pityMax, __S2rV4ScrambleTradeIn.free, __S2rV4ScrambleTradeIn.trades, __S2rV4ScrambleTradeIn.ready, __S2rV4ScrambleTradeIn.total, __S2rV4ScrambleTradeIn.demands, __S2rV4ScrambleTradeIn.stock, __S2rV4ScrambleTradeIn.missing))
+Missing: %s]], __SenaV4ScrambleTradeIn.banner, __SenaV4ScrambleTradeIn.status, math.floor(__SenaV4ScrambleTradeIn.rotation / 60), __SenaV4ScrambleTradeIn.rotation % 60, __SenaV4ScrambleTradeIn.pity, __SenaV4ScrambleTradeIn.pityMax, __SenaV4ScrambleTradeIn.free, __SenaV4ScrambleTradeIn.trades, __SenaV4ScrambleTradeIn.ready, __SenaV4ScrambleTradeIn.total, __SenaV4ScrambleTradeIn.demands, __SenaV4ScrambleTradeIn.stock, __SenaV4ScrambleTradeIn.missing))
 						end)
 					end
 
@@ -31328,7 +30647,7 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Content = "When Dr Scramble's boss is live, walks into the arena portal, joins the fight, hits the nearest target with your bat and breaks free from grabs. The clear reward lands automatically. While Auto Steal is on and this is off, an accidental touch on the arena portal is bounced back out so your steal is never hijacked.",
 				Default = false,
 				Callback = v4732(function(p1093)
-					s2rV4Config.ScrambleBossAuto = p1093 == true
+					senaV4Config.ScrambleBossAuto = p1093 == true
 
 					if v612 and type(v612._reconcileScramblePortal) == "function" then
 						pcall(v612._reconcileScramblePortal, v612)
@@ -31343,11 +30662,11 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 
 			task.spawn(function()
 				while v16() do
-					local __S2rV4ScrambleBoss = genv.__S2rV4ScrambleBoss
+					local __SenaV4ScrambleBoss = genv.__SenaV4ScrambleBoss
 
-					if __S2rV4ScrambleBoss then
+					if __SenaV4ScrambleBoss then
 						pcall(function()
-							v4848:SetContent(string.format("%s  ·  joins %d  ·  hits %d", tostring(__S2rV4ScrambleBoss.status), __S2rV4ScrambleBoss.joins or 0, __S2rV4ScrambleBoss.hits or 0))
+							v4848:SetContent(string.format("%s  ·  joins %d  ·  hits %d", tostring(__SenaV4ScrambleBoss.status), __SenaV4ScrambleBoss.joins or 0, __SenaV4ScrambleBoss.hits or 0))
 						end)
 					end
 
@@ -31412,126 +30731,41 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Callback = v4732(v4726)
 			})
 
-			local hubUI = v4851:AddSection("S2r Hub • UI Controls")
-			hubUI:AddButton({
-				Title = "Hide Main Hub (Reopen Anytime)",
-				Content = "Hide without unloading. Tap the floating S2r logo or press Right Shift to reopen.",
-				Callback = v4732(function() s2rDock.hide() end)
-			})
-			hubUI:AddSlider({
-				Title = "Main Window Size",
-				Content = "Resize the entire hub. Automatically fits narrow phones and landscape displays.",
-				Min = 65,
-				Max = 110,
-				Default = look.Scale,
-				Increment = 5,
-				Callback = v4732(function(value)
-					if type(genv.S2rHubResizeMain) == "function" then genv.S2rHubResizeMain(value) end
-				end)
-			})
-			hubUI:AddButton({
-				Title = "Center Main Window",
-				Content = "Recenter the hub if you moved it off-screen or changed orientation.",
-				Callback = v4732(function()
-					if type(genv.S2rHubCenterMain) == "function" then genv.S2rHubCenterMain() end
-				end)
-			})
-			hubUI:AddButton({
-				Title = "Reset Floating Launcher",
-				Content = "Move the draggable S2r logo back to its default on-screen position.",
-				Callback = v4732(function() s2rDock.center() end)
-			})
-			hubUI:AddButton({
-				Title = "Compact / Expand Launcher",
-				Content = "Switch between the small logo button and the full S2r Hub launcher.",
-				Callback = v4732(function() s2rDock.compact() end)
-			})
-			hubUI:AddSlider({
-				Title = "Floating Panel Size",
-				Content = "Adjust all floating panels from 60% to 100%. Viewport fitting stays active on mobile.",
-				Min = 60,
-				Max = 100,
-				Default = 100,
-				Increment = 5,
-				Callback = v4732(function(value)
-					s2rPanels.setScale(value)
-				end)
-			})
-			hubUI:AddButton({
-				Title = "Recenter Floating Panels",
-				Content = "Restore default locations for panels that were dragged off-screen.",
-				Callback = v4732(function()
-					s2rPanels.resetPositions()
-				end)
-			})
-			hubUI:AddButton({
-				Title = "Refresh Open Panels",
-				Content = "Refresh data in open egg, inventory, and history panels immediately.",
-				Callback = v4732(function()
-					s2rPanels.refreshOpen()
-				end)
-			})
-			hubUI:AddButton({
-				Title = "Copy Enabled Features",
-				Content = "Copy a simple local list of active toggles to your clipboard; no webhook required.",
-				Callback = v4732(function()
-					local enabled = {}
-					local keys = {
-						"AutoSteal", "StealPlayers", "AutoPlace", "AutoHatch",
-						"AutoSell", "AutoSellEgg", "AutoFavorite", "AutoFusePets",
-						"AutoEquipBest", "AutoIndex", "ScrambleBossAuto", "Noclip",
-						"InfiniteJump", "AntiAFK", "AutoReconnect"
-					}
-					for _, key in ipairs(keys) do
-						if s2rV4Config[key] == true then
-							table.insert(enabled, key)
-						end
-					end
-					table.sort(enabled)
-					local summary = "S2r Hub • Enabled features: " .. (#enabled > 0 and table.concat(enabled, ", ") or "None")
-					if type(setclipboard) == "function" then
-						pcall(setclipboard, summary)
-					else
-						warn(summary)
-					end
-				end)
-			})
-
 			local Windows = v4851:AddSection("Windows")
 
 			Windows:AddButton({
 				Title = "Egg Logs",
 				Content = "Live feed of every egg that spawns on the server.",
 				Callback = v4732(function()
-					s2rPanels.openLogs()
+					senaPanels.openLogs()
 				end)
 			})
 			Windows:AddButton({
 				Title = "Egg Board",
 				Content = "Sortable list of the eggs currently up for grabs.",
 				Callback = v4732(function()
-					s2rPanels.openBoard()
+					senaPanels.openBoard()
 				end)
 			})
 			Windows:AddButton({
 				Title = "Inventory & Base",
 				Content = "Your pets, eggs and plot status in one window.",
 				Callback = v4732(function()
-					s2rPanels.openInventory()
+					senaPanels.openInventory()
 				end)
 			})
 			Windows:AddButton({
 				Title = "Egg Checker",
 				Content = "Pick eggs off the field by hand, then send them all to the steal queue.",
 				Callback = v4732(function()
-					s2rPanels.openChecker()
+					senaPanels.openChecker()
 				end)
 			})
 			Windows:AddButton({
 				Title = "Egg Data & History",
 				Content = "Drop-table values per area, plus what has actually spawned this session.",
 				Callback = v4732(function()
-					s2rPanels.openAnalyst()
+					senaPanels.openAnalyst()
 				end)
 			})
 			Windows:AddButton({
@@ -31539,10 +30773,10 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				SubTitle = "Close All Windows",
 				Content = "Opens every window at once, or hides them again.",
 				Callback = v4732(function()
-					s2rPanels.openAll()
+					senaPanels.openAll()
 				end),
 				SubCallback = v4732(function()
-					s2rPanels.closeAll()
+					senaPanels.closeAll()
 				end)
 			})
 			t216.antiTreadmill = v4851:AddSection("Blocker"):AddToggle({
@@ -31638,14 +30872,14 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Title = "Teleport To Waypoint",
 				Content = "Moves you straight to the waypoint you picked.",
 				Callback = v4732(function()
-					local __S2rV4Roaming = genv.__S2rV4Roaming
+					local __SenaV4Roaming = genv.__SenaV4Roaming
 					local v4862 = false
 
-					if __S2rV4Roaming and type(__S2rV4Roaming.teleportWaypoint) == "function" then
-						v4862 = __S2rV4Roaming.teleportWaypoint(u4745) == true
+					if __SenaV4Roaming and type(__SenaV4Roaming.teleportWaypoint) == "function" then
+						v4862 = __SenaV4Roaming.teleportWaypoint(u4745) == true
 					end
 
-					S2rLibOverride:Notify({
+					SenaLibOverride:Notify({
 						Title = "Waypoint",
 						Content = v4862 and "Moved to " .. tostring(u4745) or "That waypoint is not in this server",
 						Duration = 3
@@ -31728,7 +30962,7 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 						"BottingMode",
 						"AntiCutscene"
 					}) do
-						s2rV4Config[v] = false
+						senaV4Config[v] = false
 					end
 
 					v4560(false)
@@ -31738,11 +30972,11 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 						pcall(v612.setEnabled, v612, false)
 					end
 
-					local __S2rV4HubShutdown = genv.__S2rV4HubShutdown
+					local __SenaV4HubShutdown = genv.__SenaV4HubShutdown
 
-					if type(__S2rV4HubShutdown) == "function" then
+					if type(__SenaV4HubShutdown) == "function" then
 						task.delay(0.2, function()
-							pcall(__S2rV4HubShutdown)
+							pcall(__SenaV4HubShutdown)
 						end)
 					end
 				end)
@@ -31764,7 +30998,7 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 			})
 			t216.autoExecute = Player:AddToggle({
 				Title = "Auto Execute (Rejoin)",
-				Content = "Re-executes S2r Hub from S2r_Hub.lua in your executor workspace or a configured S2rHubSourceURL after teleport.",
+				Content = "Prepares the bootstrapper so the script runs automatically after teleport or reconnect.",
 				Default = false,
 				Callback = v4732(v4729)
 			})
@@ -31828,19 +31062,19 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Title = "Clear History",
 				Content = "Wipe the list above.",
 				Callback = v4732(function()
-					if __S2rV4PlayerSteal then
-						__S2rV4PlayerSteal:clearHistory()
+					if __SenaV4PlayerSteal then
+						__SenaV4PlayerSteal:clearHistory()
 					end
 				end)
 			})
 
-			if __S2rV4PlayerSteal and v4873 then
-				local __S2rV4IdentitySetter = genv.__S2rV4IdentitySetter
-				local __S2rV4UICapabilityIdentity = genv.__S2rV4UICapabilityIdentity or 8
+			if __SenaV4PlayerSteal and v4873 then
+				local __SenaV4IdentitySetter = genv.__SenaV4IdentitySetter
+				local __SenaV4UICapabilityIdentity = genv.__SenaV4UICapabilityIdentity or 8
 
 				local function v4877(p1095)
-					if __S2rV4IdentitySetter then
-						pcall(__S2rV4IdentitySetter, __S2rV4UICapabilityIdentity)
+					if __SenaV4IdentitySetter then
+						pcall(__SenaV4IdentitySetter, __SenaV4UICapabilityIdentity)
 					end
 
 					if not v4874 or not v4874:Alive() then
@@ -31863,15 +31097,15 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 					v4874:Update(t224)
 				end
 
-				__S2rV4PlayerSteal:onChanged(v4877)
-				v4877(__S2rV4PlayerSteal)
+				__SenaV4PlayerSteal:onChanged(v4877)
+				v4877(__SenaV4PlayerSteal)
 				task.spawn(function()
-					while genv.__S2rV4PlayerSteal == __S2rV4PlayerSteal do
+					while genv.__SenaV4PlayerSteal == __SenaV4PlayerSteal do
 						local ok, result = pcall(function()
-							local v4883 = __S2rV4PlayerSteal:listEntries()
+							local v4883 = __SenaV4PlayerSteal:listEntries()
 
-							if __S2rV4IdentitySetter then
-								pcall(__S2rV4IdentitySetter, __S2rV4UICapabilityIdentity)
+							if __SenaV4IdentitySetter then
+								pcall(__SenaV4IdentitySetter, __SenaV4UICapabilityIdentity)
 							end
 
 							if v4873:Alive() then
@@ -31880,7 +31114,7 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 						end)
 
 						if not ok then
-							warn("[S2r Hub] Player list update loop error:", result)
+							warn("[Sena Steal] Player list update loop error:", result)
 						end
 
 						task.wait(1)
@@ -31906,7 +31140,7 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 		end
 
 		do
-			local __S2rV4Visual = genv.__S2rV4Visual
+			local __SenaV4Visual = genv.__SenaV4Visual
 			local v4885 = v4742:AddTab({
 				Name = "Visual",
 				Icon = "eye"
@@ -31918,23 +31152,23 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 			local v4887
 
 			local function v4888()
-				if v4887 and __S2rV4Visual then
+				if v4887 and __SenaV4Visual then
 					pcall(function()
-						v4887:SetContent(__S2rV4Visual.status)
+						v4887:SetContent(__SenaV4Visual.status)
 					end)
 				end
 			end
 			local function v4889(p1096)
-				if not __S2rV4Visual then
+				if not __SenaV4Visual then
 					return
 				end
 
 				task.spawn(function()
-					__S2rV4Visual.spawn(p1096, t225[p1096])
+					__SenaV4Visual.spawn(p1096, t225[p1096])
 					v4888()
-					S2rLibOverride:Notify({
+					SenaLibOverride:Notify({
 						Title = "Visual",
-						Content = __S2rV4Visual.status,
+						Content = __SenaV4Visual.status,
 						Duration = 3
 					})
 				end)
@@ -31971,12 +31205,12 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Default = 1,
 				Increment = 0.1,
 				Callback = v4732(function(p1098)
-					if not __S2rV4Visual or __S2rV4Visual.rodScale == p1098 then
+					if not __SenaV4Visual or __SenaV4Visual.rodScale == p1098 then
 						return
 					end
 
-					__S2rV4Visual.rodScale = p1098
-					task.spawn(__S2rV4Visual.respawn, "rods")
+					__SenaV4Visual.rodScale = p1098
+					task.spawn(__SenaV4Visual.respawn, "rods")
 				end)
 			})
 			v4890:AddSubSection("Fish")
@@ -32009,12 +31243,12 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Callback = v4732(function(p1100)
 					local fishWeight = (tonumber(p1100) or 0) / 100
 
-					if not __S2rV4Visual or __S2rV4Visual.fishWeight == fishWeight then
+					if not __SenaV4Visual or __SenaV4Visual.fishWeight == fishWeight then
 						return
 					end
 
-					__S2rV4Visual.fishWeight = fishWeight
-					task.spawn(__S2rV4Visual.respawn, "fish")
+					__SenaV4Visual.fishWeight = fishWeight
+					task.spawn(__SenaV4Visual.respawn, "fish")
 				end)
 			})
 			v4890:AddSubSection("Manage")
@@ -32026,20 +31260,20 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Title = "Remove All Visual Items",
 				Content = "Takes every spawned rod and fish out of your backpack.",
 				Callback = v4732(function()
-					if __S2rV4Visual then
-						__S2rV4Visual.clear()
+					if __SenaV4Visual then
+						__SenaV4Visual.clear()
 					end
 
 					v4888()
 				end)
 			})
 			task.spawn(function()
-				if not __S2rV4Visual then
+				if not __SenaV4Visual then
 					return
 				end
 
-				local rods = __S2rV4Visual.names("rods")
-				local fish = __S2rV4Visual.names("fish")
+				local rods = __SenaV4Visual.names("rods")
+				local fish = __SenaV4Visual.names("fish")
 
 				pcall(function()
 					v4891:Refresh(rods)
@@ -32047,14 +31281,14 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				pcall(function()
 					v4892:Refresh(fish)
 				end)
-				__S2rV4Visual.status = #rods > 0 and string.format("%d rods and %d fish available", #rods, #fish) or "Could not load the item list. Try again later."
+				__SenaV4Visual.status = #rods > 0 and string.format("%d rods and %d fish available", #rods, #fish) or "Could not load the item list. Try again later."
 				v4888()
 			end)
 
 			local v4896 = v4885:AddSection("Steal an Egg")
 			local s21 = "Egg"
 			local n84 = 50
-			local Egg = genv.__S2rV4VisualSAE and genv.__S2rV4VisualSAE.categories("Egg") or {}
+			local Egg = genv.__SenaV4VisualSAE and genv.__SenaV4VisualSAE.categories("Egg") or {}
 			local u4900 = Egg[1]
 
 			v4896:AddDropdown({
@@ -32096,10 +31330,10 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Title = "Hold in Hand",
 				Content = "Spawns a model of it in your hand. Press again for more. (In-hand only - use the other button to also add it to All Items.)",
 				Callback = v4732(function()
-					local __S2rV4VisualSAE = genv.__S2rV4VisualSAE
+					local __SenaV4VisualSAE = genv.__SenaV4VisualSAE
 
-					if __S2rV4VisualSAE then
-						__S2rV4VisualSAE.spawn(s21, u4900, n84, true)
+					if __SenaV4VisualSAE then
+						__SenaV4VisualSAE.spawn(s21, u4900, n84, true)
 					end
 				end)
 			})
@@ -32107,10 +31341,10 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Title = "Add to Backpack (Kg)",
 				Content = "Drops it in All Items (eggs) or Pets with a huge Kg for the inventory flex. Press again for more.",
 				Callback = v4732(function()
-					local __S2rV4VisualSAE = genv.__S2rV4VisualSAE
+					local __SenaV4VisualSAE = genv.__SenaV4VisualSAE
 
-					if __S2rV4VisualSAE then
-						__S2rV4VisualSAE.spawn(s21, u4900, n84, false)
+					if __SenaV4VisualSAE then
+						__SenaV4VisualSAE.spawn(s21, u4900, n84, false)
 					end
 				end)
 			})
@@ -32118,10 +31352,10 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 				Title = "Remove Egg / Pet Visuals",
 				Content = "Takes every spawned fake egg/pet and held model out.",
 				Callback = v4732(function()
-					local __S2rV4VisualSAE = genv.__S2rV4VisualSAE
+					local __SenaV4VisualSAE = genv.__SenaV4VisualSAE
 
-					if __S2rV4VisualSAE then
-						__S2rV4VisualSAE.clear()
+					if __SenaV4VisualSAE then
+						__SenaV4VisualSAE.clear()
 					end
 				end)
 			})
@@ -32166,39 +31400,39 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 			v4904(t216.scrambleBuy, v4564)
 			v4904(t216.scrambleBuyList, v4565)
 			v4904(t216.bloomAutoNet, function(p1109)
-				s2rV4Config.ButterflyAutoNet = p1109 == true
+				senaV4Config.ButterflyAutoNet = p1109 == true
 			end)
 			v4904(t216.bloomAutoCatch, function(p1110)
-				s2rV4Config.ButterflyAutoCatch = p1110 == true
+				senaV4Config.ButterflyAutoCatch = p1110 == true
 			end)
 			v4904(t216.bloomEsp, function(p1111)
-				s2rV4Config.ButterflyEsp = p1111 == true
+				senaV4Config.ButterflyEsp = p1111 == true
 			end)
 			v4904(t216.bloomAutoTrade, function(p1112)
-				s2rV4Config.ButterflyAutoTrade = p1112 == true
+				senaV4Config.ButterflyAutoTrade = p1112 == true
 			end)
 			v4904(t216.bloomAutoCraft, function(p1113)
-				s2rV4Config.ButterflyAutoCraft = p1113 == true
+				senaV4Config.ButterflyAutoCraft = p1113 == true
 			end)
 			v4904(t216.bloomTiers, function(p1114)
-				local __S2rV4ButterflyRuntime = genv.__S2rV4ButterflyRuntime
+				local __SenaV4ButterflyRuntime = genv.__SenaV4ButterflyRuntime
 
-				if __S2rV4ButterflyRuntime then
-					__S2rV4ButterflyRuntime.setTiers(v4320(p1114))
+				if __SenaV4ButterflyRuntime then
+					__SenaV4ButterflyRuntime.setTiers(v4320(p1114))
 				end
 			end)
 			v4904(t216.bloomRecipe, function(p1115)
-				local __S2rV4ButterflyRuntime = genv.__S2rV4ButterflyRuntime
+				local __SenaV4ButterflyRuntime = genv.__SenaV4ButterflyRuntime
 
-				if __S2rV4ButterflyRuntime then
-					__S2rV4ButterflyRuntime.setRecipe(p1115)
+				if __SenaV4ButterflyRuntime then
+					__SenaV4ButterflyRuntime.setRecipe(p1115)
 				end
 			end)
 			v4904(t216.bloomMode, function(p1116)
-				local __S2rV4ButterflyRuntime = genv.__S2rV4ButterflyRuntime
+				local __SenaV4ButterflyRuntime = genv.__SenaV4ButterflyRuntime
 
-				if __S2rV4ButterflyRuntime then
-					__S2rV4ButterflyRuntime.setMode(p1116)
+				if __SenaV4ButterflyRuntime then
+					__SenaV4ButterflyRuntime.setMode(p1116)
 				end
 			end)
 			v4904(t216.noclip, v4560)
@@ -32227,16 +31461,16 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 			v4904(t216.backpackRates, v4546)
 			v4904(t216.antiGuardKnockback, v4547)
 			v4904(t216.placeRarity, function(p1118)
-				s2rV4Config.PlaceRarities = v4320(p1118)
+				senaV4Config.PlaceRarities = v4320(p1118)
 			end)
 			v4904(v4519, function(p1119)
-				s2rV4Config.SellNames = v4320(p1119)
+				senaV4Config.SellNames = v4320(p1119)
 			end)
 			v4904(v4520, function(p1120)
-				s2rV4Config.SellRarities = v4320(p1120)
+				senaV4Config.SellRarities = v4320(p1120)
 			end)
 			v4904(v4521, function(p1121)
-				s2rV4Config.SellEggRarities = v4320(p1121)
+				senaV4Config.SellEggRarities = v4320(p1121)
 			end)
 			v4904(t216.sellPetValue, v4576)
 			v4904(t216.sellEggValue, v4577)
@@ -32268,29 +31502,16 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 			v4904(t216.webhookValue, v4741)
 			v4904(t216.webhookEnabled, v4738)
 			v4904(t216.helpFriend, function(p1122)
-				s2rV4Config.HelpFriend = p1122 == true
+				senaV4Config.HelpFriend = p1122 == true
 			end)
 			v4904(t216.autoSteal, v4526)
 			v4904(t216.stealPlayers, v4734)
 		end
 
 		do
-			genv.__S2rV4HubShutdown = function()
-				-- Dispose only our own GUI windows on unload/reinject to avoid duplicates.
-				local mainGui = s2rDock.mainGui()
-				if mainGui then pcall(function() mainGui:Destroy() end) end
-				for _, panel in pairs(s2rPanels.windows or {}) do
-					if panel.gui and panel.gui.Parent then
-						pcall(function() panel.gui:Destroy() end)
-					end
-				end
-				if type(genv.__S2rHubDockCleanup) == "function" then
-					pcall(genv.__S2rHubDockCleanup)
-					genv.__S2rHubDockCleanup = nil
-					genv.S2rHubUI = nil
-				end
-				if __S2rV4PlayerSteal then
-					pcall(__S2rV4PlayerSteal.setEnabled, __S2rV4PlayerSteal, false)
+			genv.__SenaV4HubShutdown = function()
+				if __SenaV4PlayerSteal then
+					pcall(__SenaV4PlayerSteal.setEnabled, __SenaV4PlayerSteal, false)
 				end
 
 				for _, v in ipairs({
@@ -32308,7 +31529,7 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 					"ButterflyAutoTrade",
 					"ButterflyAutoCraft"
 				}) do
-					s2rV4Config[v] = false
+					senaV4Config[v] = false
 				end
 
 				if v612 then
@@ -32319,4 +31540,170 @@ Missing: %s]], __S2rV4ScrambleTradeIn.banner, __S2rV4ScrambleTradeIn.status, mat
 	end
 
 	v4315()
+
+    -- S2r quick launcher: separate ScreenGui; the original UI callbacks are untouched.
+    do
+        local UIS = game:GetService("UserInputService")
+        local host = LocalPlayer:FindFirstChildOfClass("PlayerGui") or game:GetService("CoreGui")
+        local dock = Instance.new("ScreenGui")
+        dock.Name = "S2rHubStableLauncher"
+        dock.ResetOnSpawn = false
+        dock.IgnoreGuiInset = true
+        dock.DisplayOrder = 10000
+        dock.Parent = host
+        local btn = Instance.new("TextButton")
+        btn.Name = "S2rOpenButton"
+        btn.Text = "S²r"
+        btn.Font = Enum.Font.GothamBlack
+        btn.TextScaled = true
+        btn.TextColor3 = Color3.fromRGB(244, 230, 255)
+        btn.BackgroundColor3 = Color3.fromRGB(20, 11, 32)
+        btn.BackgroundTransparency = 0.05
+        btn.BorderSizePixel = 0
+        btn.AutoButtonColor = true
+        btn.Size = UDim2.fromOffset(46, 46)
+        btn.Position = UDim2.new(1, -60, 0, 118)
+        btn.Parent = dock
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 13)
+        local edge = Instance.new("UIStroke", btn)
+        edge.Color = Color3.fromRGB(166, 94, 255)
+        edge.Thickness = 2
+        local conns = {}
+        local dead = false
+        local cachedGui, cachedTitle
+        local nextScan = 0
+        local function findMain()
+            if cachedGui and cachedGui.Parent and cachedTitle and cachedTitle.Parent then
+                return cachedGui, cachedTitle
+            end
+            if os.clock() < nextScan then return nil, nil end
+            nextScan = os.clock() + 0.8
+            cachedGui, cachedTitle = nil, nil
+            for _, root in ipairs({LocalPlayer:FindFirstChildOfClass("PlayerGui"), game:GetService("CoreGui")}) do
+                if root then
+                    local ok, result = pcall(function()
+                        for _, item in ipairs(root:GetDescendants()) do
+                            if (item:IsA("TextLabel") or item:IsA("TextButton")) and item.Text == "S2r Hub" then
+                                local gui = item:FindFirstAncestorWhichIsA("ScreenGui")
+                                if gui and gui ~= dock and not gui.Name:find("__SNE_Panel_", 1, true) then
+                                    -- Ignore small status overlays with the same brand text.
+                                    local mainSized = false
+                                    local parent = item.Parent
+                                    while parent and parent ~= gui do
+                                        if parent:IsA("GuiObject") and parent.AbsoluteSize.X >= 350 and parent.AbsoluteSize.Y >= 230 then
+                                            mainSized = true
+                                            break
+                                        end
+                                        parent = parent.Parent
+                                    end
+                                    if mainSized then return {gui, item} end
+                                end
+                            end
+                        end
+                    end)
+                    if ok and result then
+                        cachedGui, cachedTitle = result[1], result[2]
+                        return cachedGui, cachedTitle
+                    end
+                end
+            end
+        end
+        local function titleVisible(gui, title)
+            if not gui or not title or not gui.Enabled then return false end
+            local node = title
+            while node and node ~= gui do
+                if node:IsA("GuiObject") and not node.Visible then return false end
+                node = node.Parent
+            end
+            return true
+        end
+        local busy = false
+        local function refresh()
+            if dead then return end
+            local gui, title = findMain()
+            btn.Visible = busy or not titleVisible(gui, title)
+        end
+        local function reopen()
+            if busy or dead then return end
+            local gui, title = findMain()
+            if gui and title then
+                gui.Enabled = true
+                local node = title
+                while node and node ~= gui do
+                    if node:IsA("GuiObject") and not node.Visible then node.Visible = true end
+                    node = node.Parent
+                end
+                refresh()
+                return
+            end
+            -- X may destroy the external library GUI. Reload only if necessary.
+            busy = true
+            task.spawn(function()
+                local url = genv.S2rHubSourceURL or "https://raw.githubusercontent.com/preexmon-collab/Khay-Hub/refs/heads/main/S2r_Hub.lua"
+                local ok, err = pcall(function()
+                    local source = game:HttpGet(url)
+                    local chunk = assert(loadstring(source))
+                    chunk()
+                end)
+                busy = false
+                if not ok then warn("[S2r Hub] Unable to reopen GUI:", err) end
+                refresh()
+            end)
+        end
+        conns[#conns+1] = btn.MouseButton1Click:Connect(function()
+            if dragged or os.clock() < (btn:GetAttribute("S2rNoClickUntil") or 0) then return end
+            reopen()
+        end)
+        conns[#conns+1] = UIS.InputBegan:Connect(function(input, processed)
+            if not processed and input.KeyCode == Enum.KeyCode.RightShift then
+                local gui, title = findMain()
+                if titleVisible(gui, title) then
+                    gui.Enabled = false
+                    refresh()
+                else
+                    reopen()
+                end
+            end
+        end)
+        -- Drag support on touch and desktop; ignore the click after a drag.
+        local dragOrigin, startPos, dragInput, dragged
+        conns[#conns+1] = btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragOrigin, startPos, dragInput, dragged = input.Position, btn.Position, input, false
+            end
+        end)
+        conns[#conns+1] = UIS.InputChanged:Connect(function(input)
+            if dragOrigin and (input == dragInput or input.UserInputType == Enum.UserInputType.MouseMovement and dragInput and dragInput.UserInputType == Enum.UserInputType.MouseButton1) then
+                local delta = input.Position - dragOrigin
+                if delta.Magnitude > 7 then dragged = true end
+                if dragged then
+                    btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end
+        end)
+        conns[#conns+1] = UIS.InputEnded:Connect(function(input)
+            if input == dragInput or input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragInput, dragOrigin, startPos = nil, nil, nil
+                if dragged then
+                    -- A drag can emit a click, so suppress the immediate reopen.
+                    btn:SetAttribute("S2rNoClickUntil", os.clock() + 0.25)
+                end
+                dragged = false
+            end
+        end)
+        -- No game-feature state is modified by this updater.
+        task.spawn(function()
+            while not dead and dock.Parent do
+                pcall(refresh)
+                task.wait(0.7)
+            end
+        end)
+        genv.__S2rHubDockCleanup = function()
+            if dead then return end
+            dead = true
+            for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+            dock:Destroy()
+        end
+        refresh()
+    end
 end
