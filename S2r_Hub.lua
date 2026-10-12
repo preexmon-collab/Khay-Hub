@@ -27492,24 +27492,26 @@ do
 	v3692()
 
 
--- S2r Hub ORIGINAL GUI layer. Standalone Roblox UI; no third-party GUI assets or UI library.
+-- S2r Hub glass UI layer. Original artwork and native Roblox instances; no external UI assets.
 -- This library implements the pre-existing UI factory interface. Gameplay callbacks stay in the host script.
-local function S2rOriginalUILibrary()
+local function S2rGlassUILibrary()
     local Players = game:GetService("Players")
     local UIS = game:GetService("UserInputService")
     local RunServiceUI = game:GetService("RunService")
     local localPlayer = Players.LocalPlayer
     local P = {
-        bg = Color3.fromRGB(9, 8, 15),
-        surface = Color3.fromRGB(18, 15, 29),
-        layer = Color3.fromRGB(24, 19, 37),
-        field = Color3.fromRGB(34, 27, 49),
-        edge = Color3.fromRGB(57, 42, 81),
-        violet = Color3.fromRGB(163, 91, 255),
-        bright = Color3.fromRGB(207, 163, 255),
-        white = Color3.fromRGB(244, 237, 255),
-        muted = Color3.fromRGB(169, 158, 191),
-        green = Color3.fromRGB(96, 217, 165),
+        bg = Color3.fromRGB(12, 10, 23),
+        surface = Color3.fromRGB(20, 15, 32),
+        layer = Color3.fromRGB(32, 24, 48),
+        field = Color3.fromRGB(47, 34, 67),
+        hover = Color3.fromRGB(64, 43, 91),
+        selected = Color3.fromRGB(93, 53, 141),
+        edge = Color3.fromRGB(131, 93, 176),
+        violet = Color3.fromRGB(174, 101, 255),
+        bright = Color3.fromRGB(225, 194, 255),
+        white = Color3.fromRGB(251, 247, 255),
+        muted = Color3.fromRGB(187, 179, 201),
+        green = Color3.fromRGB(102, 227, 171),
     }
     local function create(kind, props, parent)
         local x = Instance.new(kind)
@@ -27531,7 +27533,7 @@ local function S2rOriginalUILibrary()
     end
     local function button(parent, txt, fill)
         local b=create("TextButton", {
-            Text=tostring(txt or ""), Font=Enum.Font.GothamBold, TextSize=12,
+            Text=tostring(txt or ""), Font=Enum.Font.GothamBold, TextSize=13,
             TextColor3=P.white, BackgroundColor3=fill or P.field,
             AutoButtonColor=true, BorderSizePixel=0,
         }, parent)
@@ -27559,75 +27561,140 @@ local function S2rOriginalUILibrary()
             pcall(previousEnv.__S2rOriginalUICleanup)
             previousEnv.__S2rOriginalUICleanup=nil
         end
-        local older=guiParent:FindFirstChild("S2rOriginalInterface")
-        if older then older:Destroy() end
+        if type(previousEnv.__S2rGlassUICleanup)=="function" then
+            pcall(previousEnv.__S2rGlassUICleanup)
+            previousEnv.__S2rGlassUICleanup=nil
+        end
+        for _,oldName in ipairs({"S2rGlassInterface","S2rOriginalInterface"}) do
+            local older=guiParent:FindFirstChild(oldName)
+            if older then older:Destroy() end
+        end
         local root=create("ScreenGui", {
-            Name="S2rOriginalInterface", ResetOnSpawn=false, IgnoreGuiInset=true,
+            Name="S2rGlassInterface", ResetOnSpawn=false, IgnoreGuiInset=true,
             DisplayOrder=8500, ZIndexBehavior=Enum.ZIndexBehavior.Sibling,
         }, guiParent)
-        local shell=create("Frame", {
-            Name="S2rControlCenter", BackgroundColor3=P.bg, BorderSizePixel=0,
-            AnchorPoint=Vector2.new(0.5,0.5), Position=UDim2.fromScale(.5,.5),
-            Size=UDim2.fromOffset(768,494), ClipsDescendants=true,
+        -- Compact glass window; the game remains visible around and through it.
+        -- No full-screen scrim, remote images or whole-screen blur effects.
+        local BASE_W, BASE_H = 740, 430
+        local shadow=create("Frame", {
+            Name="GlassDepth", BackgroundColor3=Color3.fromRGB(6,4,16),
+            BackgroundTransparency=0.67, BorderSizePixel=0,
+            AnchorPoint=Vector2.new(0.5,0.5),Position=UDim2.fromScale(.5,.5),
+            Size=UDim2.fromOffset(BASE_W+10,BASE_H+10), ZIndex=0,
         },root)
-        corner(shell,15)
-        stroke(shell,P.violet,1.3,.06)
+        corner(shadow,22)
+        local shell=create("Frame", {
+            Name="S2rGlassWindow", BackgroundColor3=P.bg, BackgroundTransparency=0.22,
+            BorderSizePixel=0, AnchorPoint=Vector2.new(0.5,0.5),
+            Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(BASE_W,BASE_H),
+            ClipsDescendants=true, ZIndex=1,
+        },root)
+        corner(shell,19)
+        stroke(shell,P.violet,1.4,.13)
+        create("UIGradient", {Rotation=32,Color=ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(33,22,54)),
+            ColorSequenceKeypoint.new(.55,Color3.fromRGB(10,9,20)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(26,14,39))
+        })},shell)
         local scale=create("UIScale",{Scale=1},shell)
+        local shadowScale=create("UIScale",{Scale=1},shadow)
+        local compact=false
         local function fit()
             if not root.Parent then return end
             local cam=workspace.CurrentCamera
             if not cam then return end
             local vp=cam.ViewportSize
-            scale.Scale=math.clamp(math.min((vp.X-26)/768,(vp.Y-48)/494,1),.38,1)
+            local auto=math.min(vp.X*0.78/BASE_W,vp.Y*0.76/BASE_H,1)
+            local maxFit=math.max(.22,math.min((vp.X-16)/BASE_W,(vp.Y-16)/BASE_H,1.04))
+            local newScale=math.min(math.max(.22,auto*(compact and .84 or 1)),maxFit)
+            scale.Scale=newScale
+            shadowScale.Scale=newScale
         end
         fit()
         local sizeConn
         if workspace.CurrentCamera then
-            sizeConn=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fit)
+            sizeConn=workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+                fit()
+                shell.Position=UDim2.fromScale(.5,.5)
+                shadow.Position=shell.Position
+            end)
         end
-        local bar=create("Frame",{Name="TopBar",Size=UDim2.new(1,0,0,68),BackgroundColor3=P.surface,BorderSizePixel=0},shell)
-        create("Frame",{Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,1,-1),BackgroundColor3=P.edge,BorderSizePixel=0},bar)
-        local mark=create("Frame",{Size=UDim2.fromOffset(43,43),Position=UDim2.fromOffset(17,12),BackgroundColor3=P.layer,BorderSizePixel=0},bar)
-        corner(mark,12);stroke(mark,P.violet,1.5)
-        local markLabel=label(mark,"S²r",18,true,P.bright)
+        local bar=create("Frame",{Name="GlassHeader",Size=UDim2.new(1,0,0,62),BackgroundColor3=P.surface,BackgroundTransparency=.26,BorderSizePixel=0},shell)
+        create("UIGradient",{Rotation=10,Color=ColorSequence.new({
+            ColorSequenceKeypoint.new(0,Color3.fromRGB(41,22,66)),
+            ColorSequenceKeypoint.new(1,Color3.fromRGB(16,13,30))
+        })},bar)
+        create("Frame",{Size=UDim2.new(1,0,0,2),BackgroundColor3=P.violet,BackgroundTransparency=.24,BorderSizePixel=0},bar)
+        create("Frame",{Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,1,-1),BackgroundColor3=P.bright,BackgroundTransparency=.82,BorderSizePixel=0},bar)
+        local mark=create("Frame",{Size=UDim2.fromOffset(39,39),Position=UDim2.fromOffset(16,11),BackgroundColor3=P.selected,BackgroundTransparency=.25,BorderSizePixel=0},bar)
+        corner(mark,13);stroke(mark,P.violet,1.6,.07)
+        local markLabel=label(mark,"S2r",17,true,P.white)
         markLabel.Size=UDim2.fromScale(1,1);markLabel.TextXAlignment=Enum.TextXAlignment.Center
-        local title=label(bar,"S2r HUB",23,true,P.white)
-        title.Position=UDim2.fromOffset(71,17);title.Size=UDim2.fromOffset(200,33)
-        local searchWrap=create("Frame",{Size=UDim2.fromOffset(208,34),Position=UDim2.new(1,-311,0,18),BackgroundColor3=P.field,BorderSizePixel=0},bar)
-        corner(searchWrap,10);stroke(searchWrap,P.edge,1)
+        local title=label(bar,"S2r Hub",20,true,P.white)
+        title.Position=UDim2.fromOffset(66,11);title.Size=UDim2.fromOffset(176,28)
+        local subTitle=label(bar,"S2R  /  EVENTS  /  TOOLS",9,true,P.bright)
+        subTitle.Position=UDim2.fromOffset(67,36);subTitle.Size=UDim2.fromOffset(168,13)
+        local searchWrap=create("Frame",{Size=UDim2.fromOffset(206,32),Position=UDim2.new(1,-315,0,15),BackgroundColor3=P.field,BackgroundTransparency=.3,BorderSizePixel=0},bar)
+        corner(searchWrap,16);stroke(searchWrap,P.edge,1,.43)
         local search=create("TextBox",{
-            ClearTextOnFocus=false, Text="", PlaceholderText="Search current tab...",
+            ClearTextOnFocus=false, Text="", PlaceholderText="Search features...",
             PlaceholderColor3=P.muted, TextColor3=P.white, BackgroundTransparency=1,
             Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,
-            Position=UDim2.fromOffset(13,0),Size=UDim2.new(1,-20,1,0),
+            Position=UDim2.fromOffset(12,0),Size=UDim2.new(1,-19,1,0),
         },searchWrap)
-        local hide=button(bar,"—",P.field);hide.Size=UDim2.fromOffset(35,34);hide.Position=UDim2.new(1,-90,0,18)
-        local close=button(bar,"×",P.field);close.TextSize=20;close.Size=UDim2.fromOffset(35,34);close.Position=UDim2.new(1,-47,0,18)
-        local left=create("Frame",{Position=UDim2.fromOffset(0,68),Size=UDim2.new(0,175,1,-68),BackgroundColor3=P.surface,BorderSizePixel=0},shell)
-        create("Frame",{Size=UDim2.new(0,1,1,0),Position=UDim2.new(1,-1,0,0),BackgroundColor3=P.edge,BorderSizePixel=0},left)
-        local navigation=create("ScrollingFrame",{
-            Name="Navigation",Position=UDim2.fromOffset(10,12),Size=UDim2.new(1,-20,1,-20),
-            BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,ScrollBarImageColor3=P.violet,
-            CanvasSize=UDim2.fromOffset(0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,
-        },left)
-        list(navigation,7)
-        local contentArea=create("Frame",{
-            Position=UDim2.fromOffset(175,68),Size=UDim2.new(1,-175,1,-68),
-            BackgroundColor3=P.bg,BorderSizePixel=0,ClipsDescendants=true,
+        -- Small/normal size button, then hide button; reopening never destroys the GUI.
+        local sizeButton=button(bar,"−",P.field)
+        sizeButton.Size=UDim2.fromOffset(34,32);sizeButton.Position=UDim2.new(1,-88,0,15)
+        sizeButton.BackgroundTransparency=.22;corner(sizeButton,16);stroke(sizeButton,P.edge,1,.38)
+        local close=button(bar,"×",P.field)
+        close.TextSize=20;close.Size=UDim2.fromOffset(34,32);close.Position=UDim2.new(1,-46,0,15)
+        close.BackgroundTransparency=.22;corner(close,16);stroke(close,P.edge,1,.38)
+        sizeButton.MouseButton1Click:Connect(function()
+            compact=not compact
+            sizeButton.Text=compact and "+" or "−"
+            fit()
+        end)
+        -- Reference-inspired horizontal tabs, but all original tabs and callbacks remain.
+        local navBand=create("Frame", {
+            Name="GlassTabRail",Position=UDim2.fromOffset(0,62),Size=UDim2.new(1,0,0,49),
+            BackgroundColor3=P.surface,BackgroundTransparency=.34,BorderSizePixel=0,
         },shell)
-        -- No decorative theme / version footer; give the feature list more room.
-        local launcher=button(root,"S²r",P.surface)
+        create("Frame",{Size=UDim2.new(1,-30,0,1),Position=UDim2.new(0,15,1,-1),
+            BackgroundColor3=P.bright,BackgroundTransparency=.87,BorderSizePixel=0},navBand)
+        local navigation=create("ScrollingFrame",{
+            Name="Navigation",Position=UDim2.fromOffset(14,7),Size=UDim2.new(1,-28,1,-11),
+            BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=2,
+            ScrollBarImageColor3=P.violet,ScrollingDirection=Enum.ScrollingDirection.X,
+            CanvasSize=UDim2.fromOffset(0,0),AutomaticCanvasSize=Enum.AutomaticSize.X,
+        },navBand)
+        create("UIListLayout",{
+            Padding=UDim.new(0,7),FillDirection=Enum.FillDirection.Horizontal,
+            SortOrder=Enum.SortOrder.LayoutOrder,VerticalAlignment=Enum.VerticalAlignment.Center,
+        },navigation)
+        local contentArea=create("Frame",{
+            Name="GlassContents",Position=UDim2.fromOffset(0,111),
+            Size=UDim2.new(1,0,1,-111),BackgroundColor3=P.bg,
+            BackgroundTransparency=.52,BorderSizePixel=0,ClipsDescendants=true,
+        },shell)
+        -- The launcher is visible ONLY when the window is hidden.
+        local launcher=button(root,"S2r",P.surface)
         launcher.Name="ReopenS2r";launcher.Font=Enum.Font.GothamBlack
-        launcher.TextColor3=P.bright;launcher.TextSize=17
-        launcher.Size=UDim2.fromOffset(49,49)
-        launcher.Position=UDim2.new(1,-65,0,104);launcher.Visible=false
-        corner(launcher,15);stroke(launcher,P.violet,2,.02)
+        launcher.TextColor3=P.bright;launcher.TextSize=15
+        launcher.Size=UDim2.fromOffset(43,43)
+        launcher.Position=UDim2.new(0,20,0.45,0);launcher.Visible=false
+        launcher.BackgroundTransparency=.13
+        corner(launcher,15);stroke(launcher,P.violet,1.7,.08)
+        local state
         local function showWindow(visible)
+            if not visible and state and state.popup then
+                state.popup:Destroy()
+                state.popup=nil
+            end
             shell.Visible=visible
+            shadow.Visible=visible
             launcher.Visible=not visible
             if visible then fit() end
         end
-        hide.MouseButton1Click:Connect(function() showWindow(false) end)
         close.MouseButton1Click:Connect(function() showWindow(false) end)
         local lastLauncherDrag=0
         launcher.MouseButton1Click:Connect(function()
@@ -27651,7 +27718,15 @@ local function S2rOriginalUILibrary()
         local moveConn=UIS.InputChanged:Connect(function(input)
             if dragging and (input==dragPointer or (dragPointer and dragPointer.UserInputType==Enum.UserInputType.MouseButton1 and input.UserInputType==Enum.UserInputType.MouseMovement)) then
                 local d=input.Position-dragStart
-                shell.Position=UDim2.new(windowStart.X.Scale,windowStart.X.Offset+d.X,windowStart.Y.Scale,windowStart.Y.Offset+d.Y)
+                local vp=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1024,768)
+                local halfW,halfH=shell.AbsoluteSize.X/2,shell.AbsoluteSize.Y/2
+                local x=windowStart.X.Scale*vp.X+windowStart.X.Offset+d.X
+                local y=windowStart.Y.Scale*vp.Y+windowStart.Y.Offset+d.Y
+                shell.Position=UDim2.fromOffset(
+                    math.clamp(x,halfW+8,math.max(halfW+8,vp.X-halfW-8)),
+                    math.clamp(y,halfH+8,math.max(halfH+8,vp.Y-halfH-8))
+                )
+                shadow.Position=shell.Position
             end
         end)
         local endConn=UIS.InputEnded:Connect(function(input)
@@ -27671,8 +27746,8 @@ local function S2rOriginalUILibrary()
                     lastLauncherDrag=os.clock()
                     local vp=workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1024,768)
                     launcher.Position=UDim2.fromOffset(
-                        math.clamp(launchDrag.position.X.Scale*vp.X+launchDrag.position.X.Offset+delta.X,5,vp.X-55),
-                        math.clamp(launchDrag.position.Y.Scale*vp.Y+launchDrag.position.Y.Offset+delta.Y,65,vp.Y-55)
+                        math.clamp(launchDrag.position.X.Scale*vp.X+launchDrag.position.X.Offset+delta.X,5,math.max(5,vp.X-48)),
+                        math.clamp(launchDrag.position.Y.Scale*vp.Y+launchDrag.position.Y.Offset+delta.Y,60,math.max(60,vp.Y-48))
                     )
                 end
             end
@@ -27680,24 +27755,23 @@ local function S2rOriginalUILibrary()
         local launchEnd=UIS.InputEnded:Connect(function(input)
             if launchDrag and (input==launchDrag.source or input.UserInputType==Enum.UserInputType.MouseButton1) then launchDrag=nil end
         end)
-        local state={tabs={},active=nil,root=root,popup=nil}
+        state={tabs={},active=nil,root=root,popup=nil}
         local function hidePopup()
             if state.popup then state.popup:Destroy();state.popup=nil end
         end
         local function switchTab(tab)
             hidePopup()
-            if state.active then
-                state.active.page.Visible=false
-                state.active.nav.BackgroundColor3=P.surface
-                state.active.nav.TextColor3=P.muted
-            end
             state.active=tab
-            tab.page.Visible=true
-            tab.nav.BackgroundColor3=P.field
-            tab.nav.TextColor3=P.white
             for _,t in ipairs(state.tabs) do
-                t.page.CanvasPosition=Vector2.new(0,0)
+                local selected=(t==tab)
+                t.page.Visible=selected
+                t.nav.BackgroundColor3=selected and P.selected or P.field
+                t.nav.BackgroundTransparency=selected and .12 or .54
+                t.nav.TextColor3=selected and P.white or P.muted
+                local indicator=t.nav:FindFirstChild("ActiveAccent")
+                if indicator then indicator.Visible=selected end
             end
+            tab.page.CanvasPosition=Vector2.new(0,0)
             search.Text=""
         end
         local function applySearch()
@@ -27722,16 +27796,17 @@ local function S2rOriginalUILibrary()
         function window:AddTab(info)
             info=info or {}
             local titleText=tostring(info.Name or "TAB")
-            local nav=button(navigation,"  "..titleText,P.surface)
+            local nav=button(navigation,titleText,P.field)
             nav.Name="Tab_"..titleText;nav.TextSize=12
-            nav.TextColor3=P.muted
-            nav.TextXAlignment=Enum.TextXAlignment.Left
-            nav.Size=UDim2.new(1,-1,0,39)
-            local accent=create("Frame",{Size=UDim2.fromOffset(3,23),Position=UDim2.fromOffset(4,8),BackgroundColor3=P.violet,BorderSizePixel=0,Visible=false},nav)
-            corner(accent,3)
+            nav.TextColor3=P.muted;nav.BackgroundTransparency=.54
+            nav.TextXAlignment=Enum.TextXAlignment.Center
+            nav.Size=UDim2.fromOffset(math.max(83,math.min(164,#titleText*7+28)),31)
+            corner(nav,15);stroke(nav,P.edge,1,.74)
+            local accent=create("Frame",{Name="ActiveAccent",Size=UDim2.new(1,-18,0,2),Position=UDim2.new(0,9,1,-3),BackgroundColor3=P.bright,BorderSizePixel=0,Visible=false},nav)
+            corner(accent,2)
             local page=create("ScrollingFrame",{
                 Name="Page_"..titleText,BackgroundTransparency=1,BorderSizePixel=0,
-                Position=UDim2.fromOffset(13,12),Size=UDim2.new(1,-26,1,-23),
+                Position=UDim2.fromOffset(14,9),Size=UDim2.new(1,-28,1,-19),
                 CanvasSize=UDim2.fromOffset(0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,
                 ScrollBarThickness=3,ScrollBarImageColor3=P.violet,Visible=false,
                 ScrollingDirection=Enum.ScrollingDirection.Y,
@@ -27741,10 +27816,12 @@ local function S2rOriginalUILibrary()
             table.insert(state.tabs,tab)
             nav.MouseButton1Click:Connect(function()
                 switchTab(tab)
-                for _,t in ipairs(state.tabs) do
-                    local dot=t.nav:FindFirstChildOfClass("Frame")
-                    if dot then dot.Visible=(t==tab) end
-                end
+            end)
+            nav.MouseEnter:Connect(function()
+                if state.active~=tab then nav.BackgroundColor3=P.hover;nav.BackgroundTransparency=.30 end
+            end)
+            nav.MouseLeave:Connect(function()
+                if state.active~=tab then nav.BackgroundColor3=P.field;nav.BackgroundTransparency=.54 end
             end)
             function tab:AddSection(name)
                 name=tostring(name or "Section")
@@ -27752,29 +27829,50 @@ local function S2rOriginalUILibrary()
                     Name="Section_"..name,Size=UDim2.new(1,-5,0,0),AutomaticSize=Enum.AutomaticSize.Y,
                     BackgroundTransparency=1,BorderSizePixel=0,
                 },page)
-                list(sectionFrame,6)
-                local head=create("Frame",{Size=UDim2.new(1,0,0,37),BackgroundTransparency=1,BorderSizePixel=0},sectionFrame)
-                local stripe=create("Frame",{Size=UDim2.fromOffset(3,19),Position=UDim2.fromOffset(1,9),BackgroundColor3=P.violet,BorderSizePixel=0},head)
+                list(sectionFrame,5)
+                local head=create("Frame",{Size=UDim2.new(1,0,0,32),BackgroundTransparency=1,BorderSizePixel=0},sectionFrame)
+                local stripe=create("Frame",{Size=UDim2.fromOffset(3,18),Position=UDim2.fromOffset(1,7),BackgroundColor3=P.violet,BorderSizePixel=0},head)
                 corner(stripe,2)
-                local heading=label(head,name,15,true,P.white)
+                local heading=label(head,name,14,true,P.white)
                 heading.Position=UDim2.fromOffset(13,0);heading.Size=UDim2.new(1,-15,1,0)
                 local entries=create("Frame",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0},sectionFrame)
-                list(entries,8)
+                -- Two self-sizing columns; each control retains its own original handle and callback.
+                local columns={}
+                for i=1,2 do
+                    local column=create("Frame",{
+                        Size=UDim2.new(.5,-6,0,0),Position=UDim2.new((i-1)*.5,(i==1 and 0 or 6),0,0),
+                        AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,
+                    },entries)
+                    list(column,9)
+                    columns[i]=column
+                end
+                local nextColumn=0
+                local function columnForNext()
+                    nextColumn=nextColumn+1
+                    return columns[(nextColumn-1)%2+1]
+                end
                 local section={frame=sectionFrame,name=name,items={}}
                 table.insert(tab.sections,section)
                 local function row(opts,h)
                     opts=opts or {}
                     local subtitle=tostring(opts.Content or "")
-                    local actual=h or math.clamp(65 + math.ceil(#subtitle/75)*16,67,142)
-                    local card=create("Frame",{Size=UDim2.new(1,-2,0,actual),BackgroundColor3=P.layer,BorderSizePixel=0,ClipsDescendants=false},entries)
-                    corner(card,10);stroke(card,P.edge,1,.38)
-                    local headingText=label(card,opts.Title or "",13,true,P.white)
-                    headingText.Position=UDim2.fromOffset(14,10);headingText.Size=UDim2.new(1,-157,0,21)
-                    local contentText=label(card,subtitle,11,false,P.muted)
-                    contentText.Position=UDim2.fromOffset(14,31)
-                    contentText.Size=UDim2.new(1,-166,1,-39)
+                    local actual=h or math.clamp(76+math.ceil(#subtitle/43)*13,86,170)
+                    local card=create("Frame",{
+                        Size=UDim2.new(1,0,0,actual),BackgroundColor3=P.layer,
+                        BackgroundTransparency=.22,BorderSizePixel=0,ClipsDescendants=false,
+                    },columnForNext())
+                    corner(card,15);stroke(card,P.edge,1,.52)
+                    local headingText=label(card,opts.Title or "",12,true,P.white)
+                    headingText.Position=UDim2.fromOffset(13,9)
+                    headingText.Size=UDim2.new(1,-116,0,23)
+                    headingText.TextTruncate=Enum.TextTruncate.AtEnd
+                    local contentText=label(card,subtitle,10,false,P.muted)
+                    contentText.Position=UDim2.fromOffset(13,34)
+                    contentText.Size=UDim2.new(1,-25,1,-42)
                     contentText.TextWrapped=true
                     contentText.TextYAlignment=Enum.TextYAlignment.Top
+                    card.MouseEnter:Connect(function() card.BackgroundTransparency=.10 end)
+                    card.MouseLeave:Connect(function() card.BackgroundTransparency=.22 end)
                     local item={frame=card,search=tostring(opts.Title or "").." "..subtitle}
                     table.insert(section.items,item)
                     return card,headingText,contentText
@@ -27799,7 +27897,7 @@ local function S2rOriginalUILibrary()
                     return handle
                 end
                 function section:AddSubSection(text)
-                    local bar=create("Frame",{Size=UDim2.new(1,-4,0,25),BackgroundTransparency=1},entries)
+                    local bar=create("Frame",{Size=UDim2.new(1,0,0,25),BackgroundTransparency=1},columnForNext())
                     local textlabel=label(bar,string.upper(tostring(text or "")),10,true,P.bright)
                     textlabel.Size=UDim2.fromScale(1,1);textlabel.Position=UDim2.fromOffset(5,0)
                     table.insert(section.items,{frame=bar,search=tostring(text)})
@@ -27810,7 +27908,9 @@ local function S2rOriginalUILibrary()
                     local card,headingText,contentText=row(opts)
                     local track=button(card,"",P.field)
                     track.Size=UDim2.fromOffset(51,27);track.AnchorPoint=Vector2.new(1,.5)
-                    track.Position=UDim2.new(1,-14,.5,0)
+                    track.Position=UDim2.new(1,-13,0,11)
+                    track.AnchorPoint=Vector2.new(1,0)
+                    track.BackgroundTransparency=.16
                     corner(track,14)
                     local dot=create("Frame",{Size=UDim2.fromOffset(19,19),Position=UDim2.fromOffset(4,4),BackgroundColor3=P.muted,BorderSizePixel=0},track)
                     corner(dot,10)
@@ -27829,7 +27929,9 @@ local function S2rOriginalUILibrary()
                     local card,headingText,contentText=row(opts)
                     local action=button(card,"RUN  ›",P.field)
                     action.Size=UDim2.fromOffset(92,31);action.AnchorPoint=Vector2.new(1,.5)
-                    action.Position=UDim2.new(1,-13,.5,0)
+                    action.Position=UDim2.new(1,-12,0,9)
+                    action.AnchorPoint=Vector2.new(1,0)
+                    action.BackgroundTransparency=.16
                     stroke(action,P.violet,1,.25)
                     action.MouseButton1Click:Connect(function() safeCall(opts.Callback) end)
                     return handleFor(opts,card,headingText,contentText,nil,nil)
@@ -27843,7 +27945,7 @@ local function S2rOriginalUILibrary()
                 end
                 function section:AddInput(opts)
                     opts=opts or {}
-                    local card,headingText,contentText=row(opts,86)
+                    local card,headingText,contentText=row(opts,105)
                     headingText.Size=UDim2.new(1,-30,0,21)
                     contentText.Size=UDim2.new(1,-30,0,21)
                     local field=create("TextBox",{
@@ -27860,7 +27962,7 @@ local function S2rOriginalUILibrary()
                 end
                 function section:AddSlider(opts)
                     opts=opts or {}
-                    local card,headingText,contentText=row(opts,90)
+                    local card,headingText,contentText=row(opts,105)
                     local min,max=tonumber(opts.Min) or 0,tonumber(opts.Max) or 100
                     local step=tonumber(opts.Increment) or 1
                     local function quant(v)
@@ -27895,7 +27997,7 @@ local function S2rOriginalUILibrary()
                 end
                 function section:AddDropdown(opts)
                     opts=opts or {}
-                    local card,headingText,contentText=row(opts,82)
+                    local card,headingText,contentText=row(opts,105)
                     headingText.Size=UDim2.new(1,-22,0,19)
                     contentText.Size=UDim2.new(1,-22,0,20)
                     local selector=button(card,"SELECT  ▾",P.field)
@@ -27962,7 +28064,7 @@ local function S2rOriginalUILibrary()
                 end
                 function section:AddActionList(opts)
                     opts=opts or {}
-                    local card,headingText,contentText=row(opts,140)
+                    local card,headingText,contentText=row(opts,170)
                     headingText.Size=UDim2.new(1,-20,0,20)
                     contentText.Visible=false
                     local container=create("ScrollingFrame",{
@@ -28016,7 +28118,7 @@ local function S2rOriginalUILibrary()
                 return section
             end
             nav.MouseButton1Click:Connect(function() applySearch() end)
-            if #state.tabs==1 then switchTab(tab);accent.Visible=true end
+            if #state.tabs==1 then switchTab(tab) end
             return tab
         end
         function window:AddForum(info)
@@ -28044,7 +28146,7 @@ local function S2rOriginalUILibrary()
         end
         local connCleanup = {keyConn, moveConn, endConn, launchMove, launchEnd, sizeConn}
         local env=getgenv and getgenv() or _G
-        env.__S2rOriginalUICleanup=function()
+        env.__S2rGlassUICleanup=function()
             for _,connection in ipairs(connCleanup) do
                 if connection then pcall(function() connection:Disconnect() end) end
             end
@@ -28068,7 +28170,7 @@ end
 		genv.ChloeX_Instance = nil
 
 		-- S2r original interface: no external GUI library, gameplay callbacks unchanged.
-		local SenaLibOverride = S2rOriginalUILibrary()
+		local SenaLibOverride = S2rGlassUILibrary()
 
 		if not SenaLibOverride then
 			warn("[Sena] UI library failed to load")
