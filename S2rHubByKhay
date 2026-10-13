@@ -27502,6 +27502,7 @@ local function S2rGlassUILibrary()
     local Players = game:GetService("Players")
     local UIS = game:GetService("UserInputService")
     local RunServiceUI = game:GetService("RunService")
+    local TextService = game:GetService("TextService")
     local localPlayer = Players.LocalPlayer
     local P = {
         bg = Color3.fromRGB(12, 10, 23),
@@ -27600,7 +27601,7 @@ local function S2rGlassUILibrary()
         },root)
         corner(shadow,22)
         local shell=create("Frame", {
-            Name="S2rGlassWindow", BackgroundColor3=P.bg, BackgroundTransparency=0.29,
+            Name="S2rGlassWindow", BackgroundColor3=P.bg, BackgroundTransparency=0.14,
             BorderSizePixel=0, AnchorPoint=Vector2.new(0.5,0.5),
             Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(BASE_W,BASE_H),
             ClipsDescendants=true, ZIndex=1,
@@ -27734,16 +27735,16 @@ local function S2rGlassUILibrary()
         local contentArea=create("Frame",{
             Name="GlassContents",Position=UDim2.fromOffset(0,111),
             Size=UDim2.new(1,0,1,-111),BackgroundColor3=P.bg,
-            BackgroundTransparency=.57,BorderSizePixel=0,ClipsDescendants=true,
+            BackgroundTransparency=.23,BorderSizePixel=0,ClipsDescendants=true,
         },shell)
         refs={header=bar,nav=navBand,content=contentArea,search=searchWrap,title=title,subtitle=subTitle}
         fit()
         local glassPresetIndex=1
-        local cardTransparency=.32
+        local cardTransparency=.12
         local glassPresets={
-            {.29,.30,.39,.57,.74,.32}, -- balanced
-            {.52,.55,.60,.76,.87,.48}, -- clearer glass
-            {.13,.18,.24,.38,.63,.16}, -- text-first readability
+            {.14,.15,.22,.23,.68,.12}, -- readable black-violet glass
+            {.36,.34,.43,.47,.77,.29}, -- translucent glass
+            {.07,.10,.14,.13,.60,.05}, -- high contrast
         }
         glassButton.MouseButton1Click:Connect(function()
             glassPresetIndex=glassPresetIndex%#glassPresets+1
@@ -27873,6 +27874,9 @@ local function S2rGlassUILibrary()
                     if match then matches+=1 end
                 end
                 section.frame.Visible=matches>0 or (text=="" and #section.items==0)
+                -- Repack only visible cards, then resize the entire section.
+                -- UIListLayout.AbsoluteContentSize can lag when Roblox scales a GUI.
+                section.relayout()
             end
         end
         search:GetPropertyChangedSignal("Text"):Connect(applySearch)
@@ -27909,8 +27913,10 @@ local function S2rGlassUILibrary()
             end)
             function tab:AddSection(name)
                 name=tostring(name or "Section")
+                -- Explicit heights, not AutomaticSize.Y. Dynamic automatic sizing was
+                -- placing later sections over previous cards on mobile/landscape.
                 local sectionFrame=create("Frame",{
-                    Name="Section_"..name,Size=UDim2.new(1,-5,0,0),AutomaticSize=Enum.AutomaticSize.Y,
+                    Name="Section_"..name,Size=UDim2.new(1,-5,0,37),
                     BackgroundTransparency=1,BorderSizePixel=0,
                 },page)
                 list(sectionFrame,5)
@@ -27922,38 +27928,53 @@ local function S2rGlassUILibrary()
                 local entries=create("Frame",{
                     Size=UDim2.new(1,0,0,0),BackgroundTransparency=1,BorderSizePixel=0,
                 },sectionFrame)
-                -- Explicitly size the two-column container from its list layouts.
-                -- Absolute-positioned columns alone may not contribute to AutomaticSize.Y.
-                local columns,layouts={},{}
+                local columns={}
                 for i=1,2 do
                     local column=create("Frame",{
-                        Size=UDim2.new(.5,-6,0,0),Position=UDim2.new((i-1)*.5,(i==1 and 0 or 6),0,0),
-                        AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,
+                        Size=UDim2.new(.5,-6,0,0),
+                        Position=UDim2.new((i-1)*.5,(i==1 and 0 or 6),0,0),
+                        BackgroundTransparency=1,BorderSizePixel=0,
                     },entries)
-                    layouts[i]=list(column,9)
+                    list(column,9)
                     columns[i]=column
                 end
                 local section={frame=sectionFrame,name=name,items={}}
-                local function updateHeight()
-                    if not entries.Parent then return end
-                    local h1=layouts[1].AbsoluteContentSize.Y
-                    local h2=layouts[2].AbsoluteContentSize.Y
-                    entries.Size=UDim2.new(1,0,0,math.max(1,portraitMode and (h1+2) or math.max(h1,h2)))
+                local function measureDescription(text,hasControl)
+                    local width=portraitMode and (currentW-65) or ((currentW-63)/2-28)
+                    width=math.max(125,width)
+                    if text=="" then return 0 end
+                    local ok,rect=pcall(function()
+                        return TextService:GetTextSize(text,11,Enum.Font.Gotham,Vector2.new(width,2000))
+                    end)
+                    if ok and rect then return math.max(15,math.ceil(rect.Y)) end
+                    return math.max(15,math.ceil(#text/math.max(15,math.floor(width/6)))*15)
                 end
                 function section.relayout()
                     if not entries.Parent then return end
                     columns[1].Size=portraitMode and UDim2.new(1,0,0,0) or UDim2.new(.5,-6,0,0)
                     columns[2].Size=UDim2.new(.5,-6,0,0)
                     columns[2].Visible=not portraitMode
+                    local heights={0,0}
+                    local visibleIndex=0
                     for index,item in ipairs(section.items) do
-                        local target=columns[portraitMode and 1 or ((index-1)%2+1)]
+                        if item.resize then item.resize() end
+                        if item.frame.Visible then
+                            visibleIndex+=1
+                        end
+                        local targetIndex=portraitMode and 1 or (((math.max(visibleIndex,1)-1)%2)+1)
+                        local target=columns[targetIndex]
                         if item.frame.Parent~=target then item.frame.Parent=target end
                         item.frame.LayoutOrder=index
+                        if item.frame.Visible then
+                            if heights[targetIndex]>0 then heights[targetIndex]+=9 end
+                            heights[targetIndex]+=item.frame.Size.Y.Offset
+                        end
                     end
-                    task.defer(updateHeight)
-                end
-                for _,layout in ipairs(layouts) do
-                    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateHeight)
+                    local totalHeight=math.max(0,heights[1],heights[2])
+                    entries.Size=UDim2.new(1,0,0,totalHeight)
+                    columns[1].Size=UDim2.new(portraitMode and 1 or .5,portraitMode and 0 or -6,0,heights[1])
+                    columns[2].Size=UDim2.new(.5,-6,0,heights[2])
+                    sectionFrame.Size=UDim2.new(1,-5,0,37+totalHeight)
                 end
                 local nextColumn=0
                 local function columnForNext()
@@ -27964,24 +27985,31 @@ local function S2rGlassUILibrary()
                 local function row(opts,h)
                     opts=opts or {}
                     local subtitle=tostring(opts.Content or "")
-                    local actual=h or math.clamp(76+math.ceil(#subtitle/43)*13,86,170)
+                    local bottomControl=(h~=nil and h>=100 and h<170)
+                    local contentReserve=bottomControl and 51 or 15
+                    local minHeight=h or 89
                     local card=create("Frame",{
-                        Size=UDim2.new(1,0,0,actual),BackgroundColor3=P.layer,
+                        Size=UDim2.new(1,0,0,minHeight),BackgroundColor3=P.layer,
                         BackgroundTransparency=cardTransparency,BorderSizePixel=0,ClipsDescendants=false,
                     },columnForNext())
-                    corner(card,15);stroke(card,P.edge,1,.52)
-                    local headingText=label(card,opts.Title or "",12,true,P.white)
+                    corner(card,13);stroke(card,P.edge,1,.38)
+                    local headingText=label(card,opts.Title or "",13,true,P.white)
                     headingText.Position=UDim2.fromOffset(13,9)
                     headingText.Size=UDim2.new(1,-116,0,23)
                     headingText.TextTruncate=Enum.TextTruncate.AtEnd
-                    local contentText=label(card,subtitle,10,false,P.muted)
+                    local contentText=label(card,subtitle,11,false,P.muted)
                     contentText.Position=UDim2.fromOffset(13,34)
-                    contentText.Size=UDim2.new(1,-25,1,-42)
+                    contentText.Size=UDim2.new(1,-25,1,-(34+contentReserve))
                     contentText.TextWrapped=true
                     contentText.TextYAlignment=Enum.TextYAlignment.Top
-                    card.MouseEnter:Connect(function() card.BackgroundTransparency=math.max(.06,cardTransparency-.13) end)
+                    card.MouseEnter:Connect(function() card.BackgroundTransparency=math.max(.03,cardTransparency-.08) end)
                     card.MouseLeave:Connect(function() card.BackgroundTransparency=cardTransparency end)
                     local item={frame=card,search=tostring(opts.Title or "").." "..subtitle,isCard=true}
+                    function item.resize()
+                        local textHeight=measureDescription(tostring(contentText.Text or ""),bottomControl)
+                        local desired=math.max(minHeight,34+textHeight+contentReserve+8)
+                        card.Size=UDim2.new(1,0,0,desired)
+                    end
                     table.insert(section.items,item)
                     section.relayout()
                     return card,headingText,contentText
@@ -27997,7 +28025,16 @@ local function S2rGlassUILibrary()
                     handle.LoadValue=handle.Set
                     function handle:ResetValue() self:Set(opts.Default) end
                     function handle:SetTitle(v) titleLabel.Text=tostring(v or "") end
-                    function handle:SetContent(v) contentLabel.Text=tostring(v or "") end
+                    function handle:SetContent(v)
+                        contentLabel.Text=tostring(v or "")
+                        for _,item in ipairs(section.items) do
+                            if item.frame==frame then
+                                item.search=tostring(titleLabel.Text).." "..tostring(contentLabel.Text)
+                                break
+                            end
+                        end
+                        section.relayout()
+                    end
                     function handle:Lock() frame.Active=false end
                     function handle:Unlock() frame.Active=true end
                     function handle:SetVisible(v) frame.Visible=v == true end
@@ -28057,7 +28094,7 @@ local function S2rGlassUILibrary()
                     opts=opts or {}
                     local card,headingText,contentText=row(opts,105)
                     headingText.Size=UDim2.new(1,-30,0,21)
-                    contentText.Size=UDim2.new(1,-30,0,21)
+                    contentText.Size=UDim2.new(1,-30,1,-84)
                     local field=create("TextBox",{
                         Size=UDim2.new(1,-28,0,30),Position=UDim2.new(0,14,1,-37),
                         BackgroundColor3=P.field,BorderSizePixel=0,Text=tostring(opts.Default or ""),
@@ -28110,7 +28147,7 @@ local function S2rGlassUILibrary()
                     opts=opts or {}
                     local card,headingText,contentText=row(opts,105)
                     headingText.Size=UDim2.new(1,-22,0,19)
-                    contentText.Size=UDim2.new(1,-22,0,20)
+                    contentText.Size=UDim2.new(1,-22,1,-84)
                     local selector=button(card,"SELECT  ▾",P.field)
                     selector.Position=UDim2.new(0,14,1,-36)
                     selector.Size=UDim2.new(1,-28,0,30)
@@ -31012,7 +31049,6 @@ end
                     raceStartedAt = 0
                     raceStartPosition, observedRaceMotion = nil, false
                     missingMotionNotice = false
-                    lastError = "none"
                 end
 
                 local function warnLimited(where, err)
@@ -31414,33 +31450,14 @@ end
                     local speed = planarVelocity.Magnitude
                     local lookAhead = math.clamp(30 + speed * 0.16, 30, 65)
                     local pathLength = tonumber(racePath.Length)
-                    -- The race has three laps. Clamping the look-ahead to Length
-                    -- makes the controller aim at the same end point near the lap seam.
-                    -- Try the unwrapped distance first; wrapped/clamped coordinates
-                    -- are guarded fallbacks for track-module variations.
                     local targetAt = newProgress + lookAhead
-                    local targetFrame
-                    local frameOK, frameResult = pcall(function()
-                        return racePath:FrameAt(targetAt)
-                    end)
-                    if frameOK and typeof(frameResult) == "CFrame" then
-                        targetFrame = frameResult
-                    elseif pathLength and pathLength > 0 then
-                        frameOK, frameResult = pcall(function()
-                            return racePath:FrameAt(targetAt % pathLength)
-                        end)
-                        if frameOK and typeof(frameResult) == "CFrame" then
-                            targetFrame = frameResult
-                        else
-                            frameOK, frameResult = pcall(function()
-                                return racePath:FrameAt(math.clamp(targetAt, 0, pathLength))
-                            end)
-                            if frameOK and typeof(frameResult) == "CFrame" then targetFrame = frameResult end
-                        end
+                    if pathLength and pathLength > 0 then
+                        targetAt = math.clamp(targetAt, 0, pathLength)
                     end
-                    if not targetFrame then
+                    local targetFrame = racePath:FrameAt(targetAt)
+                    if typeof(targetFrame) ~= "CFrame" then
                         steeringActive = false
-                        trackDiagnostic = "Could not resolve track look-ahead frame"
+                        trackDiagnostic = "RaceTrackPath:FrameAt returned invalid frame"
                         return
                     end
                     local target = targetFrame.Position
@@ -31476,24 +31493,27 @@ end
                     -- waiting/Ready phase. Leave manual controls available instead.
                     raceStepStage = "checking mount / start"
                     if not observedRaceMotion and now - raceStartedAt >= 12 then
-                        -- Never deadlock at the start by disabling the only input hook.
-                        -- Unknown phase cannot prove whether the event is waiting for
-                        -- Ready or the mount requires a different movement controller.
+                        steeringActive = false
                         missingMotionNotice = raceTrack:GetAttribute("RacePhase") == nil
-                        if now >= nextStatusUpdate then
-                            nextStatusUpdate = now + 2.5
-                            status(missingMotionNotice
-                                and "No motion yet; holding forward | Ready/mount control may differ — copy debug"
-                                or "No motion yet; holding forward | verify game Ready state")
+                        if missingMotionNotice then
+                            status("Race has not moved; Ready state or mount controller unknown — copy debug")
+                        else
+                            status("Mount did not move: steering paused; check race controls and debug")
                         end
+                        return
                     end
                     -- Movement calls count reads, not actual mount consumption. Never flip
                     -- back to steering automatically after the recovery budget is exhausted.
                     raceStepStage = "stuck recovery"
-                    if recoveryBlocked and lastPosition
-                        and (root.Position - lastPosition).Magnitude > 5 then
-                        recoveryAttempts, recoveryBlocked = 0, false
-                        lastPosition, stuckSince = root.Position, now
+                    if recoveryBlocked then
+                        steeringActive = false
+                        if lastPosition and (root.Position - lastPosition).Magnitude > 5 then
+                            recoveryAttempts, recoveryBlocked = 0, false
+                            lastPosition, stuckSince = root.Position, now
+                        else
+                            status("Recovery paused: reset Auto Race or move manually; copy debug")
+                            return
+                        end
                     end
                     if lastPosition then
                         if (root.Position - lastPosition).Magnitude > 5 then
@@ -31501,40 +31521,32 @@ end
                             recoveryAttempts = 0
                             recoveryBlocked = false
                         elseif observedRaceMotion and sampledOverrides > 0
-                            and not recoveryBlocked and now - stuckSince > 5
-                            and now - lastRecoveryAt > 10 then
+                            and now - stuckSince > 5 and now - lastRecoveryAt > 10 then
                             if recoveryAttempts < 2 then
                                 reverseUntil = now + 0.55
                                 lastRecoveryAt = now
                                 recoveryAttempts += 1
                                 status("Race stuck recovery " .. tostring(recoveryAttempts) .. "/2")
                             else
-                                -- Only block further reverse attempts; keep forward
-                                -- input active so the vehicle can still recover.
                                 recoveryBlocked = true
-                                reverseUntil = 0
-                                status("Stuck after 2 reverse attempts — forward only; copy Race Debug")
+                                steeringActive = false
+                                status("Stuck after 2 recoveries — steering paused; copy Race Debug")
+                                return
                             end
                             stuckSince = now
                         end
                     else
                         lastPosition, stuckSince = root.Position, now
                     end
-                    if now < reverseUntil and not recoveryBlocked then throttle = 1 end
+                    if now < reverseUntil then throttle = 1 end
                     move = Vector3.new(steer, 0, throttle)
                     progress = newProgress
                     steeringActive = true
                     raceStepStage = "steering active"
                     if now >= nextStatusUpdate then
                         nextStatusUpdate = now + 1.5
-                        if not observedRaceMotion and now - raceStartedAt >= 8 then
-                            status("Race input attempted, no body movement | inputs " ..
-                                tostring(sampledCalls) .. "/s overrides " .. tostring(sampledOverrides) ..
-                                "/s — copy debug")
-                        elseif sampledCalls == 0 then
-                            status("PlayerModule not being polled by racer — copy debug")
-                        elseif recoveryBlocked then
-                            status("Reverse disabled after 2 attempts; still driving forward — copy debug")
+                        if now - raceStartedAt > 4 and sampledCalls == 0 then
+                            status("Mount ignores PlayerModule inputs — manual controls retained; copy debug")
                         else
                             status(string.format("Racing | %.0f studs/s | corner target %.2fx | inputs %d/s",
                                 speed, speedMultiplier, sampledCalls))
@@ -31609,11 +31621,6 @@ end
                         "RootSpeed=" .. tostring((LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) and math.floor(LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity.Magnitude * 10) / 10 or "missing"),
                         "ObservedRaceMotion=" .. tostring(observedRaceMotion),
                         "UnknownPhaseNoMotion=" .. tostring(missingMotionNotice),
-                        "InputHookInstalled=" .. tostring(controls ~= nil and controls.GetMoveVector == patchedGetMoveVector),
-                        "RootDisplacement=" .. tostring(raceStartPosition and
-                            (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and
-                            math.floor((LocalPlayer.Character.HumanoidRootPart.Position - raceStartPosition).Magnitude * 10) / 10) or "unknown"),
-                        "ReverseAttemptsBlocked=" .. tostring(recoveryBlocked),
                         "ReadyHints=" .. (function()
                             -- Diagnostics only: do NOT auto-click unknown remotes/buttons.
                             local hints, count = {}, 0
@@ -31666,7 +31673,7 @@ end
             local raceSection = v4804:AddSection("Auto Race Event")
             t216.autoRace = raceSection:AddToggle({
                 Title = "Auto Race",
-                Content = "Enters a visible portal and drives while RaceId and track are valid. If the game uses a separate mount controller, see Copy Race Debug.",
+                Content = "Joins a detected Race Portal and auto-steers after the game enters the Racing phase. Pause Auto Steal before joining.",
                 Default = false,
                 Callback = v4732(function(enabled)
                     S2rAutoRace.setEnabled(enabled == true)
@@ -31681,8 +31688,8 @@ end
                 end)
             })
             t216.raceSpeedMultiplier = raceSection:AddSlider({
-                Title = "Race Corner Pace Multiplier",
-                Content = "1x to 3x changes corner/braking target only, not server-controlled mount speed.",
+                Title = "Race Speed Input Multiplier",
+                Content = "1x to 3x input strength and braking target. Actual mount speed may be limited by the game's server.",
                 Min = 1,
                 Max = 3,
                 Default = 1,
