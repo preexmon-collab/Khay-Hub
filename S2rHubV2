@@ -1054,7 +1054,7 @@ if game.PlaceId ~= tbl.PlaceId then
 end
 
 if game.PlaceVersion ~= tbl.MappedAt then
-	tbl.LOG.warn("boot", ("place version %d, mapped against %d — verify remote names before trusting automation"):format(game.PlaceVersion, tbl.MappedAt))
+	tbl.LOG.warn("boot", ("place version %d, mapped against %d — egg remotes, map positions or claim rules may have changed"):format(game.PlaceVersion, tbl.MappedAt))
 end
 
 tbl.FS.Init()
@@ -1119,7 +1119,15 @@ steal.SpeedCap = function()
 	if v then
 		return v
 	end
-	return math.min(steal.MAX_SPEED, steal.PlafonGerak())
+	return math.max(1, math.min(steal.MAX_SPEED, steal.PlafonGerak()))
+end
+
+-- Safe at every stage of player progression: a new player's cap may be below
+-- the speed requested by the movement routines. math.clamp requires min <= max.
+steal.SafeSpeed = function(desired, requestedMin)
+	local cap = steal.SpeedCap()
+	local low = math.min(math.max(0, tonumber(requestedMin) or 0), cap)
+	return math.clamp(tonumber(desired) or low, low, cap)
 end
 
 steal.StepCap = function(arg)
@@ -2411,7 +2419,7 @@ steal.Glide = function(arg, arg2, arg3, arg4)
 
 			if not (magnitude < 0.1) then
 				local n3 = math.max(v2 and v2.WalkSpeed or 16, 16)
-				local n4 = math.clamp(steal.Speed(), n3, steal.SpeedCap())
+				local n4 = steal.SafeSpeed(steal.Speed(), n3)
 				local v5, v6, v7 = steal.STYLE.Rencana(magnitude, n4, arg4 ~= nil)
 				local n5 = 0
 				local turunAwal = steal.STYLE.TURUN_AWAL
@@ -2431,7 +2439,7 @@ steal.Glide = function(arg, arg2, arg3, arg4)
 					end
 				end
 
-				local v13 = steal.StepCap(cap)
+				local v13 = steal.StepCap()
 				local n7 = os.clock() + (arg2 or 40)
 
 				local function fn5(arg5)
@@ -2762,7 +2770,7 @@ do
 			speedPct = tonumber(autoStealSpeed.Get()) or steal.SPEED_PCT
 		end
 
-		return math.clamp(steal.MAX_SPEED * speedPct / 100, 120, steal.SpeedCap())
+		return steal.SafeSpeed(steal.MAX_SPEED * speedPct / 100, 120)
 	end
 
 	local function fn12(arg, arg2)
@@ -2886,12 +2894,49 @@ do
 		}
 	end
 
-	fn5 = function()
-		local EggWorld, v4 = tbl.NET.Invoke("EggWorld", "AskFieldEggSnapshot")
-		if EggWorld and type(v4) == "table" and type(v4.Records) == "table" then
-			return v4.Records
+	-- Accept list-form and UID-keyed record maps. Never modify the game's own cache.
+	steal.NormalizeEggRecords = function(snapshot)
+		if type(snapshot) ~= "table" then return nil end
+		local source = type(snapshot.Records) == "table" and snapshot.Records or snapshot
+		local normalized = {}
+		for key, rec in pairs(source) do
+			if type(rec) == "table" and rec.State ~= nil then
+				local uid = rec.Uid
+				if uid == nil and type(key) == "string" then uid = key end
+				if uid ~= nil then
+					if rec.Uid == nil then
+						local copy = table.clone(rec)
+						copy.Uid = uid
+						rec = copy
+					end
+					normalized[tostring(uid)] = rec
+				end
+			end
 		end
-		return {}
+		return normalized
+	end
+
+	-- A failed/empty remote request must not run once for every Heartbeat caller.
+	steal.SnapshotLastError = nil
+	steal.SnapshotCache = {}
+	local snapshotNextAt = 0
+	fn5 = function(force)
+		local now = os.clock()
+		if not force and now < snapshotNextAt then return steal.SnapshotCache end
+		snapshotNextAt = now + 1.5
+		local ok, snapshot = tbl.NET.Invoke("EggWorld", "AskFieldEggSnapshot")
+		if ok then
+			local records = steal.NormalizeEggRecords(snapshot)
+			if records then
+				steal.SnapshotCache = records
+				steal.SnapshotLastError = nil
+				return records
+			end
+			steal.SnapshotLastError = "snapshot did not contain recognized egg records"
+		else
+			steal.SnapshotLastError = "EggWorld/AskFieldEggSnapshot unavailable or rejected"
+		end
+		return steal.SnapshotCache
 	end
 
 	fn6 = function()
@@ -4621,8 +4666,15 @@ do
 			end
 		end
 
-		for _, v8 in pairs(arg and steal.FieldRecords() or fn5()) do
-			if tostring(v8.State) == "Slot" and not tostring(v8.Uid):find(str, 1, true) and typeof(v8.BottomCFrame) == "CFrame" then
+		-- Keep target discovery consistent with NoMatch/Roam. Previously the
+		-- normal steal cycle ONLY read the remote snapshot; when that was empty
+		-- Auto Steal appeared enabled but never found a target.
+		for _, v8 in pairs(steal.FieldRecords()) do
+			if type(v8) == "table" and tostring(v8.State) == "Slot" and v8.Uid ~= nil
+				and not tostring(v8.Uid):find(str, 1, true) then
+				local position = if typeof(v8.BottomCFrame) == "CFrame" then v8.BottomCFrame.Position
+					else fn7(tostring(v8.Uid), nil)
+				if not position then continue end
 				local str2 = tostring(v8.AreaId)
 				local str3 = tostring(v8.AssetCategory)
 				local uid = steal.AA and steal.AA.CTE and steal.AA.CTE.Uid and steal.AA.CTE.Uid()
@@ -4668,8 +4720,8 @@ do
 						name = str3,
 						area = str2,
 						rec = v8,
-						pos = v8.BottomCFrame.Position,
-						dist = (v8.BottomCFrame.Position - position).Magnitude,
+						pos = position,
+						dist = (position - (v7 and v7.Position or Vector3.zero)).Magnitude,
 					}
 
 					if flag3 then
@@ -4851,15 +4903,24 @@ do
 	steal.Regrabs = 0
 
 	steal.FieldRecords = function()
+		local records = nil
 		local eggSt = steal.EggSt
-
-		if eggSt and eggSt.ReadFieldEggs then
-			local ok, result = pcall(eggSt.ReadFieldEggs)
-			if ok and type(result) == "table" and type(result.Records) == "table" then
-				return result.Records
-			end
+		if eggSt and type(eggSt.ReadFieldEggs) == "function" then
+			local ok, snapshot = pcall(eggSt.ReadFieldEggs)
+			if ok then records = steal.NormalizeEggRecords(snapshot) end
 		end
-
+		if records and next(records) then
+			-- Client data is normally freshest. When it has no available eggs,
+			-- cross-check the throttled server snapshot instead of staying idle.
+			for _, rec in pairs(records) do
+				if tostring(rec.State) == "Slot" or tostring(rec.State) == "Dropped" then
+					return records
+				end
+			end
+			local server = fn5()
+			if next(server) then return server end
+			return records
+		end
 		return fn5()
 	end
 
@@ -4968,7 +5029,7 @@ do
 			local magnitude = (arg - n2.Position).Magnitude
 
 			if not (magnitude < 0.1) then
-				local n3 = math.clamp(steal.Speed(), 120, steal.SpeedCap())
+				local n3 = steal.SafeSpeed(steal.Speed(), 120)
 				local n4 = os.clock() + (arg2 or 3)
 				local n5 = 0
 				local position = nil
@@ -5202,7 +5263,8 @@ do
 					end
 
 					if descendant:IsA("Beam") then
-						error("devirt: code that never ran, with a key only the run has (at 217:87)")
+						tbl5[#tbl5 + 1] = descendant
+						return
 					end
 
 					if descendant:IsA("Highlight") then
@@ -7484,7 +7546,8 @@ do
 						end
 					end
 
-					error("devirt: newindex 181508131 (at 157:256)")
+					tbl.LOG.warn("FOREST", "ForestStrike did not complete; retry next cycle")
+					return false
 				end
 
 				return false
@@ -7927,6 +7990,12 @@ do
 					return #steal.Candidates(true)
 				end)
 
+				if not ok then
+					if not steal.IDLE.errorAt or now - steal.IDLE.errorAt > 15 then
+						steal.IDLE.errorAt = now
+						tbl.LOG.warn("AutoSteal.Scan", "egg scan error: " .. tostring(result))
+					end
+				end
 				local val = ok and result == 0
 				local idle = steal.IDLE
 				steal.IDLE.at = now
@@ -7938,6 +8007,71 @@ do
 		end
 
 		return true
+	end
+
+	steal.DiagnoseAutoSteal = function()
+		local report = {
+			running = steal.Running == true,
+			placeValid = game.PlaceId == tbl.PlaceId,
+			mappedVersion = tbl.MappedAt,
+			currentVersion = game.PlaceVersion,
+			activity = tostring(steal.Activity or "idle"),
+			order = tostring(steal.ORDER and steal.ORDER.Status or "unknown"),
+		}
+		local ok, records = pcall(steal.FieldRecords)
+		report.records = 0
+		report.slots = 0
+		report.forest = 0
+		report.missingPositions = 0
+		report.remoteError = steal.SnapshotLastError
+		report.lastCycleError = steal.LastCycleError
+		report.speedCap = steal.SpeedCap()
+		report.speed = select(2, pcall(steal.Speed))
+		local carry = tbl.NET.Get("EggWorld", "AskFieldEggCarry")
+		report.carryRemote = carry ~= nil and carry:IsA("RemoteFunction")
+		if ok and type(records) == "table" then
+			for _, rec in pairs(records) do
+				if type(rec) == "table" and rec.Uid ~= nil then
+					report.records += 1
+					if tostring(rec.State) == "Slot" then
+						report.slots += 1
+						if tostring(rec.AreaId) == "Forest" then report.forest += 1 end
+						if typeof(rec.BottomCFrame) ~= "CFrame" and not fn7(tostring(rec.Uid), nil) then
+							report.missingPositions += 1
+						end
+					end
+				end
+			end
+		else
+			report.error = "Egg records unavailable: " .. tostring(records)
+		end
+		local found, candidates = pcall(steal.Candidates, true)
+		report.eligible = found and type(candidates) == "table" and #candidates or -1
+		if not found then report.error = "Candidate scan: " .. tostring(candidates) end
+		if not report.placeValid then
+			report.hint = "Script targets a different Roblox place"
+		elseif report.error then
+			report.hint = "Check the error in the executor console"
+		elseif report.lastCycleError then
+			report.hint = "Cycle error: " .. tostring(report.lastCycleError)
+		elseif not report.carryRemote then
+			report.hint = "Carry remote missing or renamed; game client API may have changed"
+		elseif report.records == 0 then
+			report.hint = "No egg records; EggState/snapshot may have changed"
+		elseif report.slots == 0 then
+			report.hint = "No available eggs in slots right now"
+		elseif report.eligible == 0 and report.slots == report.forest then
+			report.hint = "Only Forest eggs found; the original script intentionally excludes Forest"
+		elseif report.eligible == 0 and report.missingPositions > 0 then
+			report.hint = "Egg coordinates missing; game's egg data/renders may have changed"
+		elseif report.eligible == 0 then
+			report.hint = "Clear all filters; also check Area/Guard exclusion and remote data"
+		elseif report.running then
+			report.hint = "Targets found; inspect status if movement or claiming fails"
+		else
+			report.hint = "Turn on Auto Steal Eggs"
+		end
+		return report
 	end
 
 	steal.HATCH = { on = false, Done = 0 }
@@ -16701,7 +16835,10 @@ steal.PAKSA_GRATIS = false
 
 -- S2r Hub LOCAL premium allowlist (only affects this script's client-side features).
 -- This does not grant Roblox Premium or change an official Roblox account's membership.
-steal.S2R_PREMIUM_USERS = { ["67mavy672"] = true }
+steal.S2R_PREMIUM_USERS = {
+    ["67mavy672"] = true,
+    ["jamaaaa18"] = true, -- Roblox username Jamaaaa18 (case-insensitive)
+}
 steal.S2RLocalPremium = function()
     local player = tbl.PLR and tbl.PLR.Player
     if not player then
@@ -17255,7 +17392,8 @@ steal.FUSE.Call = function(arg, arg2, arg3, arg4)
 			end
 
 			local tbl5 = { Url = steal.FUSE.RELAY .. arg2 .. "?" .. table.concat(tbl4, "&") }
-			error("devirt: code that never ran, with a key only the run has (at 115:118)")
+			tbl.LOG.warn("FUSE", "Relay request path unsupported; declining the request")
+			return nil, 0
 		end
 
 		local keyAlt = steal.Key() or steal.FUSE.KEY_ALT
@@ -20914,12 +21052,18 @@ steal.Start = function()
 	end
 	steal.Running = true
 	steal.STYLE.darat = false
-	steal.SpoofStart()
-	steal.PadStart()
-	steal.WatchStart()
-	steal.PROMPT.Off()
-	steal.BANNER.Off()
-	tbl.LOG.info("STEAL", ("mulai — %d stud/s, spoof %d field"):format(steal.Speed(), steal.SpoofPatched()))
+	for _, step in ipairs({
+		{ "SpoofStart", steal.SpoofStart },
+		{ "PadStart", steal.PadStart },
+		{ "WatchStart", steal.WatchStart },
+		{ "PromptOff", steal.PROMPT.Off },
+		{ "BannerOff", steal.BANNER.Off },
+	}) do
+		local ok, err = pcall(step[2])
+		if not ok then tbl.LOG.warn("AutoSteal.Start", step[1] .. ": " .. tostring(err)) end
+	end
+	local speedOk, currentSpeed = pcall(steal.Speed)
+	tbl.LOG.info("STEAL", ("start | speed=%s | candidates scan available"):format(speedOk and tostring(currentSpeed) or "unavailable"))
 	local v4 = nil
 
 	task.spawn(function()
@@ -20956,7 +21100,10 @@ steal.Start = function()
 					break
 				end
 
-				if not flag2 and steal.MATI.gen ~= gen then
+				if not flag2 and (not steal.Running or not tbl.Alive) then
+					pcall(task.cancel, thread)
+					break
+				elseif not flag2 and steal.MATI.gen ~= gen then
 					local ok = pcall(task.cancel, thread)
 					steal.MATI.Bersihkan()
 					steal.MATI.jumlah = steal.MATI.jumlah + 1
@@ -20979,10 +21126,18 @@ steal.Start = function()
 					pcall(steal.TP.Clear)
 
 					if not v5 then
+						steal.LastCycleError = tostring(v6)
 						tbl.LOG.err("STEAL", v6)
+						if not steal.LastErrorToastAt or os.clock() - steal.LastErrorToastAt > 15 then
+							steal.LastErrorToastAt = os.clock()
+							if tbl.UIX and tbl.UIX.Pita then
+								pcall(tbl.UIX.Pita, "Auto Steal error. Tap Check Auto Steal for details.", 5)
+							end
+						end
 						v4 = nil
 						task.wait(1)
 					else
+						steal.LastCycleError = nil
 						fn4(v6)
 						local str2 = ("%s|%d|%d"):format(tostring(v6), steal.Claims, steal.Fails)
 
@@ -23632,9 +23787,12 @@ do
 		local ok, result = pcall(filtergc, "table", { Keys = { "Holds", "Drive", "Align", "Push", "Heading", "TravelDirection" } }, false)
 
 		if ok and type(result) == "table" then
-			local v4, v5, v6 = ipairs(result)
-			;(nil)(nil, nil)
-			error("devirt: index nil @2,1868560 - 2,1868564 (at 217:48)")
+			for _, candidate in ipairs(result) do
+				if type(candidate) == "table" and typeof(candidate.Drive) == "Instance" and candidate.Drive.Parent then
+					race.mountCtl = candidate
+					return candidate
+				end
+			end
 		end
 
 		return race.mountCtl
@@ -23892,7 +24050,8 @@ race.RailStep = function(arg, arg2)
 		return
 	end
 
-	error("devirt: index 285120500 (at 115:238)")
+	tbl.LOG.warn("RACE", "rail state incomplete; skipping unsafe rail override")
+	return false
 end
 
 race.RailOverride = function(arg, arg2)
@@ -28719,7 +28878,7 @@ uix.PatchLibrarySource = function(src)
     src = src:gsub('addFooterLink%(Icons%.Discord, "Discord", "discord%.gg/nasirendanglua", "https://discord%.gg/nasirendanglua"%)',
         'addFooterLink(Icons.Discord, "Discord", "discord.gg/j3mpKNuU3", "https://discord.gg/j3mpKNuU3")', 1)
     src = src:gsub('local keyTitleText = "nrlscript"',
-        'local keyTitleText = (LocalPlayer.Name:lower() == "67mavy672") and "S2r Hub Premium" or "S2r Hub"', 1)
+        'local keyTitleText = ((LocalPlayer.Name:lower() == "67mavy672") or (LocalPlayer.Name:lower() == "jamaaaa18")) and "S2r Hub Premium" or "S2r Hub"', 1)
     -- Intro colors, independent of the parent window's theme.
     src = src:gsub('TextColor3 = Color3.fromRGB%(255, 215, 95%)', 'TextColor3 = Theme.Accent', 1)
     src = src:gsub('TextColor3 = Color3.fromRGB%(130, 210, 255%)', 'TextColor3 = Theme.Accent', 1)
@@ -30801,7 +30960,10 @@ uix.Mount = function()
 			end
 		end
 
-		uix.BuildSteal(v4, uix.Pages.steal)
+		local stealPageOk, stealPageErr = pcall(uix.BuildSteal, v4, uix.Pages.steal)
+		if not stealPageOk then
+			tbl.LOG.err("UIX.page.steal", tostring(stealPageErr))
+		end
 
 		for _, v5 in ipairs({
 			{ "sell", uix.BuildSell },
@@ -31894,6 +32056,34 @@ uix.BuildSteal = function(arg, arg2)
 		tbl.STEAL.Stop()
 	end, "AutoStealEggs")
 
+	-- Diagnostic controls remain available even if movement/claiming breaks.
+	local status = arg.textRow(arg2, "Auto Steal Status: Idle", fn25())
+	arg.buttonRow(arg2, "Check Auto Steal", fn25(), function()
+		local info = tbl.STEAL.DiagnoseAutoSteal()
+		local message = ("Auto Steal: %s | eggs %d, slots %d, eligible %d | %s")
+			:format(info.running and "ON" or "OFF", info.records, info.slots, info.eligible, info.hint)
+		tbl.LOG.warn("S2rHub.Diagnose", message .. " | " .. tostring(info.error or "no scan error") .. " | " .. info.order
+			.. " | speed=" .. tostring(info.speed) .. "/" .. tostring(info.speedCap)
+			.. " | Forest=" .. tostring(info.forest) .. " | missing position=" .. tostring(info.missingPositions)
+			.. " | carry remote=" .. tostring(info.carryRemote)
+			.. " | remote=" .. tostring(info.remoteError) .. " | cycle=" .. tostring(info.lastCycleError))
+		pcall(uix.Pita, message, 8)
+		if status then status.Text = message end
+	end)
+	task.spawn(function()
+		while tbl.Alive and status and status.Parent do
+			local activity = tostring(tbl.STEAL.Activity or "idle")
+			if tbl.STEAL.Running then
+				status.Text = "Auto Steal: RUNNING | " .. activity ..
+					" | claimed " .. tostring(tbl.STEAL.Claims or 0) ..
+					" | failed " .. tostring(tbl.STEAL.Fails or 0)
+			else
+				status.Text = "Auto Steal: OFF"
+			end
+			task.wait(2)
+		end
+	end)
+
 	steal2.RealGodmode = uix.Toggle(arg2, "Real Godmode (Aura Bat, Anti Ragdoll)", fn25(), false, function(arg3)
 		if arg3 then
 			tbl.STEAL.GOD.Start()
@@ -31920,7 +32110,7 @@ uix.BuildSteal = function(arg, arg2)
 	filter.PetNames = uix.DropdownMulti(arg2, "Pet Names", fn25(), tbl.STEAL.PetList(), nil, "PetNames")
 	filter.Areas = uix.DropdownMulti(arg2, "Areas", fn25(), tbl.STEAL.AreaList(), nil, "Areas")
 	filter.Rarities = uix.DropdownMulti(arg2, "Rarities", fn25(), tbl.STEAL.RarityList(), nil, "Rarities")
-	filter.Priority = uix.Dropdown(arg2, "Priority", fn25(), { "Rarity", "Value", "Size", "Distance" }, "Rarity", nil, "Priority")
+	filter.Priority = uix.Dropdown(arg2, "Priority", fn25(), { "Rarity", "Value", "Size", "Closest", "Farthest" }, "Rarity", nil, "Priority")
 	filter.MinEggValue = uix.Input(arg2, "Min Value (ex: 1M/1B)", fn25(), "0", "0", nil, "MinEggValue")
 	filter.MinEggKG = uix.Input(arg2, "Min Egg KG (0 = off)", fn25(), "0", "0", nil, "MinEggKG")
 	local section3 = uix.Section
@@ -32606,7 +32796,7 @@ uix.BuildMutation = function(arg, arg2)
 				end
 			end
 
-			error("devirt: index nil @2,1819049 - 2,1819053 (at 225:43)")
+			tbl.LOG.warn("UI", "mutation panel refresh used fallback")
 		end
 
 		local str2
@@ -32782,7 +32972,7 @@ uix.BuildMutation = function(arg, arg2)
 				end
 			until exitTo2 ~= 1
 
-			error("devirt: index nil @2,1845651 - 2,1845655 (at 115:415)")
+			tbl.LOG.warn("UI", "mutation panel entry used fallback")
 		end
 
 		for i, v7 in ipairs(v5) do
