@@ -8025,6 +8025,8 @@ do
 		report.missingPositions = 0
 		report.remoteError = steal.SnapshotLastError
 		report.lastCycleError = steal.LastCycleError
+		report.lastCycleErrorAt = steal.LastCycleErrorAt
+		report.lastCycleErrorCount = steal.LastCycleErrorCount or 0
 		report.speedCap = steal.SpeedCap()
 		report.speed = select(2, pcall(steal.Speed))
 		local carry = tbl.NET.Get("EggWorld", "AskFieldEggCarry")
@@ -21076,7 +21078,14 @@ steal.Start = function()
 				local v6 = nil
 
 				local function fn21()
-					local ok, result = pcall(steal.Cycle)
+					local ok, result = xpcall(steal.Cycle, function(err)
+						local message = tostring(err)
+						if debug and type(debug.traceback) == "function" then
+							local traced, stack = pcall(debug.traceback, message, 2)
+							if traced and type(stack) == "string" then return stack end
+						end
+						return message
+					end)
 					v5 = ok
 					v6 = result
 					flag2 = true
@@ -21126,18 +21135,29 @@ steal.Start = function()
 					pcall(steal.TP.Clear)
 
 					if not v5 then
-						steal.LastCycleError = tostring(v6)
-						tbl.LOG.err("STEAL", v6)
-						if not steal.LastErrorToastAt or os.clock() - steal.LastErrorToastAt > 15 then
+						local err = tostring(v6)
+						steal.LastCycleErrorCount = (steal.LastCycleErrorCount or 0) + 1
+						steal.LastCycleErrorAt = os.clock()
+						steal.LastCycleError = err
+						-- Avoid repeatedly flooding the log when the same game API is broken.
+						if err ~= steal.LastLoggedCycleError or not steal.LastLoggedCycleErrorAt
+							or os.clock() - steal.LastLoggedCycleErrorAt >= 15 then
+							tbl.LOG.err("STEAL.Cycle", err)
+							steal.LastLoggedCycleError = err
+							steal.LastLoggedCycleErrorAt = os.clock()
+						end
+						fn4("cycle error - see Auto Steal Error Details")
+						if not steal.LastErrorToastAt or os.clock() - steal.LastErrorToastAt > 25 then
 							steal.LastErrorToastAt = os.clock()
 							if tbl.UIX and tbl.UIX.Pita then
-								pcall(tbl.UIX.Pita, "Auto Steal error. Tap Check Auto Steal for details.", 5)
+								pcall(tbl.UIX.Pita, "Auto Steal cycle failed. Read Error Details below Check Auto Steal.", 5)
 							end
 						end
 						v4 = nil
-						task.wait(1)
+						-- Gradually back off repeated exceptions instead of hammering the server.
+						task.wait(math.min(5, 1 + math.floor(steal.LastCycleErrorCount / 3)))
 					else
-						steal.LastCycleError = nil
+						-- Keep the last exception available for diagnosis, even after a retry succeeds.
 						fn4(v6)
 						local str2 = ("%s|%d|%d"):format(tostring(v6), steal.Claims, steal.Fails)
 
@@ -30295,7 +30315,7 @@ uix.BuildStats = function(arg)
 		TextSize = 11,
 		TextColor3 = danger,
 		TextWrapped = true,
-		Text = "Your connection is lagging - auto steal may drop eggs. Fix your connection.",
+		Text = "High latency detected - stealing may be less reliable while ping stays elevated.",
 		ZIndex = 61,
 	})
 
@@ -30368,12 +30388,13 @@ uix.BuildStats = function(arg)
 					end
 
 					if v8 then
-						if not (v8 > 80) then
+						-- ~80 ms in the recording triggered a misleading red lag warning.
+						if v8 <= 180 then
 							Frame.Visible = false
 						else
-							local flag2 = v8 > 150
-							UIStroke.Color = if flag2 then danger else Color3.new(1, 0.7450980544090271, 0.31372550129890442)
-							TextLabel.TextColor3 = if flag2 then danger else Color3.new(1, 0.7450980544090271, 0.31372550129890442)
+								local severe = v8 > 300
+							UIStroke.Color = if severe then danger else Color3.new(1, 0.7450980544090271, 0.31372550129890442)
+							TextLabel.TextColor3 = if severe then danger else Color3.new(1, 0.7450980544090271, 0.31372550129890442)
 							Frame.Visible = true
 						end
 					else
@@ -32058,6 +32079,31 @@ uix.BuildSteal = function(arg, arg2)
 
 	-- Diagnostic controls remain available even if movement/claiming breaks.
 	local status = arg.textRow(arg2, "Auto Steal Status: Idle", fn25())
+	local errorRows = {}
+	for i = 1, 5 do
+		errorRows[i] = arg.textRow(arg2, if i == 1 then "Error Details: none captured" else "", fn25())
+	end
+	local function showCycleError()
+		local raw = tostring(tbl.STEAL.LastCycleError or "No cycle exception captured yet. Re-enable Auto Steal and try again.")
+		local compact = raw:gsub("[\r\n\t]+", " | ")
+		for i, label in ipairs(errorRows) do
+			if label and label.Parent then
+				local startAt = (i - 1) * 62 + 1
+				local chunk = compact:sub(startAt, startAt + 61)
+				label.Text = if i == 1 then "Error Details: " .. (chunk ~= "" and chunk or "none") else chunk
+			end
+		end
+	end
+	arg.buttonRow(arg2, "Copy Full Auto Steal Error", fn25(), function()
+		local info = tbl.STEAL.DiagnoseAutoSteal()
+		local report = ("S2r Hub Auto Steal | running=%s | place=%s | mapped=%s | current=%s | eggs=%s | slots=%s | eligible=%s | carry=%s | activity=%s | order=%s | errors=%s | last error:\n%s")
+			:format(tostring(info.running), tostring(info.placeValid), tostring(info.mappedVersion), tostring(info.currentVersion),
+				tostring(info.records), tostring(info.slots), tostring(info.eligible), tostring(info.carryRemote),
+				tostring(info.activity), tostring(info.order), tostring(info.lastCycleErrorCount), tostring(info.lastCycleError))
+		local copied = type(setclipboard) == "function" and pcall(setclipboard, report)
+		if not copied and type(toclipboard) == "function" then copied = pcall(toclipboard, report) end
+		pcall(uix.Pita, copied and "Full error copied. Paste it into chat." or "Clipboard unavailable. Screenshot the Error Details rows.", 6)
+	end)
 	arg.buttonRow(arg2, "Check Auto Steal", fn25(), function()
 		local info = tbl.STEAL.DiagnoseAutoSteal()
 		local message = ("Auto Steal: %s | eggs %d, slots %d, eligible %d | %s")
@@ -32069,9 +32115,29 @@ uix.BuildSteal = function(arg, arg2)
 			.. " | remote=" .. tostring(info.remoteError) .. " | cycle=" .. tostring(info.lastCycleError))
 		pcall(uix.Pita, message, 8)
 		if status then status.Text = message end
+		showCycleError()
 	end)
 	task.spawn(function()
+		local previousError = nil
 		while tbl.Alive and status and status.Parent do
+			local currentError = tbl.STEAL.LastCycleError
+			if currentError ~= previousError then
+				showCycleError()
+				previousError = currentError
+			end
+			local toggle = tbl.UIX and tbl.UIX.STEAL and tbl.UIX.STEAL.AutoStealEggs
+			local desired = toggle and toggle.Get and toggle.Get()
+			-- Keep the GUI toggle and the runner in sync, avoiding the ON switch/OFF diagnostic from the recording.
+			local competing = false
+			for _, id in ipairs({ "TeleportSteal", "AntiHitGuard" }) do
+				local control = tbl.UIX and tbl.UIX.STEAL and tbl.UIX.STEAL[id]
+				if control and control.Get and control.Get() then competing = true end
+			end
+			if desired and not tbl.STEAL.Running and not competing then
+				pcall(tbl.STEAL.Start)
+			elseif desired == false and tbl.STEAL.Running then
+				pcall(tbl.STEAL.Stop)
+			end
 			local activity = tostring(tbl.STEAL.Activity or "idle")
 			if tbl.STEAL.Running then
 				status.Text = "Auto Steal: RUNNING | " .. activity ..
