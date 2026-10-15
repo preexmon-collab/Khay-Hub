@@ -16917,19 +16917,10 @@ end
 steal.TIER_BAYAR = { gold = true, premium = true, lifetime = true }
 steal.PAKSA_GRATIS = false
 
--- S2r Hub LOCAL premium allowlist (only affects this script's client-side features).
--- This does not grant Roblox Premium or change an official Roblox account's membership.
-steal.S2R_PREMIUM_USERS = {
-    ["67mavy672"] = true,
-    ["jamaaaa18"] = true, -- Roblox username Jamaaaa18 (case-insensitive)
-    ["choyedio"] = true, -- Roblox username Choyedio (case-insensitive)
-}
+-- S2r Hub LOCAL premium is available to every script user.
+-- This does not grant Roblox Premium or change official Roblox account membership.
 steal.S2RLocalPremium = function()
-    local player = tbl.PLR and tbl.PLR.Player
-    if not player then
-        return false
-    end
-    return steal.S2R_PREMIUM_USERS[tostring(player.Name):lower()] == true
+    return true
 end
 
 steal.TSBoleh = function()
@@ -28992,7 +28983,7 @@ uix.PatchLibrarySource = function(src)
     src = src:gsub('addFooterLink%(Icons%.Discord, "Discord", "discord%.gg/nasirendanglua", "https://discord%.gg/nasirendanglua"%)',
         'addFooterLink(Icons.Discord, "Discord", "discord.gg/j3mpKNuU3", "https://discord.gg/j3mpKNuU3")', 1)
     src = src:gsub('local keyTitleText = "nrlscript"',
-        'local keyTitleText = ((LocalPlayer.Name:lower() == "67mavy672") or (LocalPlayer.Name:lower() == "jamaaaa18") or (LocalPlayer.Name:lower() == "choyedio")) and "S2r Hub Premium" or "S2r Hub"', 1)
+        'local keyTitleText = "S2r Hub Premium"', 1)
     -- Intro colors, independent of the parent window's theme.
     src = src:gsub('TextColor3 = Color3.fromRGB%(255, 215, 95%)', 'TextColor3 = Theme.Accent', 1)
     src = src:gsub('TextColor3 = Color3.fromRGB%(130, 210, 255%)', 'TextColor3 = Theme.Accent', 1)
