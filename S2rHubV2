@@ -2371,7 +2371,7 @@ steal.Gerbang = function(arg, arg2)
 			end
 			local flag2 = v2.Position.X <= steal.GATE_X
 
-			if flag2 ~= arg.X <= steal.GATE_X then
+			if flag2 ~= (arg.X <= steal.GATE_X) then
 				flag = true
 				local gateOut = flag2 and steal.GATE_OUT or steal.GATE_IN
 				local v3 = steal.Glide(flag2 and steal.GATE_IN or steal.GATE_OUT, 20, nil, arg2) and steal.Glide(gateOut, 20, nil, arg2)
