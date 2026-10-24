@@ -1,0 +1,284 @@
+-- [[ S2R Hub - Key System (Black & White Theme, 24H Key Saving) ]]
+-- Access key: KhayOnTop
+-- The separately hosted main hub is protected. Its visible text is renamed at runtime.
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:FindFirstChild("PlayerGui") or CoreGui
+
+local KEY_FILE = "S2R_Hub_StealAnEggs_Key.json"
+local correctKey = "KhayOnTop"
+local getKeyLink = "https://discord.gg/VNss3dQgJ3"
+local KEY_DURATION = 86400 -- Save valid key for 24 hours
+local MAIN_URL = "https://raw.githubusercontent.com/WhiteX1208/Scripts/refs/heads/main/StealAnEggs.luau"
+local HUB_NAME = "S2R Hub"
+
+-- Saved keys from the original Night Hub are deliberately ignored.
+local function isKeySaved()
+    if type(readfile) ~= "function" or type(isfile) ~= "function" then
+        return false
+    end
+    local success, data = pcall(function()
+        if not isfile(KEY_FILE) then return nil end
+        return HttpService:JSONDecode(readfile(KEY_FILE))
+    end)
+    return success
+        and type(data) == "table"
+        and data.Key == correctKey
+        and type(data.ExpireTime) == "number"
+        and os.time() < data.ExpireTime
+end
+
+local function saveKey()
+    if type(writefile) ~= "function" then return end
+    pcall(function()
+        writefile(KEY_FILE, HttpService:JSONEncode({
+            Key = correctKey,
+            ExpireTime = os.time() + KEY_DURATION
+        }))
+    end)
+end
+
+-- Visually rename labels created by the *separately loaded* main hub.
+-- It does not change the remote protected source or any of the hub functions.
+local renamerStarted = false
+local function renameVisibleTitle(value)
+    if type(value) ~= "string" then return value end
+    -- Case-insensitive spelling variants: Night Hub, NightHub, NIGHT_HUB, etc.
+    return (value:gsub("[Nn][Ii][Gg][Hh][Tt][%s_%-]*[Hh][Uu][Bb]", HUB_NAME))
+end
+
+local function startVisibleHubRenamer()
+    if renamerStarted then return end
+    renamerStarted = true
+
+    local tracked = setmetatable({}, {__mode = "k"})
+    local watchedRoots = {}
+
+    local function trackText(item)
+        if tracked[item] then return end
+        if not (item:IsA("TextLabel") or item:IsA("TextButton")) then return end
+        tracked[item] = true
+
+        local function fixText()
+            local oldText = item.Text
+            local newText = renameVisibleTitle(oldText)
+            if oldText ~= newText then
+                item.Text = newText
+            end
+        end
+
+        -- Listen to text updates, not just labels that already exist.
+        item:GetPropertyChangedSignal("Text"):Connect(fixText)
+        fixText()
+    end
+
+    local function watchRoot(root)
+        if not root or watchedRoots[root] then return end
+        watchedRoots[root] = true
+        for _, descendant in ipairs(root:GetDescendants()) do
+            trackText(descendant)
+        end
+        root.DescendantAdded:Connect(trackText)
+    end
+
+    watchRoot(CoreGui)
+    watchRoot(Player:FindFirstChildOfClass("PlayerGui"))
+
+    -- Some supported clients place custom UI under gethui().
+    if type(gethui) == "function" then
+        local ok, hiddenRoot = pcall(gethui)
+        if ok and typeof(hiddenRoot) == "Instance" then
+            watchRoot(hiddenRoot)
+        end
+    end
+end
+
+local function runMainScript()
+    startVisibleHubRenamer() -- Must start BEFORE main hub creates its interface.
+    print("Key verified! Executing S2R Hub script...")
+    loadstring(game:HttpGet(MAIN_URL))()
+end
+
+if isKeySaved() then
+    runMainScript()
+    return
+end
+
+-- Remove only the previous S2R key GUI so it cannot duplicate itself.
+local previous = PlayerGui:FindFirstChild("S2RHubKeySystem")
+if previous then previous:Destroy() end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "S2RHubKeySystem"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+MainFrame.BackgroundTransparency = 0.05
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -220, 0.5, -140)
+MainFrame.Size = UDim2.new(0, 440, 0, 280)
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 16)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Parent = MainFrame
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Transparency = 0.85
+MainStroke.Thickness = 1.2
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 0, 0, 22)
+Title.Size = UDim2.new(1, 0, 0, 32)
+Title.Font = Enum.Font.FredokaOne
+Title.Text = "S2R Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 28
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Name = "SubTitle"
+SubTitle.Parent = MainFrame
+SubTitle.BackgroundTransparency = 1
+SubTitle.Position = UDim2.new(0, 0, 0, 56)
+SubTitle.Size = UDim2.new(1, 0, 0, 18)
+SubTitle.Font = Enum.Font.GothamMedium
+SubTitle.Text = "S2R HUB KEY SYSTEM"
+SubTitle.TextColor3 = Color3.fromRGB(150, 150, 150)
+SubTitle.TextSize = 11
+
+local InputContainer = Instance.new("Frame")
+InputContainer.Parent = MainFrame
+InputContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 24)
+InputContainer.BorderSizePixel = 0
+InputContainer.Position = UDim2.new(0.07, 0, 0, 95)
+InputContainer.Size = UDim2.new(0.86, 0, 0, 48)
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 10)
+InputCorner.Parent = InputContainer
+
+local InputStroke = Instance.new("UIStroke")
+InputStroke.Parent = InputContainer
+InputStroke.Color = Color3.fromRGB(255, 255, 255)
+InputStroke.Transparency = 0.9
+InputStroke.Thickness = 1
+
+local TextBox = Instance.new("TextBox")
+TextBox.Parent = InputContainer
+TextBox.BackgroundTransparency = 1
+TextBox.Position = UDim2.new(0.04, 0, 0, 0)
+TextBox.Size = UDim2.new(0.92, 0, 1, 0)
+TextBox.Font = Enum.Font.Gotham
+TextBox.PlaceholderText = "Enter key here..."
+TextBox.Text = ""
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.PlaceholderColor3 = Color3.fromRGB(110, 110, 120)
+TextBox.TextSize = 14
+TextBox.ClearTextOnFocus = false
+
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0.07, 0, 0, 150)
+StatusLabel.Size = UDim2.new(0.86, 0, 0, 20)
+StatusLabel.Font = Enum.Font.GothamMedium
+StatusLabel.Text = ""
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.TextSize = 12
+
+local ButtonContainer = Instance.new("Frame")
+ButtonContainer.Parent = MainFrame
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.Position = UDim2.new(0.07, 0, 0, 185)
+ButtonContainer.Size = UDim2.new(0.86, 0, 0, 48)
+
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Parent = ButtonContainer
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+GetKeyBtn.Position = UDim2.new(0, 0, 0, 0)
+GetKeyBtn.Size = UDim2.new(0.48, -5, 1, 0)
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.Text = "Get Key"
+GetKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+GetKeyBtn.TextSize = 14
+
+local GetKeyCorner = Instance.new("UICorner")
+GetKeyCorner.CornerRadius = UDim.new(0, 10)
+GetKeyCorner.Parent = GetKeyBtn
+
+local GetKeyStroke = Instance.new("UIStroke")
+GetKeyStroke.Parent = GetKeyBtn
+GetKeyStroke.Color = Color3.fromRGB(255, 255, 255)
+GetKeyStroke.Transparency = 0.85
+GetKeyStroke.Thickness = 1
+
+local VerifyBtn = Instance.new("TextButton")
+VerifyBtn.Parent = ButtonContainer
+VerifyBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+VerifyBtn.Position = UDim2.new(0.52, 5, 0, 0)
+VerifyBtn.Size = UDim2.new(0.48, -5, 1, 0)
+VerifyBtn.Font = Enum.Font.GothamBold
+VerifyBtn.Text = "Verify Key"
+VerifyBtn.TextColor3 = Color3.fromRGB(10, 10, 12)
+VerifyBtn.TextSize = 14
+
+local VerifyCorner = Instance.new("UICorner")
+VerifyCorner.CornerRadius = UDim.new(0, 10)
+VerifyCorner.Parent = VerifyBtn
+
+local function smoothShake()
+    local basePos = UDim2.new(0.5, -220, 0.5, -140)
+    local offsets = {10, -9, 7, -5, 3, 0}
+    for _, offset in ipairs(offsets) do
+        local tween = TweenService:Create(
+            MainFrame,
+            TweenInfo.new(0.04, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+            {Position = basePos + UDim2.new(0, offset, 0, 0)}
+        )
+        tween:Play()
+        tween.Completed:Wait()
+    end
+end
+
+local busy = false
+VerifyBtn.MouseButton1Click:Connect(function()
+    if busy then return end
+    if TextBox.Text == correctKey then
+        busy = true
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        StatusLabel.Text = "Key Verified! Access Granted."
+        saveKey()
+        task.wait(0.4)
+        ScreenGui:Destroy()
+        runMainScript()
+    else
+        StatusLabel.TextColor3 = Color3.fromRGB(220, 80, 80)
+        StatusLabel.Text = "Invalid Key. Please try again."
+        TextBox.Text = ""
+        smoothShake()
+    end
+end)
+
+GetKeyBtn.MouseButton1Click:Connect(function()
+    if type(setclipboard) == "function" then
+        setclipboard(getKeyLink)
+        StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        StatusLabel.Text = "Discord invite copied! Get the key there."
+    else
+        StatusLabel.TextColor3 = Color3.fromRGB(220, 80, 80)
+        StatusLabel.Text = "Clipboard not supported by this executor."
+    end
+end)
