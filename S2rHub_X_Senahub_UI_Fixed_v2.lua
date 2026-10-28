@@ -18,6 +18,63 @@ runtimeEnv.__SenaV4HubSession = hubSession
 local function sessionAlive()
 	return runtimeEnv.__SenaV4HubSession == hubSession
 end
+-- Bounded diagnostics and normalization shared by the existing feature modules.
+local HubHealth = { history = {}, last = nil }
+function HubHealth.report(context, detail)
+	local trace = tostring(detail)
+	local last = HubHealth.last
+	if last and last.context == context and last.trace == trace and os.clock() - last.at < 5 then return end
+	local entry = { context = tostring(context), trace = trace, at = os.clock() }
+	entry.message = entry.context .. ": " .. (trace:match("^[^\n]+") or trace)
+	HubHealth.last = entry
+	table.insert(HubHealth.history, 1, entry)
+	while #HubHealth.history > 20 do table.remove(HubHealth.history) end
+	warn("[S2r Hub] " .. entry.message)
+	if HubHealth.onChanged then pcall(HubHealth.onChanged, entry) end
+end
+function HubHealth.try(context, callback, ...)
+	local result = table.pack(xpcall(callback, function(err)
+		return debug.traceback(tostring(err), 2)
+	end, ...))
+	if not result[1] then HubHealth.report(context, result[2]) end
+	return table.unpack(result, 1, result.n)
+end
+function HubHealth.clear()
+	table.clear(HubHealth.history)
+	HubHealth.last = nil
+	if HubHealth.onChanged then pcall(HubHealth.onChanged, nil) end
+end
+function HubHealth.fieldRecord(record, key)
+	if type(record) ~= "table" then return nil end
+	local uid = record.Uid
+	if type(uid) ~= "string" or uid == "" then uid = key end
+	if type(uid) ~= "string" or uid == "" then return nil end
+	local cf = typeof(record.BottomCFrame) == "CFrame" and record.BottomCFrame or record.BoundsCFrame
+	if record.Uid == uid and record.BottomCFrame == cf then return record end
+	local normalized = table.clone(record)
+	normalized.Uid = uid
+	normalized.BottomCFrame = cf
+	return normalized
+end
+function HubHealth.fieldRecords(snapshot)
+	local out = {}
+	if type(snapshot) ~= "table" then return out end
+	local records = snapshot.Records or snapshot
+	if type(records) ~= "table" then return out end
+	for key, value in pairs(records) do
+		local record = HubHealth.fieldRecord(value, key)
+		if record then out[record.Uid] = record end
+	end
+	return out
+end
+function HubHealth.targetable(record)
+	if type(record) ~= "table" or type(record.Uid) ~= "string" or record.Uid == ""
+		or typeof(record.BottomCFrame) ~= "CFrame" then return false end
+	local p = record.BottomCFrame.Position
+	return p.X == p.X and p.Y == p.Y and p.Z == p.Z
+		and math.abs(p.X) < math.huge and math.abs(p.Y) < math.huge and math.abs(p.Z) < math.huge
+end
+
 do
 	local TAMPER_API = { "hookfunction", "hookmetamethod", "getconnections", "getgc", "getrawmetatable",
 		"firetouchinterest", "newcclosure", "getnamecallmethod", "checkcaller", "getcallingscript" }
@@ -2624,7 +2681,7 @@ do
 	local _HP, _AssetsDir
 	local function rarityOf(name) if not name then return nil end if _HP == nil then _HP = okReq(RS:FindFirstChild("Data") and RS.Data:FindFirstChild("HalloweenPets")) or false end if _AssetsDir == nil then local a = okReq(RS:FindFirstChild("Data") and RS.Data:FindFirstChild("Assets")) _AssetsDir = (a and a.Directory) or false end if _HP and _HP.Specs and _HP.Specs[name] and _HP.Specs[name].Rarity then return tostring(_HP.Specs[name].Rarity) end if _AssetsDir and _AssetsDir[name] and _AssetsDir[name].Rarity then local r = _AssetsDir[name].Rarity if type(r) == "table" then return r._id or r.DisplayName elseif type(r) == "string" then return r end end local nk = runtimeEnv.__SenaV4HwNorm if nk == nil then nk = {} for _, src in ipairs({ (_AssetsDir or {}), (_HP and _HP.Specs or {}) }) do for k in pairs(src) do nk[(tostring(k):lower():gsub("[%s_%-]", ""):gsub("egg$", ""))] = k end end runtimeEnv.__SenaV4HwNorm = nk end local alt = nk[(name:lower():gsub("[%s_%-]", ""):gsub("egg$", ""))] if alt and alt ~= name then return rarityOf(alt) end return nil end
 	local function rarityPass(name, list) if type(list) ~= "table" then return true end local any = false for _, n in ipairs(list) do if n ~= "None" and n ~= "" then any = true break end end if not any then return true end local rr = rarityOf(name) if not rr then return false end for _, n in ipairs(list) do if n == rr then return true end end return false end
-	local function alive(H) return H and H.running and runtimeEnv.__SenaHalloweenFarm == H and hrp() ~= nil end
+	local function alive(H) return sessionAlive() and H and H.running and runtimeEnv.__SenaHalloweenFarm == H and hrp() ~= nil end
 	local function tpHold(H, pos, secs) local n = math.max(6, math.floor((secs or 0.6) / 0.06)) for i = 1, n do if not alive(H) then return end local r = hrp() if r then r.CFrame = CFrame.new(pos) pcall(function() r.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end) end task.wait(0.06) end end
 	local function glide(H, target, dur) local r = hrp() if not r then return end local sp = r.Position local steps = math.max(4, math.floor((dur or 0.5) / 0.03)) for i = 1, steps do if not alive(H) then return end r = hrp() if r then r.CFrame = CFrame.new(sp:Lerp(target, i / steps)) pcall(function() r.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end) end task.wait(0.03) end end
 	local function walkTo(H, pos, mi) for i = 1, (mi or 30) do if not alive(H) then return false end local h = hum() local r = hrp() if h and r then h:MoveTo(Vector3.new(pos.X, r.Position.Y, pos.Z)) end task.wait(0.08) r = hrp() if r and (Vector3.new(pos.X, 0, pos.Z) - Vector3.new(r.Position.X, 0, r.Position.Z)).Magnitude <= 6 then return true end end return false end
@@ -2786,7 +2843,7 @@ do
 	local function netR(n) if NETT == nil then local pk = REP:FindFirstChild("Packages") NETT = (pk and pk:FindFirstChild("Networking")) or false end if not NETT then return nil end return NETT:FindFirstChild(n) end
 	local function netInv(n, ...) local r = netR(n) if not r then return false end local res = table.pack(pcall(r.InvokeServer, r, ...)) if not res[1] then return false end return true, res[2], res[3] end
 	local function netFr(n, ...) local r = netR(n) if r then pcall(r.FireServer, r, ...) end end
-	local function alive(H) return H and H.running and runtimeEnv.__SenaTrainFarm == H and hrp() ~= nil end
+	local function alive(H) return sessionAlive() and H and H.running and runtimeEnv.__SenaTrainFarm == H and hrp() ~= nil end
 	local function cariTool(attr) for _, w in ipairs({ LPT.Character, LPT:FindFirstChild("Backpack") }) do if w then for _, t in ipairs(w:GetChildren()) do if t:IsA("Tool") and (t:GetAttribute(attr) or t.Name == attr) then return t end end end end return nil end
 	local function pegang(t) if not t then return nil end if t.Parent ~= LPT.Character then local h = hum() if h then pcall(h.EquipTool, h, t) end task.wait(0.25) end return t end
 	local function lompat(H, tuju, hop, jeda) local r = hrp() if not r then return false end hop = hop or 850 jeda = jeda or 0.15 local p = r.Position while (tuju - p).Magnitude > 0.5 do if not alive(H) then return false end local sisa = tuju - p p = sisa.Magnitude > hop and (p + sisa.Unit * hop) or tuju local t = os.clock() + jeda repeat local rr = hrp() if not rr then return false end tulis(rr, CFrame.new(p)) RUN.Heartbeat:Wait() until os.clock() >= t end return true end
@@ -2942,7 +2999,7 @@ local Coordinator = (function()
 		local seen = {}
 		for _, uid in ipairs(type(uids) == "table" and uids or {}) do
 			if type(uid) == "string" and uid ~= "" and not seen[uid] then
-				if self:isReserved(uid, owner) then
+				if self:isReserved(uid) then
 					return nil, "UID reserved by " .. tostring(self.reservations[uid])
 				end
 				seen[uid] = true
@@ -2982,7 +3039,7 @@ local Coordinator = (function()
 		local seen = {}
 		for _, uid in ipairs(type(uids) == "table" and uids or {}) do
 			if type(uid) == "string" and uid ~= "" and not seen[uid] then
-				if self:isReserved(uid, owner) then
+				if self:isReserved(uid) then
 					return nil, "UID reserved by " .. tostring(self.reservations[uid])
 				end
 				seen[uid] = true
@@ -3006,7 +3063,7 @@ local Coordinator = (function()
 		return token
 	end
 	function Coordinator:release(token)
-		if type(token) ~= "table" or token.released then
+		if type(token) ~= "table" or token.released or (self.active ~= token and self.background ~= token) then
 			return false
 		end
 		token.released = true
@@ -3130,15 +3187,16 @@ local catalog = (function()
 		return nil
 	end
 	function Catalog.resolve(record)
+		record = type(record) == "table" and record or nil
 		local config = record and Assets.Directory[record.AssetCategory]
 		local rarity = config and config.Rarity
-		local rarityName = rarity and (rarity.DisplayName or rarity._id) or "Unknown"
+		local rarityName = type(rarity) == "table" and (rarity.DisplayName or rarity._id) or (type(rarity) == "string" and rarity) or "Unknown"
 		return {
 			name = config and (config.DisplayName or config._id) or (record and record.AssetCategory) or "Unknown",
 			category = record and record.AssetCategory or "Unknown",
 			rarity = rarityName,
 			rarityRank = RARITY_ORDER[rarityName] or 0,
-			rarityColor = rarity and rarity.Color or nil,
+			rarityColor = type(rarity) == "table" and rarity.Color or nil,
 			icon = config and type(config.Icon) == "string" and config.Icon or nil,
 		}
 	end
@@ -3904,6 +3962,8 @@ local EggRuntime = (function()
 			self:_replaceSnapshot(snapshot)
 			end, self.connections)
 		connect(EggCmds.FieldShifted, function(record)
+			record = HubHealth.fieldRecord(record)
+			if not record or self.destroyed or not sessionAlive() then return end
 			self.records[record.Uid] = record
 			self:_refreshCounts()
 			if self.enabled and not self.destroyed and not self.running and not self.carry.active
@@ -4015,6 +4075,7 @@ local EggRuntime = (function()
 			end, self.connections)
 		self:_installClaimPresentationFilter()
 		connect(EggCmds.CarryChanged, function(state)
+			if type(state) ~= "table" or self.destroyed or not sessionAlive() then return end
 			if state.IsCarrying then
 				if self.running and self.activeTarget and state.Uid == self.activeTarget.Uid then
 					if self.carry.active and self.carry.uid == state.Uid then return end
@@ -4205,15 +4266,7 @@ local EggRuntime = (function()
 		}
 	end
 	function EggRuntime:_replaceSnapshot(snapshot)
-		table.clear(self.records)
-		local records = snapshot and (snapshot.Records or snapshot) or {}
-		for key, record in pairs(records) do
-			if type(record) == "table" and type(record.Uid) == "string" then
-				self.records[record.Uid] = record
-			elseif type(key) == "string" and type(record) == "table" then
-				self.records[key] = record
-			end
-		end
+		self.records = HubHealth.fieldRecords(snapshot)
 		self:_refreshCounts()
 		self:_schedule()
 	end
@@ -4350,7 +4403,7 @@ local EggRuntime = (function()
 		local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 		local bestRare, bestRareRank, bestRareDist
 		for _, record in pairs(self.records or {}) do
-			if (record.State == AreaEggs.States.Slot or record.State == AreaEggs.States.Dropped) and record.BottomCFrame
+			if (record.State == AreaEggs.States.Slot or record.State == AreaEggs.States.Dropped) and HubHealth.targetable(record)
 			and not self:isSkippedEgg(record.Uid) and self:_matchesNormalFilter(record) then
 				local resolved = self.catalog.resolve(record)
 				if PRIORITY_STEAL_RARITIES[resolved.rarity] then
@@ -4368,7 +4421,7 @@ local EggRuntime = (function()
 	end
 	function EggRuntime:hasNormalStealTarget()
 		for _, record in pairs(self.records or {}) do
-			if (record.State == AreaEggs.States.Slot or record.State == AreaEggs.States.Dropped) and record.BottomCFrame
+			if (record.State == AreaEggs.States.Slot or record.State == AreaEggs.States.Dropped) and HubHealth.targetable(record)
 			and not self:isSkippedEgg(record.Uid) and self:_matchesNormalFilter(record) then
 				return true
 			end
@@ -4382,7 +4435,7 @@ local EggRuntime = (function()
 		for _, record in pairs(self.records or {}) do
 			local isSlot = record.State == AreaEggs.States.Slot
 			local isDrop = record.State == AreaEggs.States.Dropped
-			if ((isSlot and takeSlot) or (isDrop and takeDrop and (takeSlot or self:_inSnipeZone(record)))) and record.BottomCFrame
+			if ((isSlot and takeSlot) or (isDrop and takeDrop and (takeSlot or self:_inSnipeZone(record)))) and HubHealth.targetable(record)
 			and not self:isSkippedEgg(record.Uid) and self:_matchesNormalFilter(record, isDrop and not takeSlot) then
 				local ok, res = pcall(function() return self.catalog.resolve(record) end)
 				local rank = (ok and res and tonumber(res.rarityRank)) or 0
@@ -4522,8 +4575,8 @@ local EggRuntime = (function()
 		if not root then return nil end
 		if self.captureObjectiveEnabled then
 			local captureUid = workspace:GetAttribute(CAPTURE_EGG_ATTR)
-			local capture = captureUid and (EggCmds.ReadFieldEgg(captureUid) or self.records[captureUid])
-			if type(capture) == "table" and capture.BottomCFrame
+			local capture = captureUid and HubHealth.fieldRecord(EggCmds.ReadFieldEgg(captureUid) or self.records[captureUid], captureUid)
+			if HubHealth.targetable(capture)
 				and (capture.State == AreaEggs.States.Slot or capture.State == AreaEggs.States.Dropped) then
 				return capture
 			end
@@ -4537,7 +4590,7 @@ local EggRuntime = (function()
 		if Config.SnipeDroppedEggs and not self.riftOnly then
 			local bestDrop, bestDropDist
 			for _, record in pairs(self.records) do
-				if record.State == AreaEggs.States.Dropped and record.BottomCFrame
+				if record.State == AreaEggs.States.Dropped and HubHealth.targetable(record)
 				and record.CarrierUserId ~= LocalPlayer.UserId
 				and not self:isSkippedEgg(record.Uid) and self:_matchesNormalFilter(record, true)
 				and self:_inSnipeZone(record) then
@@ -4558,7 +4611,7 @@ local EggRuntime = (function()
 		local bestRift, bestRiftDist, bestIndex, bestIndexDist, bestWisp, bestWispDist
 		for _, record in pairs(self.records) do
 			if (record.State == AreaEggs.States.Slot or record.State == AreaEggs.States.Dropped)
-			and record.BottomCFrame and not self:isSkippedEgg(record.Uid)
+			and HubHealth.targetable(record) and not self:isSkippedEgg(record.Uid)
 			then
 				local dist = (record.BottomCFrame.Position - root.Position).Magnitude
 				if self.riftWants[record.AssetCategory] then
@@ -4577,7 +4630,7 @@ local EggRuntime = (function()
 			local bestNormal, bestNormalRank, bestNormalDist
 			for _, record in pairs(self.records) do
 				if record.State == AreaEggs.States.Slot or record.State == AreaEggs.States.Dropped then
-					if not self:isSkippedEgg(record.Uid) and self:_matchesNormalFilter(record) and not self:_tollAreaSkip(record) then
+					if HubHealth.targetable(record) and not self:isSkippedEgg(record.Uid) and self:_matchesNormalFilter(record) and not self:_tollAreaSkip(record) then
 						local dist = (record.BottomCFrame.Position - root.Position).Magnitude
 						local resolved = self.catalog.resolve(record)
 						local priorityRank
@@ -4603,39 +4656,27 @@ local EggRuntime = (function()
 		return nil
 	end
 	function EggRuntime:_takeManualTarget()
-		local alive = {}
-		local kept = {}
+		local alive, kept, picked = {}, {}, nil
 		for _, uid in ipairs(self.manualOrder) do
 			local record = self.records[uid]
 			if record and (record.State == AreaEggs.States.Slot or record.State == AreaEggs.States.Dropped) then
-				kept[#kept + 1] = uid
-				alive[uid] = true
+				kept[#kept + 1], alive[uid] = uid, true
+				if not picked and HubHealth.targetable(record) and not self:isSkippedEgg(uid) then picked = record end
 			end
 		end
 		self.manualOrder = kept
-		for uid in pairs(self.manualQueue) do
-			if not alive[uid] then
-				self.manualQueue[uid] = nil
-			end
+		for uid in pairs(self.manualQueue) do if not alive[uid] then self.manualQueue[uid] = nil end end
+		if #kept == 0 and self.manualObjectiveEnabled then
+			self.manualObjectiveEnabled = false
+			task.defer(function() if sessionAlive() and not self.destroyed then self:_reconcileRunningState() end end)
 		end
-		if #kept == 0 then
-			if self.manualObjectiveEnabled then
-				self.manualObjectiveEnabled = false
-				task.defer(function()
-					if not self.destroyed then
-						self:_reconcileRunningState()
-					end
-					end)
-			end
-			return nil
-		end
-		return self.records[kept[1]]
+		return picked
 	end
 	function EggRuntime:queueManual(uids)
 		if type(uids) ~= "table" then return 0 end
 		for _, uid in ipairs(uids) do
 			local key = uid
-			if key ~= nil and not self.manualQueue[key] then
+			if type(key) == "string" and key ~= "" and not self.manualQueue[key] then
 				self.manualQueue[key] = true
 				self.manualOrder[#self.manualOrder + 1] = key
 			end
@@ -6736,92 +6777,100 @@ local EggRuntime = (function()
 		return heldByMe()
 	end
 	function EggRuntime:_recoverCarryConfirmationTimeout(attemptToken, targetUid)
-		if self.destroyed
-		or not self.enabled
-		or self.carryAttemptToken ~= attemptToken
-		or self:_hasConfirmedCarry(targetUid)
-		then
-			return false
+		if self.destroyed or not self.enabled or not sessionAlive()
+			or self.carryAttemptToken ~= attemptToken
+			or (self:_hasConfirmedCarry(targetUid) and self:_recordShowsCarried(targetUid)) then return false end
+		local generation = self.planGeneration
+		local ticket = {}
+		self.carryRecoveryTicket = ticket
+		local function current()
+			return sessionAlive() and not self.destroyed and self.enabled
+				and self.planGeneration == generation and self.carryRecoveryTicket == ticket
 		end
-		local character = LocalPlayer.Character
-		local root = character and character:FindFirstChild("HumanoidRootPart")
-		local safeCFrame = root and self:_resolveSafeCFrame(root)
-		safeCFrame = safeCFrame and self:_resolveElevatedDestination(root, safeCFrame) or nil
-		self.carryTimeouts = self.carryTimeouts or {}
-		local timeouts = (self.carryTimeouts[targetUid] or 0) + 1
-		local giveUp = timeouts >= MAX_CARRY_TIMEOUTS
-		if giveUp then
-			self.carryTimeouts[targetUid] = nil
-			self.skippedEggs[targetUid] = os.clock() + CARRY_TIMEOUT_SKIP_SECONDS
-			self.tweenRecoveryUid = nil
-		else
-			self.carryTimeouts[targetUid] = timeouts
-			self.tweenRecoveryUid = not self:_isPrimerEgg(targetUid) and targetUid or nil
-		end
-		local refused = self.stats.lastCarryReject
-		if type(refused) == "string" and refused:lower():find("inventory is full", 1, true) then
-			self.eggFullCount = self:_eggCount() or math.huge
-		end
-		local timedOutRecord = self.records[targetUid] or EggCmds.ReadFieldEgg(targetUid)
-		local treadmillFirst = self.config.stealMode == "Instant"
-			and (targetUid == self.primerUid or (type(timedOutRecord) == "table" and timedOutRecord.AreaId == "Forest"))
-		self.carry.generation += 1
-		self:_invalidateCarryWorker()
-		self.carryAttemptToken = nil
-		self:_clearArrivalHold(targetUid)
-		if self.activeTween and self.activeTween.Cancel then
-			pcall(self.activeTween.Cancel, self.activeTween)
-		end
-		self.activeTween = nil
-		self.running = true
-		self.activeTarget = nil
-		self.stats.lastResult = "Carry confirmation timeout"
-		if root and safeCFrame then
-			pcall(function()
-				root.AssemblyLinearVelocity = Vector3.zero
-				root.AssemblyAngularVelocity = Vector3.zero
-				end)
-			self:_setStatus("Carry timeout - returning to safe area")
-			pcall(self._glideRoot, self, safeCFrame, function() return self.destroyed or not self.enabled end)
+		local ok = HubHealth.try("Carry timeout recovery", function()
+			local character = LocalPlayer.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			local safeCFrame = root and self:_resolveSafeCFrame(root)
+			safeCFrame = safeCFrame and self:_resolveElevatedDestination(root, safeCFrame) or nil
+			self.carryTimeouts = self.carryTimeouts or {}
+			local timeouts = (self.carryTimeouts[targetUid] or 0) + 1
+			local giveUp = timeouts >= MAX_CARRY_TIMEOUTS
 			if giveUp then
-				self:_setStatus(refused and ("Carry refused (" .. refused .. ") — skipping egg")
-					or "Carry timed out twice — skipping egg")
+				self.carryTimeouts[targetUid] = nil
+				self.skippedEggs[targetUid] = os.clock() + CARRY_TIMEOUT_SKIP_SECONDS
+				self.tweenRecoveryUid = nil
 			else
-				self:_setStatus("Carry timeout — retrying")
+				self.carryTimeouts[targetUid] = timeouts
+				self.tweenRecoveryUid = not self:_isPrimerEgg(targetUid) and targetUid or nil
 			end
-		else
-			self:_setStatus("Carry timeout — safe area unavailable")
-		end
-		self.running = false
-		self:_releaseOperation()
-		if treadmillFirst then self.running = true end
-		task.delay(0.35, function()
-			if treadmillFirst then
-				if not self.destroyed and self.enabled then
-					self:_setStatus("Retrying steal")
-					pcall(self._treadmillReset, self, function() return self.destroyed or not self.enabled end)
-				end
+			local refused = self.stats.lastCarryReject
+			if type(refused) == "string" and refused:lower():find("inventory is full", 1, true) then
+				self.eggFullCount = self:_eggCount() or math.huge
+			end
+			local timedOutRecord = self.records[targetUid] or EggCmds.ReadFieldEgg(targetUid)
+			local treadmillFirst = self.config.stealMode == "Instant"
+				and (targetUid == self.primerUid or (type(timedOutRecord) == "table" and timedOutRecord.AreaId == "Forest"))
+			-- A stale local flag must not prevent all future scheduling after the deadline.
+			if self.carry.uid == targetUid or self.carry.uid == nil then self.carry.active, self.carry.uid = false, nil end
+			self.carry.generation += 1
+			self:_invalidateCarryWorker()
+			self.carryAttemptToken = nil
+			self:_clearArrivalHold(targetUid)
+			if self.activeTween and self.activeTween.Cancel then pcall(self.activeTween.Cancel, self.activeTween) end
+			self.activeTween = nil
+			self.running = true
+			self.activeTarget = nil
+			self.stats.lastResult = "Carry confirmation timeout"
+			if root and safeCFrame then
+				root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
+				self:_setStatus("Carry timeout — returning to safe area")
+				self:_glideRoot(safeCFrame, function() return not current() end)
+				if not current() then return end
+				self:_setStatus(giveUp and "Carry timed out twice — skipping egg" or "Carry timeout — retrying")
+			else
+				self:_setStatus("Carry timeout — safe area unavailable")
+			end
+			if not current() then return end
+			task.delay(0.35, function()
+				if not current() then return end
+				local recovered = HubHealth.try("Carry retry preparation", function()
+					if treadmillFirst then
+						self:_setStatus("Retrying steal")
+						self:_treadmillReset(function() return not current() end)
+					end
+				end)
+				if not current() then return end
+				self.carryRecoveryTicket = nil
+				if not recovered then self:_recoverRuntimeError(generation, "Carry recovery failed") return end
 				self.running = false
-			end
-			if not self.destroyed and self.enabled and self.carryAttemptToken == nil then
-				self:_schedule()
-			end
+				self:_releaseOperation()
+				self:_queueSchedule(0)
 			end)
+		end)
+		if not ok and current() then
+			self.carryRecoveryTicket = nil
+			self:_recoverRuntimeError(generation, "Carry recovery failed")
+		end
 		return true
 	end
 	function EggRuntime:_requestCarry(record, teleportReapproach)
+		record = HubHealth.fieldRecord(record)
+		if not record or self.destroyed or not self.enabled or not sessionAlive() or not self.running
+			or not self.activeTarget or self.activeTarget.Uid ~= record.Uid then return end
+		local generation = self.planGeneration
 		if not self:_wallOpen() then
 			self:_finish("Wall closed before carry")
 			return
 		end
 		local targetUid = record.Uid
 		local attemptToken = {}
-		local confirmationDeadline = nil
+		local confirmationDeadline
 		self.stats.lastCarryReject = nil
 		self._untrustedSince = nil
 		local isPrimerCarry = self.instantPhase == "priming" and targetUid == self.primerUid
 		local confirmWindow = isPrimerCarry and CARRY_CONFIRM_TIMEOUT_SECONDS
 			or math.max(CARRY_CONFIRM_TIMEOUT_SECONDS, self:_resolveSettleSeconds(record) + 3)
+		confirmationDeadline = os.clock() + confirmWindow
 		self.carryAttemptToken = attemptToken
 		self.stats.lastResult = "Carry requested"
 		self:_setStatus("Securing egg")
@@ -6845,7 +6894,8 @@ local EggRuntime = (function()
 			end
 		end
 		task.spawn(function()
-			while not self.destroyed
+			local ok = HubHealth.try("Carry confirmation", function()
+			while sessionAlive() and self.planGeneration == generation and not self.destroyed
 			and self.enabled
 			and self.running
 			and self.carryAttemptToken == attemptToken
@@ -6854,6 +6904,10 @@ local EggRuntime = (function()
 			do
 				if not self:_hasConfirmedCarry(targetUid) and self:_recordShowsCarried(targetUid) then
 					self:_adoptCarryFromRecord(targetUid)
+				end
+				if os.clock() >= confirmationDeadline and not (self:_hasConfirmedCarry(targetUid) and self:_recordShowsCarried(targetUid)) then
+					self:_recoverCarryConfirmationTimeout(attemptToken, targetUid)
+					return
 				end
 				if self:_hasConfirmedCarry(targetUid) then
 					if self:_recordShowsCarried(targetUid) then
@@ -6875,7 +6929,7 @@ local EggRuntime = (function()
 						self.stats.lastResult = "Carry confirmed"
 						self:_setStatus("Carry confirmed")
 						task.defer(function()
-							if not self.destroyed and self.enabled and self:_hasConfirmedCarry(targetUid) then
+							if sessionAlive() and self.planGeneration == generation and not self.destroyed and self.enabled and self:_hasConfirmedCarry(targetUid) then
 								self:_returnToSafe()
 							end
 							end)
@@ -6885,15 +6939,11 @@ local EggRuntime = (function()
 					task.wait(CARRY_RETRY_INTERVAL)
 					continue
 				end
-				if confirmationDeadline and os.clock() >= confirmationDeadline then
-					self:_recoverCarryConfirmationTimeout(attemptToken, targetUid)
-					return
-				end
 				if not self:_wallOpen() then
 					self:_finish("Wall closed before carry")
 					return
 				end
-				local current = EggCmds.ReadFieldEgg(targetUid) or self.records[targetUid]
+				local current = HubHealth.fieldRecord(EggCmds.ReadFieldEgg(targetUid) or self.records[targetUid], targetUid)
 				if not current then
 					self:_finish("Target unavailable")
 					return
@@ -6945,7 +6995,7 @@ local EggRuntime = (function()
 						local reapproachDone = false
 						self:_tweenRoot(groundedEggDestination, function()
 							reapproachDone = true
-							if self.carryAttemptToken == attemptToken and not self:_hasConfirmedCarry(targetUid) then
+							if sessionAlive() and self.planGeneration == generation and self.carryAttemptToken == attemptToken and not self:_hasConfirmedCarry(targetUid) then
 								self:_setStatus("Securing egg")
 							end
 							end, nil, {
@@ -6953,7 +7003,8 @@ local EggRuntime = (function()
 								holdUid = targetUid,
 								flightProfile = true,
 							})
-						while not self.destroyed
+						while sessionAlive() and self.planGeneration == generation and not self.destroyed
+						and os.clock() < confirmationDeadline
 						and self.enabled
 						and self.carryAttemptToken == attemptToken
 						and not self:_hasConfirmedCarry(targetUid)
@@ -6996,12 +7047,13 @@ local EggRuntime = (function()
 				else
 					self._untrustedSince = nil
 				end
-				confirmationDeadline = confirmationDeadline or (os.clock() + confirmWindow)
-				self.stats.lastResult = "Carry requested"
+								self.stats.lastResult = "Carry requested"
 				self:_setStatus(reason and ("Waiting for carry · " .. reason) or "Waiting for carry confirmation")
 				task.wait(CARRY_RETRY_INTERVAL)
 			end
 			end)
+			if not ok and self.carryAttemptToken == attemptToken then self:_recoverRuntimeError(generation, "Carry confirmation failed") end
+		end)
 	end
 	function EggRuntime:_burstHold(destCFrame, abortFn)
 		if typeof(destCFrame) ~= "CFrame" then return false end
@@ -8483,22 +8535,32 @@ local EggRuntime = (function()
 	end
 	function EggRuntime:_reportStolen()
 		local record = self.activeTarget
-		if type(record) ~= "table" or not record.Uid then return end
-		if self.reportedUid == record.Uid then return end
-		self.reportedUid = record.Uid
+		if type(record) ~= "table" or type(record.Uid) ~= "string" then return end
+		self.deliveryReports = self.deliveryReports or {}
+		local reports, uid = self.deliveryReports, record.Uid
+		for key, report in pairs(reports) do if report.expires < os.clock() then reports[key] = nil end end
+		if reports[uid] then return end
+		local ticket = { expires = os.clock() + 60 }
+		reports[uid] = ticket
+		self.reportedUid = uid
 		task.delay(1.5, function()
-			if self.destroyed then return end
-			local field = nil
-			pcall(function() field = EggCmds.ReadFieldEgg(record.Uid) end)
+			if not sessionAlive() or self.destroyed or reports[uid] ~= ticket then return end
+			local ok, field = HubHealth.try("Verify egg delivery", EggCmds.ReadFieldEgg, uid)
+			if not ok then
+				reports[uid] = nil
+				if self.reportedUid == uid then self.reportedUid = nil end
+				return
+			end
 			local stillThere = type(field) == "table" and (field.State == AreaEggs.States.Slot
 				or field.State == AreaEggs.States.Dropped
 				or (field.State == AreaEggs.States.Carried and field.CarrierUserId ~= LocalPlayer.UserId))
 			if stillThere then
-				self.reportedUid = nil
+				reports[uid] = nil
+				if self.reportedUid == uid then self.reportedUid = nil end
 				self.stats.deliveryFailed = (self.stats.deliveryFailed or 0) + 1
 				self.stats.lastResult = "Delivery failed — retrying"
 				self:_notify()
-				if self.enabled and not self.running then self:_schedule() end
+				if self.enabled and not self.running then self:_queueSchedule(0.5) end
 				return
 			end
 			self.stats.delivered = (self.stats.delivered or 0) + 1
@@ -8506,7 +8568,7 @@ local EggRuntime = (function()
 			if not hook then return end
 			local okInfo, info = pcall(self.catalog.resolve, record)
 			pcall(hook.stolen, record, okInfo and info or nil, nil)
-			end)
+		end)
 	end
 	function EggRuntime:_startWatchdog()
 		if self.watchdogRunning then return end
@@ -8516,6 +8578,8 @@ local EggRuntime = (function()
 			local frozenStatus, frozenPos, frozenSince = nil, nil, nil
 			while sessionAlive() and not self.destroyed and self.enabled do
 				task.wait(2)
+				if not sessionAlive() or self.destroyed or not self.enabled then break end
+				HubHealth.try("Steal watchdog", function()
 				-- a race/scramble started (or the join window opened) mid-cycle: abort the steal in flight so it
 				-- stops yanking the character away from the lap (the _schedule guard already blocks new cycles).
 				if self:_eventBlocksSteal()
@@ -8593,6 +8657,7 @@ local EggRuntime = (function()
 						idleSince = nil
 					end
 				end
+				end)
 			end
 			self.watchdogRunning = false
 			end)
@@ -8655,27 +8720,10 @@ local EggRuntime = (function()
 		self.planGeneration += 1
 		self:_cancelTween(result, self.enabled)
 		self:_setStatus(self.enabled and "Searching" or "Idle")
-		if self.enabled then
-			task.delay(NEXT_TARGET_HANDOFF_SECONDS, function()
-				if self.destroyed or not self.enabled then
-					self:_releaseOperation()
-					return
-				end
-				self:_schedule()
-				end)
-		end
+		if self.enabled then self:_queueSchedule(NEXT_TARGET_HANDOFF_SECONDS) end
 	end
 	function EggRuntime:_scheduleMovementRetry()
-		if self.movementRetryPending or self.destroyed or not self.enabled then
-			return
-		end
-		self.movementRetryPending = true
-		task.delay(0.2, function()
-			self.movementRetryPending = false
-			if not self.destroyed and self.enabled then
-				self:_schedule()
-			end
-			end)
+		self:_queueSchedule(0.2)
 	end
 	function EggRuntime:_eggCount()
 		local ok, count = pcall(function()
@@ -8749,11 +8797,56 @@ local EggRuntime = (function()
 		if LocalPlayer:GetAttribute("RaceId") ~= nil then return true end
 		return false
 	end
+	function EggRuntime:_queueSchedule(seconds)
+		if self.destroyed or not self.enabled or not sessionAlive() then return end
+		local generation = self.planGeneration
+		local due = os.clock() + math.max(0, tonumber(seconds) or 0)
+		local pending = self.scheduleTicket
+		if pending and pending.generation == generation and pending.due <= due then return end
+		local ticket = { generation = generation, due = due }
+		self.scheduleTicket = ticket
+		task.delay(math.max(0, due - os.clock()), function()
+			if self.scheduleTicket ~= ticket then return end
+			self.scheduleTicket = nil
+			if sessionAlive() and not self.destroyed and self.enabled and self.planGeneration == generation then self:_schedule() end
+		end)
+	end
+	function EggRuntime:_recoverRuntimeError(generation, message)
+		if self.destroyed or not sessionAlive() or self.planGeneration ~= generation then return end
+		self.planGeneration += 1
+		self.carryAttemptToken = nil
+		self.carry.generation += 1
+		self:_invalidateCarryWorker()
+		pcall(self._cancelTween, self, message)
+		self.running = false
+		self.safeStarting = false
+		self.activeTarget = nil
+		self:_releaseOperation()
+		self:_setStatus(message .. " — retrying")
+		self:_queueSchedule(2)
+	end
+	function EggRuntime:_spawnStep(label, callback, ...)
+		local generation, args = self.planGeneration, table.pack(...)
+		task.spawn(function()
+			if self.destroyed or not self.enabled or not sessionAlive() or self.planGeneration ~= generation then return end
+			local ok = HubHealth.try(label, callback, self, table.unpack(args, 1, args.n))
+			if not ok then self:_recoverRuntimeError(generation, label .. " failed") end
+		end)
+	end
 	function EggRuntime:_schedule()
+		if self.destroyed or not self.enabled or not sessionAlive() then return end
+		if self.scheduling then self:_queueSchedule(0.2) return end
+		local generation = self.planGeneration
+		self.scheduling = true
+		local ok = HubHealth.try("Steal scheduler", self._scheduleStep, self)
+		self.scheduling = false
+		if not ok then self:_recoverRuntimeError(generation, "Steal operation failed") end
+	end
+	function EggRuntime:_scheduleStep()
 		if not self.running then
 			self.safeStarting = false
 		end
-		if self.destroyed or not self.enabled or self.running then
+		if self.destroyed or not self.enabled or not sessionAlive() or self.running then
 			return
 		end
 		-- A race or scramble event owns the character: steal must fully stop and let it focus the lap/arena,
@@ -8761,18 +8854,14 @@ local EggRuntime = (function()
 		if self:_eventBlocksSteal() then
 			self:_releaseOperation()
 			self:_setStatus("Paused - race/event in progress")
-			task.delay(1, function()
-				if not self.destroyed and self.enabled and not self.running then self:_schedule() end
-			end)
+			self:_queueSchedule(1)
 			return
 		end
 		-- Inventory backing up with Auto Sell on: step aside so the sell loop drains it, then resume.
 		if not self.carry.active and self:_shouldYieldToSell() then
 			self:_releaseOperation()
 			self:_setStatus("Draining inventory (Auto Sell)")
-			task.delay(1, function()
-				if not self.destroyed and self.enabled and not self.running then self:_schedule() end
-			end)
+			self:_queueSchedule(1)
 			return
 		end
 		if not self.carry.active and self:_eggInventoryFull() then
@@ -8784,9 +8873,7 @@ local EggRuntime = (function()
 					game:GetService("StarterGui"):SetCore("SendNotification", { Title = "Auto Steal", Text = "Egg inventory full. Place, hatch or sell eggs and it continues by itself.", Duration = 6 })
 				end)
 			end
-			task.delay(3, function()
-				if not self.destroyed and self.enabled and not self.running then self:_schedule() end
-			end)
+			self:_queueSchedule(3)
 			return
 		end
 		local character = LocalPlayer.Character
@@ -8795,6 +8882,7 @@ local EggRuntime = (function()
 		if not root or not humanoid then
 			self:_releaseOperation()
 			self:_setStatus("Character unavailable")
+			self:_queueSchedule(1)
 			return
 		end
 		self:_startMovementProtection()
@@ -8806,9 +8894,7 @@ local EggRuntime = (function()
 				self:_setStatus("Dropping primer egg")
 				self.skippedEggs[self.carry.uid] = os.clock() + 30
 				pcall(EggCmds.DropFieldEgg, "PlayerRequest")
-				task.delay(0.5, function()
-					if not self.destroyed and self.enabled then self:_schedule() end
-					end)
+				self:_queueSchedule(0.5)
 				return
 			end
 			local carried = self.records[self.carry.uid] or EggCmds.ReadFieldEgg(self.carry.uid)
@@ -8821,9 +8907,7 @@ local EggRuntime = (function()
 				self:_setStatus("Dropping unwanted egg")
 				self.skippedEggs[self.carry.uid] = os.clock() + 30
 				pcall(EggCmds.DropFieldEgg, "PlayerRequest")
-				task.delay(0.5, function()
-					if not self.destroyed and self.enabled then self:_schedule() end
-					end)
+				self:_queueSchedule(0.5)
 				return
 			end
 			self:_returnToSafe()
@@ -8832,6 +8916,7 @@ local EggRuntime = (function()
 		if not self:_wallOpen() then
 			self:_releaseOperation()
 			self:_setStatus("Waiting for reset wall")
+			self:_queueSchedule(1)
 			return
 		end
 		local playerSteal = runtimeEnv.__SenaV4PlayerSteal
@@ -8842,19 +8927,12 @@ local EggRuntime = (function()
 			self:_setStatus(blocker and ("Yielding to " .. TaskLadder.TITLES[blocker])
 				or holder and ("Waiting for " .. TaskLadder.TITLES[holder] .. " to hand over")
 				or "Yielding to Steal Players")
-			if self._yieldRetryPending then return end
-			self._yieldRetryPending = true
-			task.delay((blocker or holder) and 1 or 0.5, function()
-				self._yieldRetryPending = nil
-				if not self.destroyed and self.enabled then
-					self:_schedule()
-				end
-				end)
+			self:_queueSchedule((blocker or holder) and 1 or 0.5)
 			return
 		end
 		local recoveryUid = self.tweenRecoveryUid
-		local record = recoveryUid and (EggCmds.ReadFieldEgg(recoveryUid) or self.records[recoveryUid]) or nil
-		if recoveryUid and (type(record) ~= "table"
+		local record = recoveryUid and HubHealth.fieldRecord(EggCmds.ReadFieldEgg(recoveryUid) or self.records[recoveryUid], recoveryUid) or nil
+		if recoveryUid and (not HubHealth.targetable(record)
 			or (record.State ~= AreaEggs.States.Slot and record.State ~= AreaEggs.States.Dropped))
 		then
 			self.tweenRecoveryUid = nil
@@ -8863,6 +8941,7 @@ local EggRuntime = (function()
 		end
 		if not record then record = self:_chooseTarget() end
 		if not record then
+			self:_queueSchedule(1)
 			if self.stats.matching == 0 and self.stats.available > 0 and (self.config.minWeightKg or 0) > 0 then
 				self:_setStatus(string.format("No eggs ≥ %dKg", self.config.minWeightKg))
 			else
@@ -8888,11 +8967,7 @@ local EggRuntime = (function()
 		local acquired, acquireError = self:_acquireOperation()
 		if not acquired then
 			self:_setStatus("Waiting · " .. tostring(acquireError or "another operation"))
-			task.delay(0.5, function()
-				if not self.destroyed and self.enabled and self.planGeneration == planGeneration then
-					self:_schedule()
-				end
-				end)
+			self:_queueSchedule(0.5)
 			return
 		end
 		self.safeStarting = true
@@ -8911,7 +8986,7 @@ local EggRuntime = (function()
 			end
 			self:_setStatus("Returning to egg")
 			self:_tweenRoot(destination, function()
-				if self.tweenRecoveryUid == record.Uid then
+				if sessionAlive() and not self.destroyed and self.enabled and self.planGeneration == planGeneration and self.tweenRecoveryUid == record.Uid then
 					self:_requestCarry(record, false)
 				end
 				end, nil, {
@@ -8928,16 +9003,12 @@ local EggRuntime = (function()
 			self.activeTarget = nil
 			self:_releaseOperation()
 			self:_setStatus("Preparing steal")
-			task.delay(0.3, function()
-				if not self.destroyed and self.enabled and self.planGeneration == planGeneration then
-					self:_schedule()
-				end
-				end)
+			self:_queueSchedule(0.3)
 			return
 		end
 		if runtimeEnv.__SenaV4AdminBoost == true and not (self.captureObjectiveEnabled and self:_isCaptureEgg(record.Uid)) then
 			self.safeStarting = false
-			task.spawn(self._adminSteal, self, record)
+			self:_spawnStep("Admin steal", self._adminSteal, record)
 			return
 		end
 		local _safeDelta = root.Position - SAFE_ZONE_POSITION
@@ -8960,14 +9031,11 @@ local EggRuntime = (function()
 				self.lastSafeRepositionAt = os.clock()
 				self:_setStatus("Repositioning to safe area")
 				self:_tweenRoot(safeDestination, function()
+					if self.destroyed or not self.enabled or not sessionAlive() or self.planGeneration ~= planGeneration then return end
 					self:_groundSnap()
 					self.safeStarting = false
 					self.running = false
-					task.delay(0.15, function()
-						if not self.destroyed and self.enabled and self.planGeneration == planGeneration then
-							self:_schedule()
-						end
-						end)
+					self:_queueSchedule(0.15)
 					end, nil, {
 						flightProfile = true,
 					})
@@ -8984,7 +9052,7 @@ local EggRuntime = (function()
 			self:_installGuardHitDistanceBoost()
 			self:_startMovementProtection()
 			self.stats.lastResult = "Sniping drop"
-			task.spawn(self._snipeGrab, self, record)
+			self:_spawnStep("Dropped egg steal", self._snipeGrab, record)
 			return
 		end
 		if self:_usesPortalBoost(record) then
@@ -9001,7 +9069,7 @@ local EggRuntime = (function()
 			self:_startMovementProtection()
 			self:_showTreadmillDecoy()
 			self.stats.lastResult = "Low Speed Boost"
-			task.spawn(self._portalBoostSteal, self, record)
+			self:_spawnStep("Portal steal", self._portalBoostSteal, record)
 			return
 		end
 		if self.config.stealMode == "Fly" then
@@ -9023,11 +9091,7 @@ local EggRuntime = (function()
 			self.activeTarget = nil
 			self:_releaseOperation()
 			self:_setStatus("Preparing steal")
-			task.delay(0.25, function()
-				if not self.destroyed and self.enabled and self.planGeneration == planGeneration then
-					self:_schedule()
-				end
-				end)
+			self:_queueSchedule(0.25)
 			return
 		end
 		self.instantPhase = "priming"
@@ -9049,7 +9113,7 @@ local EggRuntime = (function()
 		if self.lowFpsPrime then
 			self:_setStatus("Preparing steal")
 			self:_tweenRoot(primerDest, function()
-				if self.instantPhase == "priming" and self.primerUid == primer.Uid then
+				if sessionAlive() and not self.destroyed and self.enabled and self.planGeneration == planGeneration and self.instantPhase == "priming" and self.primerUid == primer.Uid then
 					self:_requestCarry(primer, false)
 				end
 				end, nil, {
@@ -9067,7 +9131,7 @@ local EggRuntime = (function()
 					or self.instantPhase ~= "priming" or self.primerUid ~= primer.Uid
 			end)
 			if not pOk then
-				if self.instantPhase == "priming" and self.primerUid == primer.Uid then
+				if sessionAlive() and not self.destroyed and self.enabled and self.planGeneration == planGeneration and self.instantPhase == "priming" and self.primerUid == primer.Uid then
 					self:_finish("Steal unavailable — retrying")
 				end
 				return
@@ -9141,7 +9205,7 @@ local EggRuntime = (function()
 			self:_startMovementProtection()
 			pcall(self._installPromptFilter, self)
 			if Config.SnipeDroppedEggs then self:_installSnipeHook() end
-			if self.userStealEnabled or Config.SnipeDroppedEggs then self:_startWatchdog() end
+			self:_startWatchdog()
 			self:_setStatus("Searching")
 			self:_schedule()
 		else
@@ -11615,7 +11679,10 @@ local PlayerSteal = (function()
 		self:_notify()
 	end
 	function PlayerSteal:setEnabled(value)
+		if self.destroyed then return end
+		if self.enabled ~= (value == true) then self.actionGeneration = (self.actionGeneration or 0) + 1 end
 		self.enabled = value == true
+		if not self.enabled then self.forced, self.wantsTarget = false, false self:_clearActionResources() end
 		if not self.enabled then
 			self:_setStatus("idle")
 		else
@@ -11656,14 +11723,14 @@ local PlayerSteal = (function()
 			return EggCmds.ReadFieldEggs()
 			end)
 		if not okSnap or not snapshot then return found end
-		for _, record in ipairs(snapshot.Records or {}) do
+		for _, record in pairs(HubHealth.fieldRecords(snapshot)) do
 			local isCarried = record.State == "Carried" or (AreaEggs and AreaEggs.States and record.State == AreaEggs.States.Carried)
 			if isCarried and not self.blacklist[record.Uid] then
 				local full = nil
 				pcall(function()
 					full = EggCmds.ReadFieldEgg(record.Uid)
 					end)
-				full = full or record
+				full = HubHealth.fieldRecord(full, record.Uid) or record
 				local carrier = full.CarrierUserId
 				if carrier and carrier ~= LocalPlayer.UserId then
 					local player = Players:GetPlayerByUserId(carrier)
@@ -11767,7 +11834,7 @@ local PlayerSteal = (function()
 		return best
 	end
 	function PlayerSteal:strike(player)
-		if not player or player == LocalPlayer then return false end
+		if not player or player == LocalPlayer or self.destroyed or self.running or self.actionTicket or self.forced then return false end
 		for _, entry in ipairs(self:carriers()) do
 			if entry.player == player then
 				self.forced = true
@@ -11839,9 +11906,9 @@ local PlayerSteal = (function()
 	local function getForestBaitEgg(excludeUid)
 		local snap = nil
 		pcall(function() snap = EggCmds.ReadFieldEggs() end)
-		local records = (snap and snap.Records) or {}
+		local records = HubHealth.fieldRecords(snap)
 		local targetBait = nil
-		for _, eg in ipairs(records) do
+		for _, eg in pairs(records) do
 			if (eg.State == "Slot" or eg.State == "Dropped") and eg.Uid ~= excludeUid and (not eg.CarrierUserId or eg.CarrierUserId == LocalPlayer.UserId) then
 				local bpos = (eg.BottomCFrame and eg.BottomCFrame.Position) or (eg.BoundsCFrame and eg.BoundsCFrame.Position)
 				local isForest = (eg.AreaId == "Forest") or tostring(eg.Uid):find("Forest", 1, true) or tostring(eg.Uid):find("^FirstArea") or (bpos and bpos.X < 680)
@@ -11858,6 +11925,7 @@ local PlayerSteal = (function()
 		return targetBait
 	end
 	function PlayerSteal:_primeForest(excludeUid)
+		if not self:_actionAlive() then return false end
 		local runtime = self.eggRuntime
 		local character = LocalPlayer.Character
 		local root = character and character:FindFirstChild("HumanoidRootPart")
@@ -11892,7 +11960,7 @@ local PlayerSteal = (function()
 		local carried = false
 		local tCarry = os.clock()
 		local nextBurst = 0
-		while not carried and os.clock() - tCarry < 0.8 do
+		while self:_actionAlive() and not carried and os.clock() - tCarry < 0.8 do
 			root = character:FindFirstChild("HumanoidRootPart") or root
 			if root and root.Position.Y < 65 then
 				root.CFrame = CFrame.new(bLanding)
@@ -11920,6 +11988,7 @@ local PlayerSteal = (function()
 			end
 			RunService.Heartbeat:Wait()
 		end
+		if not self:_actionAlive() then return false end
 		if not carried then
 			self:_setStatus("Steal unavailable — retrying")
 			recoverPosture()
@@ -11934,6 +12003,7 @@ local PlayerSteal = (function()
 		root.AssemblyAngularVelocity = Vector3.zero
 		local knockbackReceived = false
 		local kbConns = {}
+		self.primeConnections = kbConns
 		pcall(function()
 			local refreshRemote = ReplicatedStorage:FindFirstChild("Packages")
 			and ReplicatedStorage.Packages:FindFirstChild("Networking")
@@ -11984,7 +12054,7 @@ local PlayerSteal = (function()
 		triggerGuardHit()
 		local kbDeadline = os.clock() + 0.75
 		local nextStrike = os.clock() + 0.05
-		while os.clock() < kbDeadline do
+		while self:_actionAlive() and os.clock() < kbDeadline do
 			if knockbackReceived then break end
 			local curHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 			if curHum and (curHum.PlatformStand or curHum.Sit) then knockbackReceived = true break end
@@ -12001,6 +12071,8 @@ local PlayerSteal = (function()
 			RunService.Heartbeat:Wait()
 		end
 		for _, conn in ipairs(kbConns) do pcall(conn.Disconnect, conn) end
+		self.primeConnections = nil
+		if not self:_actionAlive() then return false end
 		if not knockbackReceived then
 			self:_setStatus("Steal unavailable — retrying")
 			recoverPosture()
@@ -12009,7 +12081,7 @@ local PlayerSteal = (function()
 		self:_setStatus("Preparing steal")
 		recoverPosture()
 		local settleDl = os.clock() + 0.35
-		while os.clock() < settleDl do
+		while self:_actionAlive() and os.clock() < settleDl do
 			local hh = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
 			local rr = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 			if hh and rr and not hh.PlatformStand and not hh.Sit then
@@ -12085,7 +12157,7 @@ local PlayerSteal = (function()
 		end
 		return false
 	end
-	function PlayerSteal:_chase(entry, intercept)
+	function PlayerSteal:_chaseImpl(entry, intercept)
 		if LocalPlayer:GetAttribute("InHalloweenDimension") == true then return end
 		if self.running then return end
 		self.running = true
@@ -12114,6 +12186,7 @@ local PlayerSteal = (function()
 				return
 			end
 		end
+		if not self:_actionAlive() then return end
 		local bat = self.godMode and self.godMode:_equipBat()
 		local deadline = os.clock() + (intercept and INTERCEPT_TIMEOUT or CHASE_TIMEOUT)
 		local outcome = "could not catch them"
@@ -12130,20 +12203,26 @@ local PlayerSteal = (function()
 		self.leadIdx = self.hitIdx or self.leadIdx or 1
 		self.missStreak = 0
 		local ncConn = nil
+		self.chaseCollisions = {}
 		pcall(function()
 			ncConn = RunService.Stepped:Connect(function()
+				if not self:_actionAlive() then return end
 				local curC = LocalPlayer.Character
 				if curC then
 					for _, p in ipairs(curC:GetDescendants()) do
-						if p:IsA("BasePart") then p.CanCollide = false end
+						if p:IsA("BasePart") then
+							if self.chaseCollisions[p] == nil then self.chaseCollisions[p] = p.CanCollide end
+							p.CanCollide = false
+						end
 					end
 				end
 				end)
 			end)
+		self.chaseConnection = ncConn
 		self:_setStatus(string.format("Chasing %s", name))
-		while os.clock() < deadline do
+		while self:_actionAlive() and os.clock() < deadline do
 			local dt = RunService.PreSimulation:Wait()
-			if not self.enabled and not self.forced then outcome = "stopped" break end
+			if not self:_actionAlive() then outcome = "stopped" break end
 			local current = nil
 			pcall(function() current = EggCmds.ReadFieldEgg(uid) end)
 			local state = current and current.State
@@ -12272,7 +12351,9 @@ local PlayerSteal = (function()
 				task.spawn(self._swingBatAt, self, holder, bat)
 			end
 		end
-		if ncConn then pcall(function() ncConn:Disconnect() end) end
+		self:_clearActionResources()
+		if not self:_actionAlive() then return end
+		if not self:_actionAlive() then return end
 		if outcome == "taken" then
 			self.taken += 1
 			self:_deliver(uid, record)
@@ -12301,7 +12382,7 @@ local PlayerSteal = (function()
 			self:_setStatus("Moving to dropped egg")
 			TweenMoveTo(root, humanoid, CFrame.new(bpos + Vector3.new(0, 3, 0)), function()
 				local c = current()
-				return (not self.enabled and not self.forced) or humanoid.Health <= 0 or not root.Parent
+				return (not self:_actionAlive()) or humanoid.Health <= 0 or not root.Parent
 					or c == nil or c.State ~= "Dropped"
 			end)
 		end
@@ -12321,7 +12402,7 @@ local PlayerSteal = (function()
 		if handed then
 			self:_setStatus("Delivering stolen egg")
 			local deadline = os.clock() + 30
-			while runtime._instantReturnToken ~= nil and os.clock() < deadline do
+			while self:_actionAlive() and runtime._instantReturnToken ~= nil and os.clock() < deadline do
 				task.wait(0.2)
 			end
 			return
@@ -12333,14 +12414,14 @@ local PlayerSteal = (function()
 		end
 		self:_setStatus("Carrying stolen egg home")
 		local deadline = os.clock() + 8
-		while not banked() and os.clock() < deadline do
+		while self:_actionAlive() and not banked() and os.clock() < deadline do
 			local character = LocalPlayer.Character
 			local root = character and character:FindFirstChild("HumanoidRootPart")
 			if root and runtime and not runtime:_isInSafeArea(root) then self:_returnSafe() end
 			task.wait(0.1)
 		end
 	end
-	function PlayerSteal:_snipe(record, carrierUserId)
+	function PlayerSteal:_snipeImpl(record, carrierUserId)
 		if self.running then return end
 		self.running = true
 		self.attempts += 1
@@ -12363,13 +12444,14 @@ local PlayerSteal = (function()
 			if self.godMode then self.godMode:stopDefend() end
 			self:_setStatus(string.format("Sniping %s's dropped egg", name))
 			TweenMoveTo(root, humanoid, CFrame.new(bpos + Vector3.new(0, 3, 0)), function()
-				return not self.enabled or humanoid.Health <= 0 or not stillDropped()
+				return not self:_actionAlive() or humanoid.Health <= 0 or not stillDropped()
 			end)
 			local dropped, current = stillDropped()
-			if dropped and self.enabled then
+			if dropped and self:_actionAlive() then
 				outcome = self:_grab(current, nil, nil, true) and "taken" or outcome
 			end
 		end
+		if not self:_actionAlive() then return end
 		if outcome == "taken" then
 			self.taken += 1
 			self:_deliver(uid, record)
@@ -12384,6 +12466,7 @@ local PlayerSteal = (function()
 	function PlayerSteal:_watchDrops()
 		if self.dropConns then return end
 		local function alive()
+			if not sessionAlive() or self.destroyed then return false end
 			if runtimeEnv.ChloeX_Running == nil and runtimeEnv.__SenaV4PlayerSteal ~= self then
 				for _, conn in ipairs(self.dropConns or {}) do pcall(function() conn:Disconnect() end) end
 				return false
@@ -12391,12 +12474,13 @@ local PlayerSteal = (function()
 			return true
 		end
 		pcall(function()
-			for _, r in ipairs(EggCmds.ReadFieldEggs().Records or {}) do
+			for _, r in pairs(HubHealth.fieldRecords(EggCmds.ReadFieldEggs())) do
 				if r.State == "Carried" and r.CarrierUserId then self.lastCarrier[r.Uid] = r.CarrierUserId end
 			end
 			end)
 		self.dropConns = {}
 		table.insert(self.dropConns, EggCmds.FieldShifted:Connect(function(record)
+			record = HubHealth.fieldRecord(record)
 			if not alive() or type(record) ~= "table" or not record.Uid then return end
 			if record.State == "Carried" then
 				self.lastCarrier[record.Uid] = record.CarrierUserId
@@ -12478,7 +12562,7 @@ local PlayerSteal = (function()
 		if settleFloor then settleSeconds = math.max(settleSeconds, settleFloor) end
 		local lockCF = nil
 		local settleUntil = quick and 0 or os.clock() + settleSeconds
-		while os.clock() < settleUntil do
+		while self:_actionAlive() and os.clock() < settleUntil do
 			local current = fresh()
 			local state = current and current.State
 			if state == "Carried" then
@@ -12499,7 +12583,7 @@ local PlayerSteal = (function()
 		end
 		local askBusy, carryBusy = false, false
 		local deadline = os.clock() + 3.5
-		while os.clock() < deadline do
+		while self:_actionAlive() and os.clock() < deadline do
 			local current = fresh()
 			local state = current and current.State
 			if state == "Carried" then
@@ -12547,13 +12631,62 @@ local PlayerSteal = (function()
 		end
 		return false
 	end
+	function PlayerSteal:_actionAlive()
+		local ticket = self.actionTicket
+		return sessionAlive() and not self.destroyed and (self.enabled or self.forced)
+			and (not ticket or ticket.generation == (self.actionGeneration or 0))
+	end
+	function PlayerSteal:_clearActionResources()
+		if self.chaseConnection then pcall(self.chaseConnection.Disconnect, self.chaseConnection) self.chaseConnection = nil end
+		for _, conn in ipairs(self.primeConnections or {}) do pcall(conn.Disconnect, conn) end
+		self.primeConnections = nil
+		for part, value in pairs(self.chaseCollisions or {}) do
+			if not Config.Noclip then pcall(function() if part.Parent then part.CanCollide = value end end) end
+		end
+		self.chaseCollisions = nil
+	end
+	function PlayerSteal:_runAction(label, callback, ...)
+		if self.running or self.actionTicket or not self:_actionAlive() then return false end
+		local ticket = { generation = self.actionGeneration or 0 }
+		self.actionTicket = ticket
+		local result = table.pack(HubHealth.try(label, callback, self, ...))
+		if self.actionTicket == ticket then
+			self:_clearActionResources()
+			self.actionTicket = nil
+			self.running = false
+			self.forced = false
+			self.wantsTarget = false
+			self.cardTarget = nil
+			self:_setStatus(result[1] and (self.enabled and "looking for a carrier" or "idle") or "Error — retrying")
+		end
+		return table.unpack(result, 1, result.n)
+	end
+	function PlayerSteal:_chase(...)
+		return self:_runAction("Player steal", self._chaseImpl, ...)
+	end
+	function PlayerSteal:_snipe(...)
+		return self:_runAction("Dropped egg steal", self._snipeImpl, ...)
+	end
+	function PlayerSteal:destroy()
+		if self.destroyed then return end
+		self.destroyed = true
+		self.enabled, self.forced, self.running, self.wantsTarget = false, false, false, false
+		self.actionGeneration = (self.actionGeneration or 0) + 1
+		self:_clearActionResources()
+		for _, conn in ipairs(self.dropConns or {}) do pcall(conn.Disconnect, conn) end
+		self.dropConns = nil
+		if self.loop then pcall(task.cancel, self.loop) self.loop = nil end
+		table.clear(self.listeners)
+	end
 	function PlayerSteal:_start()
 		self:_watchDrops()
 		if self.loop then return end
 		self.loop = task.spawn(function()
-			while true do
+			while sessionAlive() and not self.destroyed do
 				task.wait(0.4)
+				if not sessionAlive() or self.destroyed then break end
 				if runtimeEnv.ChloeX_Running == nil and runtimeEnv.__SenaV4PlayerSteal ~= self then break end
+				HubHealth.try("Player steal loop", function()
 				for uid, expiry in pairs(self.blacklist) do
 					if os.clock() > expiry then self.blacklist[uid] = nil end
 				end
@@ -12567,6 +12700,7 @@ local PlayerSteal = (function()
 				end
 				self.wantsTarget = entry ~= nil
 				if entry and not bloomBusy then self:_chase(entry) end
+				end)
 			end
 			self.loop = nil
 			end)
@@ -14634,7 +14768,8 @@ do
 			task.wait(0.1)
 		end
 		conn:Disconnect()
-		return st.solved, st.solved and nil or (st.err or "the cricket stopped playing")
+		if st.solved then return true, nil end
+		return false, st.err or "the cricket stopped playing"
 	end
 	function BB.hitMushroom(idx, rem)
 		local root = rootPart()
@@ -17085,8 +17220,8 @@ local function initSenaPanels()
 			h = 28,
 			icon = "play",
 			onClick = function()
-				if type(applyAutoPlace) == "function" then
-					applyAutoPlace(true)
+				if type(UIRunners.setAutoPlace) == "function" then
+					UIRunners.setAutoPlace(true)
 				elseif type(UIRunners) == "table" and type(UIRunners.AutoPlaceLoop) == "function" then
 					Config.AutoPlace = true
 					task.spawn(UIRunners.AutoPlaceLoop)
@@ -19955,7 +20090,512 @@ loadstring(game:HttpGet("https://senahub.xyz/raw/senav6"))()
 		end)
 	Hunt.load()
 end
+-- S2R_APPEARANCE_BEGIN
+-- Cosmetic settings are separate from the existing gameplay configuration.
+-- Override these before loading, or use Settings > Appearance in the window:
+-- getgenv().S2rHubAppearance = { LogoAssetId = "106507222214747",
+--     BackgroundAssetId = "", BackgroundDim = 0.45, BackgroundColor = "10121E" }
+local function createS2rAppearance(Sena)
+	if type(runtimeEnv.__S2rHubAppearanceCleanup) == "function" then pcall(runtimeEnv.__S2rHubAppearanceCleanup) end
+	local UI = {
+		Title = "S2r Hub X Sena Hub",
+		defaults = { LogoAssetId = "106507222214747", BackgroundAssetId = "", BackgroundDim = 0.45, BackgroundColor = "10121E" },
+		settings = {}, connections = {}, restores = {}, owned = {}, images = {}, controls = {},
+		alive = true, elapsed = 0, imageGeneration = 0,
+	}
+	local CONFIG_FILE = "SenaSAEv4/s2r_appearance.json"
+	function UI:elevate()
+		local setter = runtimeEnv.__SenaV4IdentitySetter
+		if type(setter) == "function" then pcall(setter, runtimeEnv.__SenaV4UICapabilityIdentity or 8) end
+	end
+	local function assetId(value, allowEmpty)
+		local text = tostring(value or ""):match("^%s*(.-)%s*$")
+		if text == "" then return allowEmpty and "" or nil end
+		local id = text:match("^(%d+)$") or text:match("^rbxassetid://(%d+)$")
+		if not id and (text:match("^https?://[%w%.]*roblox%.com/") or text:match("^rbxthumb://")) then
+			id = text:match("[?&]id=(%d+)") or text:match("/library/(%d+)") or text:match("/catalog/(%d+)") or text:match("/asset/(%d+)")
+		end
+		return id and tonumber(id) and tonumber(id) > 0 and id or nil
+	end
+	local function hexColor(value)
+		local s = tostring(value or ""):gsub("%s", ""):gsub("^#", "")
+		return #s == 6 and s:match("^%x+$") and s:upper() or nil
+	end
+	local function content(id)
+		return id ~= "" and "rbxassetid://" .. id or ""
+	end
+	local function color(hex)
+		return Color3.fromRGB(tonumber(hex:sub(1, 2), 16), tonumber(hex:sub(3, 4), 16), tonumber(hex:sub(5, 6), 16))
+	end
+	local function loadValues(values)
+		if type(values) ~= "table" then return end
+		UI.settings.LogoAssetId = assetId(values.LogoAssetId, false) or UI.settings.LogoAssetId
+		UI.settings.BackgroundAssetId = assetId(values.BackgroundAssetId, true) or UI.settings.BackgroundAssetId
+		UI.settings.BackgroundColor = hexColor(values.BackgroundColor) or UI.settings.BackgroundColor
+		local dim = tonumber(values.BackgroundDim)
+		if dim and dim == dim then UI.settings.BackgroundDim = math.clamp(dim, 0, 1) end
+	end
+	loadValues(UI.defaults)
+	pcall(function()
+		if type(readfile) == "function" and type(isfile) == "function" and isfile(CONFIG_FILE) then
+			loadValues(game:GetService("HttpService"):JSONDecode(readfile(CONFIG_FILE)))
+		end
+	end)
+	loadValues(runtimeEnv.S2rHubAppearance)
+	runtimeEnv.S2rHubAppearance = UI.settings
+	UI.Logo = content(UI.settings.LogoAssetId)
+	function UI:notify(message)
+		pcall(function() Sena:Notify({ Title = "Appearance", Content = message, Duration = 4 }) end)
+	end
+	function UI:save()
+		if type(writefile) ~= "function" then return end
+		local ok = pcall(function()
+			if type(makefolder) == "function" and type(isfolder) == "function" and not isfolder("SenaSAEv4") then makefolder("SenaSAEv4") end
+			writefile(CONFIG_FILE, game:GetService("HttpService"):JSONEncode(self.settings))
+		end)
+		if not ok and not self.saveWarning then
+			self.saveWarning = true
+			self:notify("Appearance applied. This environment could not save it for the next session.")
+		end
+	end
+	function UI:remember(object, property, value)
+		local old = self.restores[object]
+		if not old then old = {} self.restores[object] = old end
+		if old[property] == nil then old[property] = { object[property] } end
+		object[property] = value
+	end
+	function UI:new(class, props, parent)
+		local object = Instance.new(class)
+		for key, value in pairs(props) do object[key] = value end
+		self.owned[object] = true
+		object.Parent = parent
+		return object
+	end
+	function UI:connect(signal, callback)
+		local connection = signal:Connect(function(...)
+			if not self.alive then return end
+			self:elevate()
+			callback(...)
+		end)
+		self.connections[#self.connections + 1] = connection
+		return connection
+	end
+	function UI:owns(object)
+		while object do
+			if self.owned[object] then return true end
+			object = object.Parent
+		end
+		return false
+	end
+	local function isBrand(text)
+		local normalized = tostring(text or ""):lower():gsub("[%s%p]", "")
+		return normalized == "s2rhubxsenahub" or normalized == "senahub" or normalized == "s2rhub"
+	end
+	local function isImage(object)
+		return object:IsA("ImageLabel") or object:IsA("ImageButton")
+	end
+	function UI:visible(object)
+		while object do
+			if object:IsA("GuiObject") and not object.Visible then return false end
+			if object:IsA("ScreenGui") and not object.Enabled then return false end
+			object = object.Parent
+		end
+		return true
+	end
+	function UI:setImage(image, id, kind)
+		self:elevate()
+		if self.images[image] and self.images[image].id == id then return end
+		self.imageGeneration = self.imageGeneration + 1
+		local record = { id = id, generation = self.imageGeneration }
+		self.images[image] = record
+		image.ImageRectOffset = Vector2.new(0, 0)
+		image.ImageRectSize = Vector2.new(0, 0)
+		image.ImageColor3 = Color3.new(1, 1, 1)
+		image.Image = content(id)
+		if id == "" then return end
+		-- A decal ID may not be an Image ID. A Roblox asset thumbnail also works
+		-- for decals, without fetching/executing any external asset code.
+		task.delay(3, function()
+			if not self.alive or not image.Parent or self.images[image] ~= record or image.IsLoaded then return end
+			self:elevate()
+			image.Image = "rbxthumb://type=Asset&id=" .. id .. "&w=420&h=420"
+			task.delay(5, function()
+				if not self.alive or not image.Parent or self.images[image] ~= record or image.IsLoaded then return end
+				local key = kind .. ":" .. id
+				if self.imageWarning ~= key then
+					self.imageWarning = key
+					self:notify(kind .. " could not load. Check that the asset is an available Roblox image or decal.")
+				end
+			end)
+		end)
+	end
+	function UI:findTitle(root)
+		local best, score
+		for _, node in ipairs(root:GetDescendants()) do
+			if not self:owns(node) and node:IsA("TextLabel") and isBrand(node.Text) then
+				local s = node.AbsoluteSize.X > 0 and 10 or 0
+				if node.Name:lower():find("title", 1, true) then s = s + 5 end
+				if self:visible(node) then s = s + 2 end
+				if not score or s > score then best, score = node, s end
+			end
+		end
+		return best
+	end
+	function UI:findMain(root, title)
+		local node = title and title.Parent
+		while node and node ~= root do
+			if node:IsA("GuiObject") and node.AbsoluteSize.X >= 240 and node.AbsoluteSize.Y >= 160 then return node end
+			node = node.Parent
+		end
+		for _, key in ipairs({ "MainFrame", "Main", "Frame", "Container" }) do
+			local value = type(self.window) == "table" and rawget(self.window, key)
+			if typeof(value) == "Instance" and value:IsA("GuiObject") and value:IsDescendantOf(root)
+				and value.AbsoluteSize.X >= 240 and value.AbsoluteSize.Y >= 160 then return value end
+		end
+		return nil
+	end
+	function UI:hosts()
+		local list, seen = {}, {}
+		local function add(object)
+			if typeof(object) == "Instance" and not seen[object] then seen[object] = true list[#list + 1] = object end
+		end
+		pcall(function() add(game:GetService("CoreGui")) end)
+		pcall(function() add(LocalPlayer:FindFirstChildOfClass("PlayerGui")) end)
+		pcall(function() if type(gethui) == "function" then add(gethui()) end end)
+		return list
+	end
+	function UI:captureRoots()
+		self.previousRoots = {}
+		for _, host in ipairs(self:hosts()) do
+			for _, node in ipairs(host:GetDescendants()) do
+				if node:IsA("ScreenGui") then self.previousRoots[node] = true end
+			end
+		end
+	end
+	function UI:findRoot()
+		-- Prefer references returned by this window, including CoreGui/gethui hosts.
+		for _, owner in ipairs({ self.window, Sena }) do
+			if type(owner) == "table" then
+				for _, key in ipairs({ "Gui", "ScreenGui", "MainGui", "MainFrame", "Main", "Frame" }) do
+					local node = rawget(owner, key)
+					if typeof(node) == "Instance" then
+						local root = node:IsA("ScreenGui") and node or node:FindFirstAncestorWhichIsA("ScreenGui")
+						if root and root.Parent and self:findTitle(root) then return root end
+					end
+				end
+			end
+		end
+		for _, host in ipairs(self:hosts()) do
+			for _, node in ipairs(host:GetDescendants()) do
+				if node:IsA("ScreenGui") and not self.previousRoots[node] and self:findTitle(node) then return node end
+			end
+		end
+		return nil
+	end
+	function UI:styleNativeTitle(title)
+		if self.nativeTitle == title then return end
+		self.nativeTitle = title
+		for key, value in pairs({ Text = self.Title, TextColor3 = Color3.new(1, 1, 1), Font = Enum.Font.GothamBold,
+			TextTransparency = 0, TextStrokeColor3 = Color3.new(0, 0, 0), TextStrokeTransparency = 0.55,
+			RichText = false, TextWrapped = true, TextScaled = true, TextTruncate = Enum.TextTruncate.None }) do
+			self:remember(title, key, value)
+		end
+		local limit = title:FindFirstChildWhichIsA("UITextSizeConstraint")
+		if limit then
+			self:remember(limit, "MinTextSize", 16)
+			self:remember(limit, "MaxTextSize", 22)
+		else
+			self:new("UITextSizeConstraint", { Name = "S2rReadableTitle", MinTextSize = 16, MaxTextSize = 22 }, title)
+		end
+		for _, child in ipairs(title:GetChildren()) do
+			if child:IsA("UIGradient") then self:remember(child, "Enabled", false) end
+		end
+	end
+	function UI:mountHeader()
+		-- This extra title strip is a sibling of the main window. It is not clipped
+		-- by the old title slot and never sits on top of search/close/tab controls.
+		local z = self.nativeTitle.ZIndex + 2
+		local bar = self:new("Frame", { Name = "S2rHubBrandBar", Size = UDim2.fromOffset(360, 60),
+			BackgroundColor3 = Color3.fromRGB(15, 17, 29), BackgroundTransparency = 0.04,
+			BorderSizePixel = 0, Active = false, Selectable = false, Visible = false, ZIndex = z }, self.root)
+		self.bar = bar
+		self:new("UICorner", { CornerRadius = UDim.new(0, 12) }, bar)
+		self:new("UIStroke", { Color = Color3.fromRGB(157, 124, 255), Transparency = 0.2, Thickness = 1 }, bar)
+		self:new("Frame", { Name = "Accent", Position = UDim2.fromOffset(0, 12), Size = UDim2.new(0, 3, 1, -24),
+			BackgroundColor3 = Color3.fromRGB(167, 139, 250), BorderSizePixel = 0, ZIndex = z + 1 }, bar)
+		local tile = self:new("Frame", { Name = "LogoTile", Position = UDim2.fromOffset(10, 8), Size = UDim2.fromOffset(44, 44),
+			BackgroundColor3 = Color3.fromRGB(39, 33, 60), BorderSizePixel = 0, ZIndex = z + 1 }, bar)
+		self:new("UICorner", { CornerRadius = UDim.new(0, 10) }, tile)
+		self.logoTile = tile
+		self:new("TextLabel", { Name = "LogoFallback", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
+			Text = "S2r", TextColor3 = Color3.fromRGB(221, 210, 255), TextSize = 16, Font = Enum.Font.GothamBold, ZIndex = z + 1 }, tile)
+		self.logo = self:new("ImageLabel", { Name = "S2rHubLogo", Position = UDim2.fromOffset(3, 3),
+			Size = UDim2.new(1, -6, 1, -6), BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, ZIndex = z + 2 }, tile)
+		self.brandText = self:new("TextLabel", { Name = "S2rHubFullName", Position = UDim2.fromOffset(66, 4),
+			Size = UDim2.new(1, -78, 1, -8), BackgroundTransparency = 1, Text = self.Title,
+			TextSize = 22, TextScaled = false, TextWrapped = false, TextTruncate = Enum.TextTruncate.None,
+			TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center,
+			Font = Enum.Font.GothamBold, TextColor3 = Color3.new(1, 1, 1), ZIndex = z + 1 }, bar)
+		self:connect(self.logo:GetPropertyChangedSignal("IsLoaded"), function()
+			if self.alive then tile.LogoFallback.Visible = not self.logo.IsLoaded end
+		end)
+	end
+	function UI:mountBackground()
+		local main = self.main
+		self:remember(main, "BackgroundColor3", color(self.settings.BackgroundColor))
+		self:remember(main, "BackgroundTransparency", 0)
+		if isImage(main) then self:remember(main, "ImageTransparency", 1) end
+		local image = self:new("ImageLabel", { Name = "S2rHubWallpaper", Size = UDim2.fromScale(1, 1),
+			Position = UDim2.fromOffset(0, 0), BackgroundTransparency = 1, BorderSizePixel = 0,
+			Active = false, Selectable = false, ScaleType = Enum.ScaleType.Crop, ZIndex = main.ZIndex }, main)
+		self.background = image
+		local corner = main:FindFirstChildWhichIsA("UICorner")
+		if corner then self:new("UICorner", { CornerRadius = corner.CornerRadius }, image) end
+		self:refreshSurfaces()
+	end
+	function UI:refreshSurfaces()
+		if not self.main or not self.main.Parent then return end
+		local main = self.main
+		for _, node in ipairs(main:GetChildren()) do
+			if node:IsA("GuiObject") and not self:owns(node) then
+				-- Keep the wallpaper below existing controls for both ZIndex modes.
+				if node.ZIndex <= main.ZIndex then
+					local delta = main.ZIndex + 1 - node.ZIndex
+					self:remember(node, "ZIndex", node.ZIndex + delta)
+					for _, child in ipairs(node:GetDescendants()) do
+						if child:IsA("GuiObject") then self:remember(child, "ZIndex", child.ZIndex + delta) end
+					end
+				end
+				local full = node.AbsoluteSize.X >= main.AbsoluteSize.X * 0.65 and node.AbsoluteSize.Y >= main.AbsoluteSize.Y * 0.65
+				if full then
+					if node:IsA("Frame") or node:IsA("ScrollingFrame") then
+						local original = self.restores[node] and self.restores[node].BackgroundTransparency
+						local value = original and original[1] or node.BackgroundTransparency
+						self:remember(node, "BackgroundTransparency", math.max(value, 0.65))
+					elseif node:IsA("ImageLabel") and not node.Active then
+						-- Large decorative art, not tab icons or feature buttons.
+						self:remember(node, "ImageTransparency", 1)
+					end
+				end
+			end
+		end
+	end
+	function UI:refreshLogos(root, isToggle)
+		self.logoSlots = self.logoSlots or {}
+		for _, node in ipairs(root:GetDescendants()) do
+			if isImage(node) and not self:owns(node) and not self.logoSlots[node] then
+				local id = assetId(node.Image, true)
+				local known = id == self.defaults.LogoAssetId or id == "96240498384290"
+				local name = node.Name:lower()
+				local nearTitle = self.nativeTitle and node.AbsoluteSize.X <= 80 and node.AbsoluteSize.Y <= 80
+					and math.abs(node.AbsolutePosition.Y - self.nativeTitle.AbsolutePosition.Y) < 50
+					and math.abs(node.AbsolutePosition.X - self.nativeTitle.AbsolutePosition.X) < 100
+				if (isToggle and node:IsA("ImageButton")) or known or (nearTitle and (name == "logo" or name == "icon")) then
+					-- A child image preserves the original button/drag events and is not
+					-- overwritten by the library's sprite-sheet animation.
+					local overlay = self:new("ImageLabel", { Name = "S2rAssetLogo", Size = UDim2.fromScale(1, 1),
+						BackgroundColor3 = Color3.fromRGB(26, 24, 43), BackgroundTransparency = 0,
+						BorderSizePixel = 0, Active = false, Selectable = false,
+						ScaleType = Enum.ScaleType.Fit, ZIndex = node.ZIndex + 1 }, node)
+					self:new("UICorner", { CornerRadius = UDim.new(0, 8) }, overlay)
+					self.logoSlots[node] = overlay
+					self:setImage(overlay, self.settings.LogoAssetId, "Logo")
+				end
+			end
+		end
+	end
+	function UI:apply()
+		self:elevate()
+		self.Logo = content(self.settings.LogoAssetId)
+		if self.logo then self:setImage(self.logo, self.settings.LogoAssetId, "Logo") end
+		for node, overlay in pairs(self.logoSlots or {}) do
+			if overlay.Parent then self:setImage(overlay, self.settings.LogoAssetId, "Logo") else self.logoSlots[node] = nil end
+		end
+		if self.background and self.background.Parent then
+			self:setImage(self.background, self.settings.BackgroundAssetId, "Background")
+			self.background.ImageTransparency = self.settings.BackgroundDim
+			self:remember(self.main, "BackgroundColor3", color(self.settings.BackgroundColor))
+			self:refreshSurfaces()
+		end
+	end
+	function UI:layout()
+		local main, root = self.main, self.root
+		if not main or not main.Parent or not root.Parent then self:Destroy() return end
+		if not self:visible(main) then self.bar.Visible = false return end
+		local origin, bounds = root.AbsolutePosition, root.AbsoluteSize
+		local p, size = main.AbsolutePosition - origin, main.AbsoluteSize
+		local width, height, gap = math.min(size.X, bounds.X - 16), 60, 6
+		if width < 220 then self.bar.Visible = false return end
+		local x = math.clamp(p.X, 8, math.max(8, bounds.X - width - 8))
+		local y
+		if p.Y >= height + gap + 4 then y = p.Y - height - gap
+		elseif bounds.Y - (p.Y + size.Y) >= height + gap + 4 then y = p.Y + size.Y + gap
+		elseif p.X >= 238 then width = math.min(300, p.X - 14) x = p.X - width - gap y = math.clamp(p.Y, 4, math.max(4, bounds.Y - height - 4))
+		elseif bounds.X - (p.X + size.X) >= 238 then width = math.min(300, bounds.X - (p.X + size.X) - 14) x = p.X + size.X + gap y = math.clamp(p.Y, 4, math.max(4, bounds.Y - height - 4)) end
+		-- On a full-screen/mobile layout, use only the native branding area.
+		-- Find its real boundaries rather than assuming where search/close live.
+		if not y and self.nativeTitle and self.nativeTitle.Parent then
+			local title = self.nativeTitle
+			local header = title.Parent
+			while header and header ~= main do
+				if header:IsA("GuiObject") and header.AbsoluteSize.Y >= 32 and header.AbsoluteSize.Y <= 100 and header.AbsoluteSize.X >= 180 then break end
+				header = header.Parent
+			end
+			if header and header ~= main then
+				local hp, hs = header.AbsolutePosition - origin, header.AbsoluteSize
+				local left = math.max(p.X + 6, hp.X + 4)
+				local right = math.min(p.X + size.X - 6, hp.X + hs.X - 4)
+				local top, bottom = hp.Y + 2, hp.Y + math.min(hs.Y, 64) - 2
+				for _, node in ipairs(header:GetDescendants()) do
+					if node:IsA("GuiObject") and node ~= title and not self:owns(node) and not self.logoSlots[node]
+						and self:visible(node) and (node:IsA("GuiButton") or node:IsA("TextBox") or (node:IsA("TextLabel") and node.Text ~= "")) then
+						local np, ns = node.AbsolutePosition - origin, node.AbsoluteSize
+						if np.Y < bottom and np.Y + ns.Y > top then
+							if np.X + ns.X <= title.AbsolutePosition.X - origin.X then left = math.max(left, np.X + ns.X + 4)
+							elseif np.X > title.AbsolutePosition.X - origin.X then right = math.min(right, np.X - 4) end
+						end
+					end
+				end
+				if right - left >= 180 and bottom - top >= 32 then x, y, width, height = left, top, right - left, bottom - top end
+			end
+		end
+		self.bar.Visible = y ~= nil
+		if y then
+			self.bar.Position = UDim2.fromOffset(x, y)
+			self.bar.Size = UDim2.fromOffset(width, height)
+			local compact = height < 52
+			local tileSize = compact and math.max(24, height - 8) or 44
+			self.logoTile.Position = UDim2.fromOffset(8, (height - tileSize) / 2)
+			self.logoTile.Size = UDim2.fromOffset(tileSize, tileSize)
+			local textX = tileSize + 20
+			self.brandText.Position = UDim2.fromOffset(textX, 0)
+			self.brandText.Size = UDim2.new(1, -textX - 8, 1, 0)
+			local wide = width >= 370
+			self.brandText.Text = wide and self.Title or "S2r Hub\nX Sena Hub"
+			self.brandText.TextSize = wide and 22 or (compact and 16 or 19)
+		end
+	end
+	function UI:Attach(window)
+		self.window = window
+		task.spawn(function()
+			for _ = 1, 60 do
+				if not self.alive or not sessionAlive() then return end
+				self:elevate()
+				local root = self:findRoot()
+				local title = root and self:findTitle(root)
+				local main = root and self:findMain(root, title)
+				if main and title then
+					self.root, self.main = root, main
+					self:styleNativeTitle(title)
+					self:mountHeader()
+					self:mountBackground()
+					self:refreshLogos(root, false)
+					self:apply()
+					self:connect(root.DescendantAdded, function(node)
+						if self:owns(node) or self.pendingRefresh then return end
+						self.pendingRefresh = true
+						task.defer(function()
+							self.pendingRefresh = false
+							if self.alive and root.Parent then self:elevate() self:refreshLogos(root, false) self:refreshSurfaces() end
+						end)
+					end)
+					self:connect(root.Destroying, function() self:Destroy() end)
+					self:connect(RunService.RenderStepped, function(dt)
+						if not self.alive then return end
+						if not sessionAlive() then self:Destroy() return end
+						self.elapsed = self.elapsed + dt
+						if self.elapsed >= 0.05 then self.elapsed = 0 self:layout() end
+					end)
+					-- Scope the reopen logo to the toggle GUI created by this window.
+					task.spawn(function()
+						for _ = 1, 20 do
+							if not self.alive then return end
+							self:elevate()
+							for _, host in ipairs(self:hosts()) do
+								for _, gui in ipairs(host:GetDescendants()) do
+									if gui:IsA("ScreenGui") and gui.Name == "ToggleUIButton" and not self.previousRoots[gui] then self:refreshLogos(gui, true) end
+								end
+							end
+							task.wait(0.5)
+						end
+					end)
+					self:layout()
+					return
+				end
+				task.wait(0.25)
+			end
+			warn("[S2rHub] Appearance: could not locate this window's title. Existing controls were left intact.")
+		end)
+	end
+	function UI:set(key, value)
+		local parsed
+		if key == "LogoAssetId" or key == "BackgroundAssetId" then
+			parsed = assetId(value, key == "BackgroundAssetId")
+			if parsed == nil then self:notify("Enter a Roblox image/decal asset ID. Clear Background Asset ID to remove the image.") return false end
+		elseif key == "BackgroundColor" then
+			parsed = hexColor(value)
+			if not parsed then self:notify("Use a six-digit color, such as #10121E or #201234.") return false end
+		elseif key == "BackgroundDim" then
+			parsed = tonumber(value)
+			if not parsed or parsed ~= parsed then return false end
+			parsed = math.clamp(parsed, 0, 1)
+		else return false end
+		self.settings[key] = parsed
+		self:apply()
+		self:save()
+		return true
+	end
+	function UI:syncControls()
+		self.syncing = true
+		for key, control in pairs(self.controls) do
+			local value = self.settings[key]
+			if key == "BackgroundDim" then value = math.floor(value * 100 + 0.5) end
+			pcall(function() control:Set(value) end)
+		end
+		self.syncing = false
+	end
+	function UI:AddSettings(tab)
+		self.syncing = true
+		local section = tab:AddSection({ Title = "Appearance", Icon = "palette", AlwaysOpen = true })
+		section:AddParagraph({ Title = self.Title, Content = "Customize the logo and window background. Changes apply immediately." })
+		for _, entry in ipairs({
+			{ "LogoAssetId", "Logo Asset ID", "106507222214747", "Accepts an image/decal ID or Roblox asset link." },
+			{ "BackgroundAssetId", "Background Asset ID", "Paste an asset ID", "Leave empty for a solid background." },
+			{ "BackgroundColor", "Background Color", "#10121E", "Six-digit color for the solid background and image dimming." },
+		}) do
+			local key = entry[1]
+			self.controls[key] = section:AddInput({ Title = entry[2], Placeholder = entry[3], Content = entry[4], Default = self.settings[key],
+				Callback = function(value) if self.alive and not self.syncing then self:set(key, value) end end })
+		end
+		self.controls.BackgroundDim = section:AddSlider({ Title = "Background Dimming", Content = "0 = full image, 100 = solid background.",
+			Min = 0, Max = 100, Increment = 1, Default = math.floor(self.settings.BackgroundDim * 100 + 0.5),
+			Callback = function(value) if self.alive and not self.syncing then self:set("BackgroundDim", (tonumber(value) or 45) / 100) end end })
+		section:AddButton({ Title = "Reset Appearance", Content = "Restore the original asset ID and dark background.", Callback = function()
+			if not self.alive then return end
+			loadValues(self.defaults)
+			self:apply() self:save() self:syncControls()
+		end })
+		self:syncControls()
+	end
+	function UI:Destroy()
+		if not self.alive then return end
+		self:elevate()
+		self.alive = false
+		for _, connection in ipairs(self.connections) do pcall(function() connection:Disconnect() end) end
+		for object in pairs(self.owned) do pcall(function() object:Destroy() end) end
+		for object, props in pairs(self.restores) do
+			for property, value in pairs(props) do pcall(function() object[property] = value[1] end) end
+		end
+		self.connections, self.owned, self.restores, self.images = {}, {}, {}, {}
+	end
+	runtimeEnv.__S2rHubAppearanceCleanup = function() UI:Destroy() end
+	return UI
+end
+-- S2R_APPEARANCE_END
+
 local function buildSenaHub()
+	local controls = {}
+	local settingRevisions, oneShotTickets = {}, {}
 	local SENA_LIB_URL = runtimeEnv.SenaLibUrl or "https://senahub.xyz/libsenak3"
 	pcall(function()
 		local previous = runtimeEnv.ChloeX_Instance
@@ -20215,6 +20855,7 @@ local function buildSenaHub()
 		Config.IsAutoPlaceWorkerRunning = true
 		while Config.AutoPlace and sessionAlive() do
 			task.wait(1.5)
+			if not Config.AutoPlace or not sessionAlive() then break end
 			local success, err = pcall(function()
 				local ReplicatedStorage = game:GetService("ReplicatedStorage")
 				local HttpService = game:GetService("HttpService")
@@ -20441,7 +21082,7 @@ local function buildSenaHub()
 			Config.IsPlacing = false
 			if not success then
 				placeStatus = "Error, retrying"
-				warn("Auto Place Error: " .. tostring(err))
+				HubHealth.report("Auto place", err)
 			end
 		end
 		Config.IsAutoPlaceWorkerRunning = false
@@ -20465,33 +21106,36 @@ local function buildSenaHub()
 			local failedHatchAttempts = {}
 			while Config.AutoHatch and sessionAlive() do
 				task.wait(1.5)
-				pcall(function()
+				if not Config.AutoHatch or not sessionAlive() then break end
+				HubHealth.try("Auto hatch", function()
 					local ReplicatedStorage = game:GetService("ReplicatedStorage")
 					local EggCmds = require(ReplicatedStorage.Client.EggState)
 					local myEggs = EggCmds.GetOwnerRuntimeRecords(LocalPlayer.UserId)
-					if not myEggs then return end
+					if type(myEggs) ~= "table" then return end
 					local eggsToHatch = {}
 					for uid, record in pairs(myEggs) do
-						if record.Placement ~= nil then
+						if type(record) == "table" and record.Placement ~= nil then
 							table.insert(eggsToHatch, uid)
 						end
 					end
 					local now = os.time()
 					for _, uid in ipairs(eggsToHatch) do
-						if not Config.AutoHatch then break end
+						if not Config.AutoHatch or not sessionAlive() then break end
 						if failedHatchAttempts[uid] and now < failedHatchAttempts[uid] then
 							continue
 						end
+						failedHatchAttempts[uid] = nil
 						local record = myEggs[uid]
-						local isReady = false
+						local isReady = record.Ready == true
+						local readyKnown = type(record.Ready) == "boolean"
 						if type(EggCmds.IsReadyToHatch) == "function" then
 							local ok, ready = pcall(EggCmds.IsReadyToHatch, uid)
-							isReady = ok and ready == true
+							if ok and type(ready) == "boolean" then isReady, readyKnown = ready, true end
 						end
-						if isReady or record.Ready == true or not failedHatchAttempts[uid] then
+						if isReady or not readyKnown then
 							local success = EggCmds.RequestHatchEgg(uid)
 							if success then
-								EggCmds.RequestCompleteHatchEgg(uid)
+								if sessionAlive() and Config.AutoHatch then EggCmds.RequestCompleteHatchEgg(uid) end
 								failedHatchAttempts[uid] = nil
 								task.wait(0.1)
 							else
@@ -20717,7 +21361,8 @@ local function buildSenaHub()
 		task.spawn(function()
 			while Config.AutoMutation and sessionAlive() do
 				task.wait(1.0)
-				pcall(UIRunners.mutationSweep)
+				if not Config.AutoMutation or not sessionAlive() then break end
+				HubHealth.try("Auto mutation", UIRunners.mutationSweep)
 			end
 			Config.IsAutoMutationWorkerRunning = false
 			end)
@@ -21302,36 +21947,49 @@ local function buildSenaHub()
 		Config.AntiCutscene = value == true
 	end
 	local function runOnce(flagKey, runner, onDone)
-		local restore = Config[flagKey]
+		if oneShotTickets[flagKey] then return end
+		local restore, revision = Config[flagKey], settingRevisions[flagKey] or 0
+		local ticket = {}
+		oneShotTickets[flagKey] = ticket
 		Config[flagKey] = true
-		task.spawn(runner)
+		task.spawn(function() if sessionAlive() then HubHealth.try("Run once: " .. flagKey, runner) end end)
 		task.delay(2.4, function()
 			local deadline = os.clock() + 30
-			while Config.IsPlacing and os.clock() < deadline do task.wait(0.25) end
-			Config[flagKey] = restore
-			if onDone then pcall(onDone) end
-			end)
+			while sessionAlive() and Config.IsPlacing and os.clock() < deadline do task.wait(0.25) end
+			if not sessionAlive() or oneShotTickets[flagKey] ~= ticket then return end
+			oneShotTickets[flagKey] = nil
+			if (settingRevisions[flagKey] or 0) == revision then Config[flagKey] = restore end
+			if onDone then HubHealth.try("Run once completion", onDone) end
+		end)
 	end
 	UIRunners.runOnce = runOnce
 	local function applyAutoPlace(value)
+		settingRevisions.AutoPlace = (settingRevisions.AutoPlace or 0) + 1
 		Config.AutoPlace = value == true
 		if Config.AutoPlace then
 			task.spawn(UIRunners.AutoPlaceLoop)
 		end
 	end
+	UIRunners.setAutoPlace = function(value)
+		applyAutoPlace(value)
+		if controls.autoPlace then pcall(controls.autoPlace.Set, controls.autoPlace, value == true) end
+	end
 	local function applyAutoHatch(value)
+		settingRevisions.AutoHatch = (settingRevisions.AutoHatch or 0) + 1
 		Config.AutoHatch = value == true
 		if Config.AutoHatch then
 			task.spawn(UIRunners.AutoHatchLoop)
 		end
 	end
 	local function applyAutoMutation(value)
+		settingRevisions.AutoMutation = (settingRevisions.AutoMutation or 0) + 1
 		Config.AutoMutation = value == true
 		if Config.AutoMutation then
 			task.spawn(UIRunners.AutoMutationLoop)
 		end
 	end
 	local function applyAutoRingEvent(value)
+		settingRevisions.AutoRingEvent = (settingRevisions.AutoRingEvent or 0) + 1
 		Config.AutoRingEvent = value == true
 		if Config.AutoRingEvent then
 			UIRunners.RingEventLoop()
@@ -21353,12 +22011,14 @@ local function buildSenaHub()
 		Config.MutationRetry = value == true
 	end
 	local function applyAutoSell(value)
+		settingRevisions.AutoSell = (settingRevisions.AutoSell or 0) + 1
 		Config.AutoSell = value == true
 		if Config.AutoSell then
 			UIRunners.startAutoSellLoop()
 		end
 	end
 	local function applyAutoSellEgg(value)
+		settingRevisions.AutoSellEgg = (settingRevisions.AutoSellEgg or 0) + 1
 		Config.AutoSellEgg = value == true
 		if Config.AutoSellEgg then
 			UIRunners.startAutoSellEggLoop()
@@ -21518,7 +22178,7 @@ local function buildSenaHub()
 				return
 			end
 			if type(apply) == "function" then
-				apply(value)
+				HubHealth.try("GUI control", apply, value)
 			end
 		end
 	end
@@ -21613,182 +22273,29 @@ local function buildSenaHub()
 	end
 	elevateUi()
 	local isV2Lib = type(Sena.ApplyIcon) == "function"
+	local appearance = createS2rAppearance(Sena)
+	appearance:captureRoots()
 	local Window = Sena:Window({
-		Title = "S2rHub X Senahub",
-		Footer = "Steal An Egg | S2rHub X Senahub",
+		Title = appearance.Title,
+		Footer = "Steal An Egg | " .. appearance.Title,
 		Folder = "SenaSAEv4",
 		Version = 1,
 		Color = Color3.fromRGB(139, 92, 246),
-		Image = "rbxassetid://106507222214747",
-		Logo = "rbxassetid://106507222214747",
-		Icon = "rbxassetid://106507222214747",
+		Image = appearance.Logo,
+		Logo = appearance.Logo,
+		Icon = appearance.Logo,
 		ThemeDim = 0.15,
 		OpenFirstSection = false,
-		ImageSize = 56,
+		ImageSize = 44,
 		ConfigGroup = "App",
 		ConfigLayoutOrder = 31,
-		ToggleSheet = { Url = "https://senahub.xyz/api/visual/sena_toggle_sheet2.jpg", Frames = 100, Columns = 10, FrameSize = 102, Fps = 16 },
 		RowTransparency = 0.3,
 		KeyGate = not runtimeEnv.__SenaKeyless,
 		Keyless = runtimeEnv.__SenaKeyless == true,
 		CompactSidebar = false,
 		})
 	guardUiFactory(Window)
-	-- Strong runtime branding patch for the externally loaded GUI library.
-	-- Force a readable top-bar title and custom logo without touching feature logic.
-	do
-		local BRAND_TITLE = "S2rHub X Senahub"
-		local BRAND_IMAGE = "rbxassetid://106507222214747"
-		local BRAND_IMAGE_ID = "106507222214747"
-		local function textLooksLikeBrand(text)
-			text = tostring(text or "")
-			local normalized = string.lower((text:gsub("[%s%p]+", "")))
-			return normalized:find("s2rhub", 1, true) ~= nil
-				or normalized:find("senahub", 1, true) ~= nil
-				or normalized:find("senahub", 1, true) ~= nil
-		end
-		local function imageLooksLikeBrand(image)
-			image = tostring(image or "")
-			return image:find(BRAND_IMAGE_ID, 1, true) ~= nil
-				or image:find("96240498384290", 1, true) ~= nil
-				or image:find("rbxassetid://96240498384290", 1, true) ~= nil
-		end
-		local function tuneNode(node)
-			if not node then return end
-			if node:IsA("TextLabel") or node:IsA("TextButton") then
-				if textLooksLikeBrand(node.Text) then
-					node.Text = BRAND_TITLE
-					node.TextTruncate = Enum.TextTruncate.None
-					node.TextWrapped = false
-					node.TextScaled = true
-					pcall(function()
-						local limiter = node:FindFirstChild("S2rHubTextLimit") or Instance.new("UITextSizeConstraint")
-						limiter.Name = "S2rHubTextLimit"
-						limiter.MinTextSize = 10
-						limiter.MaxTextSize = 22
-						limiter.Parent = node
-					end)
-					pcall(function()
-						node.AutomaticSize = Enum.AutomaticSize.None
-						local s = node.Size
-						node.Size = UDim2.new(s.X.Scale, math.max(s.X.Offset, 170), s.Y.Scale, s.Y.Offset)
-					end)
-				end
-			elseif node:IsA("ImageLabel") or node:IsA("ImageButton") then
-				if imageLooksLikeBrand(node.Image) then
-					node.Image = BRAND_IMAGE
-				end
-			end
-		end
-		local function styleBrandLabel(label)
-			label.BackgroundTransparency = 1
-			label.BorderSizePixel = 0
-			label.Text = BRAND_TITLE
-			label.TextXAlignment = Enum.TextXAlignment.Left
-			label.TextYAlignment = Enum.TextYAlignment.Center
-			label.TextTruncate = Enum.TextTruncate.None
-			label.TextWrapped = false
-			label.TextScaled = true
-			label.TextColor3 = Color3.fromRGB(238, 238, 245)
-			label.Font = Enum.Font.GothamBold
-			label.Size = UDim2.new(0, 220, 1, -8)
-			label.Position = UDim2.new(0, 50, 0, 4)
-			local limiter = label:FindFirstChild("S2rHubTextLimit") or Instance.new("UITextSizeConstraint")
-			limiter.Name = "S2rHubTextLimit"
-			limiter.MinTextSize = 10
-			limiter.MaxTextSize = 22
-			limiter.Parent = label
-		end
-		local function styleBrandLogo(image)
-			image.BackgroundTransparency = 1
-			image.BorderSizePixel = 0
-			image.Image = BRAND_IMAGE
-			image.ScaleType = Enum.ScaleType.Fit
-			image.Size = UDim2.fromOffset(36, 36)
-			image.Position = UDim2.new(0, 10, 0.5, -18)
-		end
-		local function patchTopBar(root)
-			if not root or not root:IsA("GuiObject") then return end
-			if root:FindFirstChild("S2rHubBrandPatched") then return end
-			local closeBtn, searchObj
-			for _, d in ipairs(root:GetDescendants()) do
-				if not closeBtn and (d:IsA("TextButton") or d:IsA("ImageButton")) and (d.Name == "Close" or d.Name == "Exit" or (d:IsA("TextButton") and tostring(d.Text) == "X")) then
-					closeBtn = d
-				end
-				if not searchObj and (d:IsA("TextBox") or d:IsA("TextLabel")) then
-					local probe = d:IsA("TextBox") and d.PlaceholderText or d.Text
-					if tostring(probe or ""):lower():find("search", 1, true) then
-						searchObj = d
-					end
-				end
-			end
-			if not closeBtn or not searchObj then return end
-			local topBar = closeBtn:FindFirstAncestorWhichIsA("Frame")
-			if not topBar or not searchObj:IsDescendantOf(topBar) then return end
-			local marker = Instance.new("BoolValue")
-			marker.Name = "S2rHubBrandPatched"
-			marker.Parent = topBar
-
-			for _, d in ipairs(topBar:GetDescendants()) do
-				tuneNode(d)
-				if (d:IsA("TextLabel") or d:IsA("TextButton")) and textLooksLikeBrand(d.Text) then
-					d.Visible = false
-				elseif (d:IsA("ImageLabel") or d:IsA("ImageButton")) and imageLooksLikeBrand(d.Image) then
-					d.Visible = false
-				end
-			end
-
-			local leftPad = Instance.new("Frame")
-			leftPad.Name = "S2rHubBrandOverlay"
-			leftPad.BackgroundTransparency = 1
-			leftPad.BorderSizePixel = 0
-			leftPad.Size = UDim2.new(0, 280, 1, 0)
-			leftPad.Position = UDim2.new(0, 0, 0, 0)
-			leftPad.ZIndex = 50
-			leftPad.Parent = topBar
-
-			local logo = Instance.new("ImageLabel")
-			logo.Name = "S2rHubLogo"
-			logo.ZIndex = 51
-			styleBrandLogo(logo)
-			logo.Parent = leftPad
-
-			local title = Instance.new("TextLabel")
-			title.Name = "S2rHubTitle"
-			title.ZIndex = 51
-			styleBrandLabel(title)
-			title.Parent = leftPad
-
-			pcall(function()
-				if type(Window.SetLogo) == "function" then Window:SetLogo(BRAND_IMAGE) end
-			end)
-		end
-		local guiHost = LocalPlayer:FindFirstChildOfClass("PlayerGui")
-		if guiHost then
-			for _, descendant in ipairs(guiHost:GetDescendants()) do
-				tuneNode(descendant)
-				if descendant:IsA("Frame") then
-					task.defer(function() if descendant.Parent then patchTopBar(descendant) end end)
-				end
-			end
-			local con
-			con = guiHost.DescendantAdded:Connect(function(descendant)
-				task.defer(function()
-					if not descendant.Parent then return end
-					tuneNode(descendant)
-					local probe = descendant
-					if not probe:IsA("Frame") then
-						probe = descendant:FindFirstAncestorWhichIsA("Frame")
-					end
-					if probe then patchTopBar(probe) end
-				end)
-			end)
-			task.delay(30, function()
-				if con then con:Disconnect() end
-			end)
-		end
-	end
-	local controls = {}
+	appearance:Attach(Window)
 	local waypointOptions = { "Respawn Point" }
 	do
 		local roaming = runtimeEnv.__SenaV4Roaming
@@ -21877,6 +22384,30 @@ local function buildSenaHub()
 	local ServerTab = Window:AddTab({ Name = "Server", Icon = "server", LayoutOrder = 11, Group = "Tools" })
 	controls.privateTab = ServerTab
 	local SettingsTab = Window:AddTab({ Name = "Settings", Icon = "settings", LayoutOrder = 30, Group = "App" })
+	do
+		local section = SettingsTab:AddSection("Diagnostics")
+		local status = section:AddParagraph({ Title = "Latest runtime error", Content = "No errors recorded in this session." })
+		local function refresh(entry)
+			if type(status) == "table" and type(status.SetContent) == "function" then
+				pcall(status.SetContent, status, entry and entry.message or "No errors recorded in this session.")
+			end
+		end
+		HubHealth.onChanged = refresh
+		refresh(HubHealth.last)
+		section:AddButton({ Title = "Copy Latest Error", Content = "Copy the feature name and error details for troubleshooting.", Callback = guarded(function()
+			local entry = HubHealth.last
+			if not entry then Sena:Notify({ Title = "Diagnostics", Content = "No errors recorded.", Duration = 3 }) return end
+			local text = "S2r Hub X Sena Hub\n" .. entry.context .. "\n" .. entry.trace
+			local copy = runtimeEnv.setclipboard or runtimeEnv.toclipboard or setclipboard
+			if type(copy) == "function" then copy(text) else warn(text) end
+		end) })
+		section:AddButton({ Title = "Clear Error History", Callback = guarded(HubHealth.clear) })
+	end
+
+	do
+		local ok, err = pcall(function() appearance:AddSettings(SettingsTab) end)
+		if not ok then warn("[S2rHub] Appearance settings: " .. tostring(err)) end
+	end
 	local AdminAbuseTab = EventsTab
 	local AdminCaptureSection = controls.section(AdminAbuseTab, "Capture The Egg", controls.gameIcon("CaptureTheEgg", "BroadcastIconImage"))
 	controls.autoStealCapture = AdminCaptureSection:AddToggle({
@@ -23503,7 +24034,7 @@ local function buildSenaHub()
 	local function sync(control, apply)
 		elevateUi()
 		if type(control) == "table" and control.Value ~= nil then
-			pcall(apply, control.Value)
+			HubHealth.try("Saved control", apply, control.Value)
 		end
 	end
 	building = false
@@ -23649,36 +24180,55 @@ local function buildSenaHub()
 			task.delay(2, function() pcall(hunt.open) end)
 		end
 	end
+	local shutdownDone = false
 	runtimeEnv.__SenaV4HubShutdown = function()
-		if playerSteal then pcall(playerSteal.setEnabled, playerSteal, false) end
-		for _, key in ipairs({ "AutoSteal", "AutoPlace", "AutoHatch", "AutoMutation", "AutoRingEvent", "AutoSell", "AutoSellEgg", "StealPlayers", "StarAutoCatch",
-			"ButterflyAutoCatch", "ButterflyAutoNet", "ButterflyAutoTrade", "ButterflyAutoCraft" }) do
+		if shutdownDone or not sessionAlive() then return end
+		shutdownDone = true
+		runtimeEnv.__SenaV4HubSession = nil
+		HubHealth.onChanged = nil
+		pcall(appearance.Destroy, appearance)
+		for _, key in ipairs({ "AutoSteal", "AutoPlace", "AutoHatch", "AutoMutation", "AutoRingEvent", "AutoSell", "AutoSellEgg", "StealPlayers",
+			"StarAutoCatch", "ButterflyAutoCatch", "ButterflyAutoNet", "ButterflyAutoTrade", "ButterflyAutoCraft", "SnipeDroppedEggs",
+			"AutoIndex", "WispAutoQuest", "BanjoAuto", "AutoStealHalloween", "HalloweenHitMobs", "HalloweenCollectPumpkin", "HalloweenAutoFish",
+			"HalloweenPhantomExpress", "HalloweenTradeSouls", "HalloweenAutoBuy", "AutoClaimOffline", "AutoBaseUpgrade", "AutoClaimAlmanac", "AutoFusePets" }) do
 			Config[key] = false
 		end
-		if eggRuntime then
-			pcall(eggRuntime.setEnabled, eggRuntime, false)
+		pcall(applyNoclip, false)
+		pcall(applyBottingMode, false)
+		pcall(applyAntiAfk, false)
+		pcall(applyAutoReconnect, false)
+		for _, key in ipairs({ "__SenaHalloweenFarm", "__SenaTrainFarm" }) do
+			local farm = runtimeEnv[key]
+			if type(farm) == "table" then
+				farm.running = false
+				if type(farm.stop) == "function" then pcall(farm.stop) end
+			end
 		end
-		-- floating panels (Egg Checker, Logs, ...) outlive a re-exec and keep driving the dead hub's controls
-		pcall(function()
-			local pg = LocalPlayer:FindFirstChild("PlayerGui")
-			local holders = { game:GetService("CoreGui"), pg }
-			if gethui then table.insert(holders, gethui()) end
-			for _, holder in ipairs(holders) do
-				if holder then
-					for _, d in ipairs(holder:GetDescendants()) do
-						if d:IsA("ScreenGui") and d.Name:sub(1, 12) == "__SNE_Panel_" then pcall(function() d:Destroy() end) end
-					end
+		runtimeEnv.__SenaV4OnTrain = false
+		for _, conn in ipairs(runtimeEnv.__SenaTrainConns or {}) do pcall(conn.Disconnect, conn) end
+		runtimeEnv.__SenaTrainConns = nil
+		if runtimeEnv.__SenaV4DisconnectConn then pcall(function() runtimeEnv.__SenaV4DisconnectConn:Disconnect() end) end
+		for _, service in pairs({ playerSteal, runtimeEnv.__SenaV4MovementExtras, runtimeEnv.__SenaV4AntiHitGuard }) do
+			if type(service) == "table" and type(service.destroy) == "function" then pcall(service.destroy, service) end
+		end
+		for _, key in ipairs({ "__SenaV4EggRuntimeCleanup", "__SenaV4TweenRuntimeCleanup", "__SenaV4AntiGuardCleanup", "__SenaV4CosmeticSuppressCleanup", "__SenaV4StealDeclutterCleanup" }) do
+			if type(runtimeEnv[key]) == "function" then pcall(runtimeEnv[key]) end
+		end
+		local oldGui = type(Window) == "table" and rawget(Window, "Gui") or nil
+		if typeof(oldGui) == "Instance" then pcall(oldGui.Destroy, oldGui) end
+		local holders = { game:GetService("CoreGui") }
+		local pg = LocalPlayer:FindFirstChild("PlayerGui")
+		if pg then holders[#holders + 1] = pg end
+		pcall(function() if gethui then holders[#holders + 1] = gethui() end end)
+		for _, holder in ipairs(holders) do
+			pcall(function()
+				for _, gui in ipairs(holder:GetDescendants()) do
+					if gui:IsA("ScreenGui") and (gui.Name:sub(1, 12) == "__SNE_Panel_"
+						or gui.Name == "Chloeex" or gui.Name == "ToggleUIButton") then pcall(gui.Destroy, gui) end
 				end
-			end
-		end)
-		local oldGui = Window and rawget(Window, "Gui") or nil
-		local roots = { game:GetService("CoreGui") }
-		pcall(function() if gethui then table.insert(roots, gethui()) end end)
-		for _, holder in ipairs(roots) do
-			for _, gui in ipairs(holder:GetChildren()) do
-				if gui == oldGui or (gui:IsA("ScreenGui") and (gui.Name == "Chloeex" or gui.Name == "ToggleUIButton")) then pcall(gui.Destroy, gui) end
-			end
+			end)
 		end
+		UI_LOADED = false
 	end
 	UI_LOADED = true
 end
