@@ -1,5 +1,222 @@
+-- S2r Hub startup repair: embedded fallback GUI and visible startup diagnostics.
+-- Startup stays independent of the downloaded UI and game feature modules.
+local S2rBoot = {}
+S2rBoot.__index = S2rBoot
+function S2rBoot.new()
+	local env = _G
+	if type(getgenv) == "function" then local ok, value = pcall(getgenv) if ok and type(value) == "table" then env = value end end
+	local previous = env.__S2rStartup
+	if type(previous) == "table" and type(previous.cancel) == "function" then pcall(previous.cancel, previous) end
+	local self = setmetatable({ env = env, active = true, phase = "Starting", startedAt = os.clock(), connections = {} }, S2rBoot)
+	if not pcall(function() env.__S2rStartup = self end) then
+		env = setmetatable({}, { __index = env })
+		self.env = env
+		env.__S2rStartup = self
+	end
+	self:show()
+	return self
+end
+function S2rBoot:current() return self.active and self.env.__S2rStartup == self end
+function S2rBoot:parent(gui)
+	local candidates = {}
+	local player = game:GetService("Players").LocalPlayer
+	if player then local pg = player:FindFirstChildOfClass("PlayerGui") if pg then candidates[#candidates + 1] = pg end end
+	pcall(function() if type(gethui) == "function" then candidates[#candidates + 1] = gethui() end end)
+	pcall(function() candidates[#candidates + 1] = game:GetService("CoreGui") end)
+	for _, parent in ipairs(candidates) do
+		if parent and pcall(function() gui.Parent = parent end) and gui.Parent == parent then return parent end
+	end
+	error("No accessible PlayerGui or UI container. Wait for the game to finish loading and run again.", 0)
+end
+function S2rBoot:show()
+	if self.gui and self.gui.Parent then return end
+	local ok, err = pcall(function()
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "S2rStartupStatus"
+		gui.ResetOnSpawn = false
+		gui.DisplayOrder = 2147483000
+		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		self:parent(gui)
+		self.gui = gui
+		local card = Instance.new("Frame")
+		card.Name = "StartupCard"
+		card.AnchorPoint = Vector2.new(0.5, 0.5)
+		card.Position = UDim2.fromScale(0.5, 0.5)
+		card.Size = UDim2.new(1, -32, 0, 240)
+		card.BackgroundColor3 = Color3.fromRGB(18, 18, 30)
+		card.BorderSizePixel = 0
+		card.Parent = gui
+		local bounds = Instance.new("UISizeConstraint") bounds.MaxSize = Vector2.new(550, 300) bounds.Parent = card
+		local corner = Instance.new("UICorner") corner.CornerRadius = UDim.new(0, 14) corner.Parent = card
+		local stroke = Instance.new("UIStroke") stroke.Color = Color3.fromRGB(166, 125, 255) stroke.Parent = card
+		local function label(name, text, y, height, size)
+			local node = Instance.new("TextLabel")
+			node.Name = name node.BackgroundTransparency = 1 node.Position = UDim2.fromOffset(18, y)
+			node.Size = UDim2.new(1, -36, 0, height) node.Text = text node.TextSize = size
+			node.Font = Enum.Font.GothamBold node.TextColor3 = Color3.fromRGB(245, 241, 255)
+			node.TextWrapped = true node.TextXAlignment = Enum.TextXAlignment.Left node.Parent = card
+			return node
+		end
+		label("Brand", "S2r Hub X Sena Hub", 12, 35, 20)
+		self.statusLabel = label("Status", "Starting…", 51, 35, 16)
+		self.detailLabel = label("Details", "Checking the game and loading controls.", 91, 80, 13)
+		self.detailLabel.Font = Enum.Font.Gotham
+		self.detailLabel.TextYAlignment = Enum.TextYAlignment.Top
+		local function button(text, x, callback)
+			local node = Instance.new("TextButton") node.Text = text node.Font = Enum.Font.GothamBold node.TextSize = 13
+			node.TextColor3 = Color3.new(1,1,1) node.BackgroundColor3 = Color3.fromRGB(93,64,145)
+			node.Size = UDim2.new(0.5,-24,0,36) node.Position = UDim2.new(x,12,1,-48) node.Parent = card
+			local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0,8) c.Parent = node
+			self.connections[#self.connections+1] = node.Activated:Connect(callback)
+			return node
+		end
+		button("Copy details", 0, function()
+			local copy = self.env.setclipboard or self.env.toclipboard or setclipboard
+			local detail = self.error or (self.phase .. "\n" .. tostring(self.note or ""))
+			if type(copy) == "function" then pcall(copy, "S2r Hub startup\n" .. detail) else warn(detail) end
+		end)
+		button("Dismiss", 0.5, function() if self.gui then self.gui.Enabled = false end end)
+	end)
+	if not ok then warn("[S2r Hub startup panel] " .. tostring(err)) end
+end
+function S2rBoot:stage(phase, note)
+	if not self:current() then error("S2r Hub startup was replaced or cancelled",0) end
+	self.phase, self.note = phase, note
+	self:show()
+	if self.statusLabel then self.statusLabel.Text = phase end
+	if self.detailLabel then self.detailLabel.Text = note or "Please wait…" end
+end
+function S2rBoot:fail(detail)
+	if not self:current() then return end
+	self.error = self.phase .. "\n" .. tostring(detail)
+	self.env.__S2rLastStartupError = self.error
+	warn("[S2r Hub startup] " .. self.error)
+	self:show()
+	if self.gui then self.gui.Enabled = true end
+	if self.statusLabel then self.statusLabel.Text = "Could not finish startup" self.statusLabel.TextColor3 = Color3.fromRGB(255,161,161) end
+	if self.detailLabel then self.detailLabel.Text = self.error:sub(1,650) end
+end
+function S2rBoot:ready()
+	if not self:current() then return end
+	self.finished = true
+	self.env.__S2rLastStartupError = nil
+	if self.gui then self.gui:Destroy() self.gui = nil end
+	for _, c in ipairs(self.connections) do pcall(c.Disconnect,c) end
+	self.connections = {}
+end
+function S2rBoot:cancel()
+	self.active = false
+	if self.worker and coroutine.running() ~= self.worker and type(task.cancel) == "function" then pcall(task.cancel,self.worker) end
+	if self.gui then pcall(self.gui.Destroy,self.gui) self.gui=nil end
+	for _, c in ipairs(self.connections) do pcall(c.Disconnect,c) end
+	self.connections = {}
+end
+function S2rBoot:waitUntil(predicate, seconds, message)
+	local deadline = os.clock() + seconds
+	repeat
+		if not self:current() then error("Startup cancelled",0) end
+		local ok, value = pcall(predicate)
+		if ok and value then return value end
+		if os.clock() >= deadline then error(message,0) end
+		task.wait(0.1)
+	until false
+end
+function S2rBoot:prepare()
+	self:stage("Waiting for the game", "The hub opens after the player and game modules are ready.")
+	self:waitUntil(function() return game:IsLoaded() end, 45, "Roblox did not finish loading within 45 seconds. Rejoin and try again.")
+	self:waitUntil(function() return game:GetService("Players").LocalPlayer end, 15, "LocalPlayer is unavailable. Run this from the Roblox client.")
+	self:waitUntil(function() return game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui") end, 15, "PlayerGui is unavailable. Wait until your character has spawned.")
+	local rs = game:GetService("ReplicatedStorage")
+	self:waitUntil(function()
+		local client, shared, data = rs:FindFirstChild("Client"), rs:FindFirstChild("Shared"), rs:FindFirstChild("Data")
+		return client and shared and data and client:FindFirstChild("EggState") and client:FindFirstChild("PlotState")
+			and client:FindFirstChild("AreaEggResetWall") and shared:FindFirstChild("Remotes") and data:FindFirstChild("Assets")
+	end, 30, "Required Steal an Egg modules are missing. Join the supported game and wait for loading; if already there, the game may have changed its module names.")
+	self:stage("Preparing features", "Loading the game modules and saved settings.")
+end
+function S2rBoot:loadLibrary(url, override, fallback)
+	if type(override) == "table" and type(override.Window) == "function" then return override end
+	self:stage("Loading the GUI", "If the online UI is unavailable, built-in controls will open automatically.")
+	local done, library, failure = false, nil, nil
+	local worker = task.spawn(function()
+		local ok, value = pcall(function()
+			local source = game:HttpGet(url)
+			if type(source) ~= "string" or #source < 20 then error("Empty UI response") end
+			if source:match("^%s*<") then error("The UI endpoint returned a web page instead of Lua") end
+			local chunk, compileError = loadstring(source, "S2rOnlineUI")
+			if not chunk then error(compileError or "Could not compile UI response") end
+			local result = chunk()
+			if type(result) ~= "table" or type(result.Window) ~= "function" then error("UI response has no Window constructor") end
+			return result
+		end)
+		if ok then library=value else failure=tostring(value) end
+		done = true
+	end)
+	local deadline = os.clock() + 8
+	while self:current() and not done and os.clock() < deadline do task.wait(0.05) end
+	if not self:current() then pcall(task.cancel,worker) error("Startup cancelled",0) end
+	if not done then pcall(task.cancel,worker) failure="Online GUI request timed out after 8 seconds" end
+	if library then return library end
+	self.libraryFailure = failure or "Online GUI unavailable"
+	warn("[S2r Hub] Opening built-in controls: " .. self.libraryFailure)
+	self:stage("Opening built-in controls", "The online GUI is unavailable. Your game controls are included in this file.")
+	return fallback()
+end
+function S2rBoot:run(callback)
+	self.worker = task.spawn(function()
+		local ok, err = xpcall(function() self:prepare() callback(self) end, function(e)
+			local message = tostring(e)
+			if debug and type(debug.traceback)=="function" then local success, trace=pcall(debug.traceback,message,2) if success then return trace end end
+			return message
+		end)
+		if not self:current() then return end
+		if not ok or not self.finished then
+			if type(self.cleanup)=="function" then pcall(self.cleanup) end
+			self:fail(not ok and err or "The script exited before creating the GUI.")
+		end
+	end)
+	task.delay(65,function()
+		if self:current() and not self.finished and not self.error then self:fail("Startup is still waiting in this step. Copy details to identify the blocked module.") end
+	end)
+end
+
+function S2rBoot:compatRequire(originalRequire, replicatedStorage)
+	local client = replicatedStorage:FindFirstChild("Client")
+	local aliases = {}
+	if client then
+		local eggs, plot, wall = client:FindFirstChild("EggState"), client:FindFirstChild("PlotState"), client:FindFirstChild("AreaEggResetWall")
+		if eggs then aliases[eggs] = {
+			GetAreaEggSnapshot="ReadFieldEggs", GetAreaEggRecord="ReadFieldEgg", RequestAreaEggSnapshot="SyncFieldEggs",
+			RequestCarryAreaEgg="CarryFieldEgg", RequestDropHeldAreaEgg="DropFieldEgg", AreaEggCarryStateChanged="CarryChanged",
+			AreaEggClaimed="FieldClaimed", AreaEggUpdated="FieldShifted", AreaEggRemoved="FieldGone", GetOwnerRuntimeRecords="ReadOwnerEggs",
+			RequestEquipTool="WearEggTool", RequestPlaceEgg="PlantEgg", RequestHatchEgg="BeginHatch", RequestCompleteHatchEgg="FinishHatch",
+			RequestRuntimeSnapshot="SyncOwnedEggs", RuntimeOwnerUpdated="OwnerRefreshed", RuntimeOwnerCleared="OwnerCleared",
+		} end
+		if plot then aliases[plot]={GetMySlot="ResolveLocalSlot",GetPlotsFolder="ResolveFolder",IsWorldPositionWithinLocalPlotBounds="ContainsLocalPoint",GetPlotData="ResolvePlot"} end
+		if wall then aliases[wall]={IsClosed="IsSealed"} end
+	end
+	local cache={}
+	return function(module)
+		if cache[module] then return cache[module] end
+		local value=originalRequire(module)
+		local map=aliases[module]
+		if not map or type(value)~="table" then return value end
+		local adapter={}
+		for legacy, current in pairs(map) do
+			if value[legacy]==nil and value[current]~=nil then adapter[legacy]=value[current] end
+			if value[current]==nil and value[legacy]~=nil then adapter[current]=value[legacy] end
+		end
+		setmetatable(adapter,{__index=value})
+		cache[module]=adapter
+		return adapter
+	end
+end
+
+local function startS2rHub(Boot)
+local getgenv = function() return Boot.env end
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local require = Boot:compatRequire(require, ReplicatedStorage)
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -15,6 +232,22 @@ if type(runtimeEnv.__SenaV4HubShutdown) == "function" then
 end
 local hubSession = {}
 runtimeEnv.__SenaV4HubSession = hubSession
+Boot.session = hubSession
+Boot.cleanup = function()
+	if runtimeEnv.__SenaV4HubSession ~= hubSession then return end
+	runtimeEnv.__SenaV4HubSession = nil
+	for _, key in ipairs({ "__SenaV4EggRuntimeCleanup", "__SenaV4TweenRuntimeCleanup", "__SenaV4AntiGuardCleanup", "__SenaV4CosmeticSuppressCleanup", "__SenaV4StealDeclutterCleanup", "__S2rHubAppearanceCleanup" }) do
+		if type(runtimeEnv[key]) == "function" then pcall(runtimeEnv[key]) end
+	end
+	for _, key in ipairs({ "__SenaV4PlayerSteal", "__SenaV4MovementExtras", "__SenaV4AntiHitGuard" }) do
+		local service = runtimeEnv[key]
+		if type(service) == "table" and type(service.destroy) == "function" then pcall(service.destroy, service) end
+	end
+	if Boot.window then
+		if type(Boot.window.DestroyGui) == "function" then pcall(Boot.window.DestroyGui, Boot.window)
+		elseif typeof(Boot.window.Gui) == "Instance" then pcall(Boot.window.Gui.Destroy, Boot.window.Gui) end
+	end
+end
 local function sessionAlive()
 	return runtimeEnv.__SenaV4HubSession == hubSession
 end
@@ -848,33 +1081,8 @@ Config = {
 	WebhookRarities = {"None"},
 	WebhookMinValue = 0
 }
-do
-	local EggState = require(game:GetService("ReplicatedStorage").Client.EggState)
-	EggState.GetAreaEggSnapshot = EggState.ReadFieldEggs
-	EggState.GetAreaEggRecord = EggState.ReadFieldEgg
-	EggState.RequestAreaEggSnapshot = EggState.SyncFieldEggs
-	EggState.RequestCarryAreaEgg = EggState.CarryFieldEgg
-	EggState.RequestDropHeldAreaEgg = EggState.DropFieldEgg
-	EggState.AreaEggCarryStateChanged = EggState.CarryChanged
-	EggState.AreaEggClaimed = EggState.FieldClaimed
-	EggState.AreaEggUpdated = EggState.FieldShifted
-	EggState.AreaEggRemoved = EggState.FieldGone
-	EggState.GetOwnerRuntimeRecords = EggState.ReadOwnerEggs
-	EggState.RequestEquipTool = EggState.WearEggTool
-	EggState.RequestPlaceEgg = EggState.PlantEgg
-	EggState.RequestHatchEgg = EggState.BeginHatch
-	EggState.RequestCompleteHatchEgg = EggState.FinishHatch
-	EggState.RequestRuntimeSnapshot = EggState.SyncOwnedEggs
-	EggState.RuntimeOwnerUpdated = EggState.OwnerRefreshed
-	EggState.RuntimeOwnerCleared = EggState.OwnerCleared
-	local PlotState = require(game:GetService("ReplicatedStorage").Client.PlotState)
-	PlotState.GetMySlot = PlotState.ResolveLocalSlot
-	PlotState.GetPlotsFolder = PlotState.ResolveFolder
-	PlotState.IsWorldPositionWithinLocalPlotBounds = PlotState.ContainsLocalPoint
-	PlotState.GetPlotData = PlotState.ResolvePlot
-	local AreaEggResetWall = require(game:GetService("ReplicatedStorage").Client.AreaEggResetWall)
-	AreaEggResetWall.IsClosed = AreaEggResetWall.IsSealed
-end
+-- API aliases are supplied by the local require adapter; original game modules are not modified.
+
 speedDialStuds = function()
 	if runtimeEnv.__SenaV4AdminBoost == true then return 4000 end
 	local inputSpeed = math.clamp(
@@ -1576,7 +1784,7 @@ function TweenPrep.purgeStealPopups()
 		TweenPrep.destroyStealPopup(instance)
 	end
 end
-TweenPrep.guiConnection = LocalPlayer:WaitForChild("PlayerGui").DescendantAdded:Connect(function(instance)
+TweenPrep.guiConnection = (LocalPlayer:FindFirstChildOfClass("PlayerGui") or error("PlayerGui disappeared during startup")).DescendantAdded:Connect(function(instance)
 	TweenPrep.destroyStealPopup(instance)
 	end)
 function TweenPrep.removeDecoy()
@@ -3101,6 +3309,7 @@ local Coordinator = (function()
 	end
 	return Coordinator
 	end)()
+Boot:stage("Loading egg data", "Reading the game catalog and runtime modules.")
 local catalog = (function()
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local Areas = require(ReplicatedStorage.Data.Areas)
@@ -11183,6 +11392,7 @@ local TreadmillManager = (function()
 	TreadmillManager.Destroy = TreadmillManager.destroy
 	return TreadmillManager
 	end)()
+Boot:stage("Starting feature services", "Preparing egg automation, movement controls, and event services.")
 local eventCoordinator = Coordinator.new()
 eggRuntime = EggRuntime.new(catalog, integrityLimitsModule, eventCoordinator)
 runtimeEnv.__SenaV4EggRuntime = eggRuntime
@@ -12707,6 +12917,7 @@ local PlayerSteal = (function()
 	end
 	return PlayerSteal
 	end)()
+Boot:stage("Preparing player controls", "Initializing the remaining feature services.")
 local antiGuard = AntiGuard.new(eggRuntime)
 antiGuard:install()
 antiGuard:setEnabled(Config.AntiGuardKnockback == true)
@@ -20593,6 +20804,359 @@ local function createS2rAppearance(Sena)
 end
 -- S2R_APPEARANCE_END
 
+-- Local control renderer used only when the optional online UI cannot load.
+local function createS2rNativeUI(Boot, HubHealth)
+	local env = Boot.env
+	local UI = { Native = true, windows = {}, donator = false }
+	local accent = Color3.fromRGB(157,110,255)
+	local ink = Color3.fromRGB(244,240,255)
+	local muted = Color3.fromRGB(184,179,203)
+	local function new(class, props, parent)
+		local object=Instance.new(class)
+		for key,value in pairs(props or {}) do object[key]=value end
+		object.Parent=parent
+		return object
+	end
+	local function round(object,radius) new("UICorner",{CornerRadius=UDim.new(0,radius or 8)},object) end
+	local function disconnect(list) for _,conn in ipairs(list or {}) do pcall(conn.Disconnect,conn) end table.clear(list or {}) end
+	local function wire(signal, callback, list)
+		local connection=signal:Connect(callback) list[#list+1]=connection return connection
+	end
+	local function copy(value) return type(value)=="table" and table.clone(value) or value end
+	local function equal(a,b)
+		if type(a)~=type(b) then return false end
+		if type(a)~="table" then return a==b end
+		for k,v in pairs(a) do if b[k]~=v then return false end end
+		for k in pairs(b) do if a[k]==nil then return false end end
+		return true
+	end
+	local function textLabel(parent,text,size,color)
+		return new("TextLabel",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,
+			Text=tostring(text or ""),TextColor3=color or ink,TextSize=size or 14,Font=Enum.Font.Gotham,
+			TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,TextYAlignment=Enum.TextYAlignment.Top},parent)
+	end
+	local function vertical(parent,padding)
+		new("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder,Padding=UDim.new(0,padding or 8)},parent)
+	end
+	local function pad(parent,n) new("UIPadding",{PaddingLeft=UDim.new(0,n),PaddingRight=UDim.new(0,n),PaddingTop=UDim.new(0,n),PaddingBottom=UDim.new(0,n)},parent) end
+	local function button(parent,text,width)
+		local node=new("TextButton",{Size=UDim2.new(width or 1,0,0,34),Text=tostring(text or ""),TextSize=13,
+			Font=Enum.Font.GothamBold,TextColor3=ink,BackgroundColor3=Color3.fromRGB(67,48,102),BorderSizePixel=0,
+			TextWrapped=true,AutoButtonColor=true},parent)
+		round(node,7) return node
+	end
+	local function input(parent,placeholder)
+		local node=new("TextBox",{Size=UDim2.new(1,0,0,36),Text="",PlaceholderText=placeholder or "",TextSize=14,
+			Font=Enum.Font.Gotham,TextColor3=ink,PlaceholderColor3=muted,BackgroundColor3=Color3.fromRGB(14,14,24),
+			BorderSizePixel=0,ClearTextOnFocus=false,TextXAlignment=Enum.TextXAlignment.Left},parent)
+		round(node,7) pad(node,8) return node
+	end
+	function UI:ApplyIcon(object,value) if object then pcall(function() object.Image=value or "" end) end end
+	function UI:SetDonator(value) self.donator=value==true end
+	function UI:IsDonator() return self.donator end
+	function UI:GetSavedKey() return nil end
+	function UI:CheckDonatorKey() return false,{ok=false,message="Online key service unavailable"} end
+	function UI:Notify(options)
+		options=type(options)=="table" and options or {Content=tostring(options)}
+		local window=self.windows[#self.windows]
+		if not window or not window:Alive() then warn("[S2r Hub] "..tostring(options.Content or options.Title or "")) return end
+		window.noticeSerial=(window.noticeSerial or 0)+1 local token=window.noticeSerial
+		window.notice.Text=tostring(options.Title or "S2r Hub").." · "..tostring(options.Content or "")
+		task.delay(tonumber(options.Duration) or 5,function() if window:Alive() and window.noticeSerial==token then window.notice.Text="S2r Hub · Built-in controls" end end)
+	end
+	function UI:Window(options)
+		options=options or {}
+		local window={connections={},controls={},tabs={},alive=true,folder=options.Folder or "SenaSAEv4",keyCounts={}}
+		self.windows[#self.windows+1]=window
+		local gui=new("ScreenGui",{Name="S2rNativeHub",ResetOnSpawn=false,DisplayOrder=10000,ZIndexBehavior=Enum.ZIndexBehavior.Sibling})
+		Boot:parent(gui) window.Gui=gui
+		local main=new("Frame",{Name="MainFrame",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.new(1,-20,1,-86),BackgroundColor3=Color3.fromRGB(16,18,30),BorderSizePixel=0},gui)
+		new("UISizeConstraint",{MaxSize=Vector2.new(930,680)},main) round(main,12) window.MainFrame=main
+		new("UIStroke",{Color=accent,Transparency=.35},main)
+		local header=new("Frame",{Name="Header",Size=UDim2.new(1,0,0,64),BackgroundTransparency=1},main)
+		local logo=new("ImageLabel",{Name="Logo",Position=UDim2.fromOffset(12,10),Size=UDim2.fromOffset(42,42),Image=options.Logo or "rbxassetid://106507222214747",ScaleType=Enum.ScaleType.Fit,BackgroundTransparency=1},header)
+		local title=new("TextLabel",{Name="Title",Position=UDim2.fromOffset(64,8),Size=UDim2.new(1,-110,0,48),BackgroundTransparency=1,
+			Text=options.Title or "S2r Hub X Sena Hub",TextColor3=ink,TextSize=19,TextWrapped=true,TextXAlignment=Enum.TextXAlignment.Left,Font=Enum.Font.GothamBold},header)
+		local close=button(header,"×") close.Position=UDim2.new(1,-42,0,14)close.Size=UDim2.fromOffset(30,34)
+		local reopen=button(gui,"S2r")reopen.Name="S2rReopen"reopen.Position=UDim2.new(0,8,0.5,-20)reopen.Size=UDim2.fromOffset(54,40)reopen.Visible=false
+		local search=input(main,"Search controls…")search.Position=UDim2.fromOffset(12,68)search.Size=UDim2.new(1,-24,0,34)
+		local nav=new("ScrollingFrame",{Name="Tabs",Position=UDim2.fromOffset(8,110),Size=UDim2.new(0,146,1,-146),BackgroundTransparency=1,BorderSizePixel=0,CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=3},main)
+		vertical(nav,5)pad(nav,4)
+		local body=new("Frame",{Name="Pages",Position=UDim2.fromOffset(160,110),Size=UDim2.new(1,-170,1,-146),BackgroundTransparency=1},main)
+		window.notice=new("TextLabel",{Name="Footer",Position=UDim2.new(0,12,1,-28),Size=UDim2.new(1,-24,0,22),BackgroundTransparency=1,Text="S2r Hub · Built-in controls",TextColor3=muted,TextSize=11,TextTruncate=Enum.TextTruncate.AtEnd,Font=Enum.Font.Gotham},main)
+		function window:Alive() return self.alive and self.Gui.Parent~=nil end
+		function window:DestroyGui()
+			if not self.alive then return end self.alive=false
+			disconnect(self.connections)
+			for _,control in ipairs(self.controls) do disconnect(control.connections) disconnect(control.optionConnections) disconnect(control.rowConnections) end
+			if self.Gui then self.Gui:Destroy() end
+		end
+		wire(gui.Destroying,function() if window.alive then window.alive=false disconnect(window.connections) for _,c in ipairs(window.controls)do disconnect(c.connections)disconnect(c.optionConnections)disconnect(c.rowConnections)end end end,window.connections)
+		wire(close.Activated,function()main.Visible=false reopen.Visible=true end,window.connections)
+		wire(reopen.Activated,function()main.Visible=true reopen.Visible=false end,window.connections)
+		local function resize()
+			local compact=main.AbsoluteSize.X<520 local width=compact and 92 or 146
+			nav.Size=UDim2.new(0,width,1,-146)body.Position=UDim2.fromOffset(width+14,110)body.Size=UDim2.new(1,-width-24,1,-146)
+		end
+		wire(main:GetPropertyChangedSignal("AbsoluteSize"),resize,window.connections)resize()
+		function window:filter()
+			local query=search.Text:lower()
+			for _,control in ipairs(self.controls)do
+				control.Frame.Visible=control.visible~=false and (query=="" or control.search:find(query,1,true)~=nil)
+			end
+		end
+		wire(search:GetPropertyChangedSignal("Text"),function()window:filter()end,window.connections)
+		function window:SetHeaderChips(chips)
+			local values={}for _,item in ipairs(chips or {})do values[#values+1]=tostring(item.Text or "")end
+			self.chips=values
+		end
+		local function configPath(name)
+			name=tostring(name or "Default"):gsub("[^%w_%-]","_"):sub(1,60)
+			return window.folder.."/S2rNative_"..name..".json"
+		end
+		function window:SaveConfig(name)
+			if type(writefile)~="function" then return false,"File saving is unavailable" end
+			local values={}
+			for _,c in ipairs(self.controls)do if c.key and c.Value~=nil then values[c.key]=copy(c.Value) end end
+			local ok,err=pcall(function()
+				if type(makefolder)=="function" and (type(isfolder)~="function" or not isfolder(self.folder))then pcall(makefolder,self.folder)end
+				writefile(configPath(name),game:GetService("HttpService"):JSONEncode(values))
+			end)
+			if not ok then HubHealth.report("Save GUI settings",err)end return ok,err
+		end
+		function window:LoadConfig(name)
+			if type(readfile)~="function" then return false,"File loading is unavailable"end
+			local ok,values=pcall(function()return game:GetService("HttpService"):JSONDecode(readfile(configPath(name)))end)
+			if not ok or type(values)~="table" then return false,"No saved settings found"end
+			self.loading=true
+			for _,c in ipairs(self.controls)do if c.key and values[c.key]~=nil then c:Set(values[c.key])end end
+			self.loading=false return true
+		end
+		function window:changed()
+			if self.loading or self.savePending then return end self.savePending=true
+			task.delay(.6,function()self.savePending=false if self:Alive()then self:SaveConfig("Default")end end)
+		end
+		local pending={}
+		pcall(function()if type(readfile)=="function" and type(isfile)=="function" and isfile(configPath("Default"))then local v=game:GetService("HttpService"):JSONDecode(readfile(configPath("Default")))if type(v)=="table"then pending=v end end end)
+		local Section={}
+		Section.__index=Section
+		function Section:_control(kind,opts)
+			opts=type(opts)=="table" and opts or {Title=tostring(opts or "")}
+			local frame=new("Frame",{Name=kind,Size=UDim2.new(1,-2,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundColor3=Color3.fromRGB(30,29,46),BackgroundTransparency=.12,BorderSizePixel=0},self.content)
+			round(frame,9)pad(frame,10)vertical(frame,7)
+			local heading=textLabel(frame,opts.Title or "",14)heading.Font=Enum.Font.GothamBold
+			local description=textLabel(frame,opts.Content or "",12,muted)description.Visible=tostring(opts.Content or "")~=""
+			local control={Frame=frame,title=heading,description=description,connections={},opts=opts,visible=true,window=window,search=(tostring(opts.Title or "").." "..tostring(opts.Content or "")):lower()}
+			window.controls[#window.controls+1]=control
+			function control:Alive()return window:Alive() and self.Frame.Parent~=nil end
+			function control:SetVisible(value)self.visible=value~=false window:filter()end
+			function control:SetTitle(value)self.title.Text=tostring(value or "")end
+			function control:SetContent(value)self.description.Text=tostring(value or "")self.description.Visible=self.description.Text~=""end
+			function control:SetSubTitle(value)self:SetContent(value)end
+			function control:SetBadge(value)self:SetContent(value)end
+			function control:Lock(reason)self.locked=true self.lockReason=reason end
+			function control:Unlock()self.locked=false end
+			function control:GetValue()return copy(self.Value)end
+			function control:emit()
+				if self.locked or not self:Alive() then return end
+				if type(opts.Callback)=="function"then HubHealth.try("Control: "..tostring(opts.Title or kind),opts.Callback,copy(self.Value))end
+				window:changed()
+			end
+			function control:Set(value,silent)
+				if self.normalize then value=self.normalize(value)end
+				if value==nil then return false end
+				local changed=not equal(self.Value,value)self.Value=copy(value)
+				if self.paint then self.paint()end
+				if changed and not silent then self:emit()end return true
+			end
+			control.SetValue=control.Set control.LoadValue=control.Set
+			function control:ResetValue()return self:Set(opts.Default)end
+			function control:initialize(default)
+				local key=opts.Flag or (self.sectionPath.."/"..tostring(opts.Title or kind))
+				window.keyCounts[key]=(window.keyCounts[key] or 0)+1
+				if window.keyCounts[key]>1 then key=key.."#"..window.keyCounts[key]end
+				self.key=key
+				local initial=default if pending[key]~=nil then initial=pending[key]end
+				self:Set(initial,true)
+			end
+			control.sectionPath=self.path
+			return control
+		end
+		function Section:AddParagraph(opts)return self:_control("Paragraph",opts)end
+		function Section:AddSubSection(text)
+			local c=self:AddParagraph({Title=type(text)=="table" and text.Title or text})c.Frame.BackgroundTransparency=1 return self
+		end
+		function Section:AddToggle(opts)
+			local c=self:_control("Toggle",opts)local b=button(c.Frame,"")
+			c.normalize=function(value)if type(value)=="boolean"then return value end return nil end
+			c.paint=function()b.Text=c.Value and "ON" or "OFF"b.BackgroundColor3=c.Value and accent or Color3.fromRGB(53,49,67)end
+			wire(b.Activated,function()if not c.locked then c:Set(not c.Value)end end,c.connections)
+			c:initialize(opts.Default==true)return c
+		end
+		function Section:AddInput(opts)
+			local c=self:_control("Input",opts)local box=input(c.Frame,opts.Placeholder)
+			c.normalize=function(v)return tostring(v or "")end c.paint=function()box.Text=c.Value end
+			wire(box.FocusLost,function()if not c.locked then c:Set(box.Text)end end,c.connections)
+			c:initialize(opts.Default or "")return c
+		end
+		function Section:AddButton(opts)
+			local c=self:_control("Button",opts)local b=button(c.Frame,opts.ButtonText or opts.Title or "Run")
+			wire(b.Activated,function()if c.locked or c.busy then return end c.busy=true
+				task.spawn(function()if type(opts.Callback)=="function"then HubHealth.try("Button: "..tostring(opts.Title),opts.Callback)end c.busy=false end)
+			end,c.connections)
+			if type(opts.SubCallback)=="function"then local sub=button(c.Frame,opts.SubTitle or "More")wire(sub.Activated,function()HubHealth.try("Button: "..tostring(opts.SubTitle),opts.SubCallback)end,c.connections)end
+			return c
+		end
+		function Section:AddSlider(opts)
+			local c=self:_control("Slider",opts)local min,max=tonumber(opts.Min)or 0,tonumber(opts.Max)or 100
+			local step=math.max(.0001,tonumber(opts.Increment)or 1)
+			local row=new("Frame",{Size=UDim2.new(1,0,0,36),BackgroundTransparency=1},c.Frame)
+			local minus=button(row,"−")minus.Size=UDim2.fromOffset(34,34)
+			local plus=button(row,"+")plus.Size=UDim2.fromOffset(34,34)plus.Position=UDim2.new(1,-34,0,0)
+			local box=input(row,"")box.Size=UDim2.new(1,-80,0,34)box.Position=UDim2.fromOffset(40,0)
+			local rail=new("TextButton",{Text="",Size=UDim2.new(1,0,0,16),BackgroundColor3=Color3.fromRGB(48,44,63),BorderSizePixel=0},c.Frame)round(rail)
+			local fill=new("Frame",{Size=UDim2.fromScale(0,1),BackgroundColor3=accent,BorderSizePixel=0},rail)round(fill)
+			c.normalize=function(v)local n=tonumber(v)if not n or n~=n then return nil end return math.clamp(min+math.floor((n-min)/step+.5)*step,min,max)end
+			c.paint=function()box.Text=tostring(math.floor(c.Value*10000+.5)/10000)fill.Size=UDim2.fromScale(max>min and (c.Value-min)/(max-min) or 0,1)end
+			wire(minus.Activated,function()if not c.locked then c:Set(c.Value-step)end end,c.connections)
+			wire(plus.Activated,function()if not c.locked then c:Set(c.Value+step)end end,c.connections)
+			wire(box.FocusLost,function()if not c:Set(box.Text)then c.paint()end end,c.connections)
+			local dragging=false
+			local function seek(pos)if not c.locked and rail.AbsoluteSize.X>0 then c:Set(min+math.clamp((pos.X-rail.AbsolutePosition.X)/rail.AbsoluteSize.X,0,1)*(max-min))end end
+			wire(rail.InputBegan,function(event)if event.UserInputType==Enum.UserInputType.MouseButton1 or event.UserInputType==Enum.UserInputType.Touch then dragging=true seek(event.Position)end end,c.connections)
+			local inputService=game:GetService("UserInputService")
+			wire(inputService.InputChanged,function(event)if dragging and (event.UserInputType==Enum.UserInputType.MouseMovement or event.UserInputType==Enum.UserInputType.Touch)then seek(event.Position)end end,c.connections)
+			wire(inputService.InputEnded,function(event)if event.UserInputType==Enum.UserInputType.MouseButton1 or event.UserInputType==Enum.UserInputType.Touch then dragging=false end end,c.connections)
+			c:initialize(opts.Default or min)return c
+		end
+		function Section:AddDropdown(opts)
+			local c=self:_control("Dropdown",opts)local summary=button(c.Frame,"Select")local multi=opts.Multi==true
+			local panel=new("Frame",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,Visible=false},c.Frame)vertical(panel,6)
+			local query=input(panel,"Filter options…")
+			local list=new("ScrollingFrame",{Size=UDim2.new(1,0,0,160),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=3,BackgroundTransparency=1,BorderSizePixel=0},panel)vertical(list,4)
+			c.options=copy(opts.Options or {})c.optionConnections={}
+			c.normalize=function(value)
+				if multi then local out={}if type(value)~="table"then value={value}end for _,v in ipairs(value)do if table.find(c.options,v)and not table.find(out,v)then out[#out+1]=v end end return out end
+				if type(value)=="table"then value=value[1]end
+				if value==nil or table.find(c.options,value)==nil then return c.options[1] or "" end return value
+			end
+			local function rebuild()
+				disconnect(c.optionConnections)
+				for _,child in ipairs(list:GetChildren())do if child:IsA("TextButton")then child:Destroy()end end
+				local q=query.Text:lower()
+				for _,value in ipairs(c.options)do
+					if q==""or tostring(value):lower():find(q,1,true)then
+						local selected=multi and table.find(c.Value or {},value)~=nil or (not multi and c.Value==value)
+						local b=button(list,(selected and "✓  " or "")..tostring(value))
+						b.BackgroundColor3=selected and Color3.fromRGB(98,65,153)or Color3.fromRGB(38,35,53)
+						wire(b.Activated,function()
+							if c.locked then return end
+							if multi then local values=copy(c.Value or {})local i=table.find(values,value)if i then table.remove(values,i)else values[#values+1]=value end c:Set(values)
+							else c:Set(value)panel.Visible=false end
+						end,c.optionConnections)
+					end
+				end
+			end
+			c.paint=function()
+				if multi then local labels={}for _,value in ipairs(c.Value or {})do labels[#labels+1]=tostring(value)end summary.Text=#labels>0 and table.concat(labels,", ")or "None selected"
+				else summary.Text=tostring(c.Value or "Select")end
+				if panel.Visible then rebuild()end
+			end
+			function c:Refresh(values)c.options=type(values)=="table"and copy(values)or {}c:Set(c.Value,true)rebuild()end
+			c.SetOptions=c.Refresh
+			wire(summary.Activated,function()if c.locked then return end panel.Visible=not panel.Visible if panel.Visible then rebuild()end end,c.connections)
+			wire(query:GetPropertyChangedSignal("Text"),rebuild,c.connections)
+			c:initialize(opts.Default or (multi and {} or c.options[1] or ""))return c
+		end
+		function Section:AddActionList(opts)
+			local c=self:_control("ActionList",opts)c.rowConnections={}
+			local list=new("ScrollingFrame",{Size=UDim2.new(1,0,0,(tonumber(opts.VisibleRows)or 5)*68),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3},c.Frame)vertical(list,7)
+			function c:Update(entries)
+				if not self:Alive()then return end disconnect(self.rowConnections)
+				for _,child in ipairs(list:GetChildren())do if child:IsA("GuiObject")then child:Destroy()end end
+				if type(entries)~="table"or #entries==0 then textLabel(list,opts.EmptyText or "Nothing here yet.",12,muted)return end
+				for _,entry in ipairs(entries)do
+					local row=new("Frame",{Size=UDim2.new(1,-5,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundColor3=Color3.fromRGB(22,22,35),BorderSizePixel=0},list)round(row)pad(row,8)vertical(row,5)
+					for _,key in ipairs({"name","sub","status","statusSub"})do if entry[key]and entry[key]~=""then local label=textLabel(row,entry[key],key=="name"and 14 or 12,key=="name"and ink or muted)label.RichText=true end end
+					if entry.button~=false and type(entry.onClick)=="function"then
+						local b=button(row,entry.button or "Select")
+						wire(b.Activated,function()HubHealth.try("List action",entry.onClick,entry,function(text)b.Text=tostring(text or "")end)end,self.rowConnections)
+					end
+				end
+			end
+			c:Update({})return c
+		end
+		function Section:AddPriorityList(opts)
+			local c=self:_control("PriorityList",opts)c.rows={}c.items={}c.rowConnections={}
+			for _,item in ipairs(opts.Items or {})do c.items[item.Id]=item end
+			local list=new("Frame",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1},c.Frame)vertical(list,5)
+			c.normalize=function(value)
+				local out={}for _,id in ipairs(type(value)=="table"and value or {})do if c.items[id]and not table.find(out,id)then out[#out+1]=id end end
+				for _,item in ipairs(opts.Items or {})do if not table.find(out,item.Id)then out[#out+1]=item.Id end end return out
+			end
+			local function move(id,delta)
+				local values=copy(c.Value)local from=table.find(values,id)local to=from and from+delta
+				if from and to>=1 and to<=#values and not c.items[id].Pinned and not c.items[values[to]].Pinned then values[from],values[to]=values[to],values[from]c:Set(values)end
+			end
+			for _,item in ipairs(opts.Items or {})do
+				local row=new("Frame",{Size=UDim2.new(1,0,0,78),BackgroundTransparency=1},list)
+				local label=textLabel(row,item.Title or item.Id,13)label.Size=UDim2.new(1,-76,0,32)label.AutomaticSize=Enum.AutomaticSize.None
+				local status=textLabel(row,item.Sub or "",11,muted)status.Position=UDim2.fromOffset(0,37)status.Size=UDim2.new(1,0,0,36)status.AutomaticSize=Enum.AutomaticSize.None
+				local up=button(row,"↑")up.Position=UDim2.new(1,-70,0,0)up.Size=UDim2.fromOffset(32,32)
+				local down=button(row,"↓")down.Position=UDim2.new(1,-34,0,0)down.Size=UDim2.fromOffset(32,32)
+				up.Visible=not item.Pinned down.Visible=not item.Pinned
+				wire(up.Activated,function()move(item.Id,-1)end,c.connections)wire(down.Activated,function()move(item.Id,1)end,c.connections)
+				c.rows[item.Id]={frame=row,status=status}
+			end
+			c.paint=function()for index,id in ipairs(c.Value or {})do if c.rows[id]then c.rows[id].frame.LayoutOrder=index end end end
+			function c:SetStatus(id,text)local row=self.rows[id]if row then row.status.Text=tostring(text or "")end end
+			function c:SetVisible(id,value)if type(id)=="boolean"then self.Frame.Visible=id elseif self.rows[id]then self.rows[id].frame.Visible=value~=false end end
+			c:initialize(opts.Default or {})return c
+		end
+		function Section:AddIconGrid(opts)
+			local c=self:AddActionList({Title=opts.Title,EmptyText=opts.EmptyText or "No items yet.",VisibleRows=3})
+			local update=c.Update
+			function c:SetItems(items)
+				local rows={}
+				for i,item in ipairs(items or {})do rows[i]={name=item.Name or item.name or item.Title or item.id or tostring(i),status=tostring(item.Value or item.Count or item.Text or item.text or ""),statusSub=item.Sub or "",button=false}end
+				update(self,rows)
+			end
+			c.Update=c.SetItems
+			function c:SetNote(text)self:SetContent(text)end
+			return c
+		end
+		function Section:AddSupportCard(opts)return self:AddParagraph({Title="S2r Hub X Sena Hub",Content="Built-in controls are ready. Community support pages require the online interface."})end
+		function Section:AddLiveChat(opts)return self:AddParagraph({Title=opts.Title or "Live Chat",Content="The online chat service is unavailable in built-in mode. Gameplay controls remain available in the other tabs."})end
+		function window:AddTab(opts)
+			opts=type(opts)=="table"and opts or {Name=tostring(opts)}
+			local page=new("ScrollingFrame",{Name=tostring(opts.Name or "Tab"),Size=UDim2.fromScale(1,1),CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollBarThickness=4,BackgroundTransparency=1,BorderSizePixel=0,Visible=false},body)vertical(page,12)pad(page,4)
+			local b=button(nav,opts.Name or "Tab")b.LayoutOrder=opts.LayoutOrder or 50
+			local tab={page=page,button=b,name=opts.Name or "Tab"}
+			self.tabs[#self.tabs+1]=tab
+			function tab:select()for _,t in ipairs(window.tabs)do t.page.Visible=t==self t.button.BackgroundColor3=t==self and Color3.fromRGB(102,66,160)or Color3.fromRGB(36,32,51)end end
+			wire(b.Activated,function()tab:select()end,window.connections)
+			function tab:AddSection(value)
+				local title=type(value)=="table"and(value.Title or value.Name)or value
+				local holder=new("Frame",{Name=tostring(title or "Section"),Size=UDim2.new(1,-2,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1},self.page)vertical(holder,8)
+				if not(type(value)=="table"and value.Header==false)then local label=textLabel(holder,title or "",16,Color3.fromRGB(205,177,255))label.Font=Enum.Font.GothamBold end
+				return setmetatable({content=holder,path=self.name.."/"..tostring(title)},Section)
+			end
+			function tab:SetVisible(value)b.Visible=value~=false if value==false and page.Visible then page.Visible=false end end
+			if opts.StartActive==true or (not window.activeTab and opts.StartActive~=false)then window.activeTab=tab tab:select()end
+			return tab
+		end
+		function window:AddForum(opts)local tab=self:AddTab(opts)tab:AddSection(opts.Section or "Forum"):AddParagraph({Title="Community forum",Content="The forum requires the online interface. Your gameplay controls are available in built-in mode."})return tab end
+		local configTab=window:AddTab({Name="Configs",LayoutOrder=32,StartActive=false})
+		local configSection=configTab:AddSection("Saved settings")local profile="Default"
+		configSection:AddInput({Title="Profile name",Default="Default",Callback=function(v)profile=v end})
+		configSection:AddButton({Title="Save profile",Callback=function()local ok,err=window:SaveConfig(profile)UI:Notify({Title="Settings",Content=ok and "Profile saved."or tostring(err)})end})
+		configSection:AddButton({Title="Load profile",Callback=function()local ok,err=window:LoadConfig(profile)UI:Notify({Title="Settings",Content=ok and "Profile loaded."or tostring(err)})end})
+		env.ChloeX_Running=true env.ChloeX_Instance=window
+		return window
+	end
+	return UI
+end
+
 local function buildSenaHub()
 	local controls = {}
 	local settingRevisions, oneShotTickets = {}, {}
@@ -20606,17 +21170,11 @@ local function buildSenaHub()
 	runtimeEnv.ChloeX_Running = nil
 	runtimeEnv.ChloeX_ReopenPrompt = nil
 	runtimeEnv.ChloeX_Instance = nil
-	local Sena = runtimeEnv.SenaLibOverride
-	if type(Sena) ~= "table" then
-		local ok, lib = pcall(function()
-			return loadstring(game:HttpGet(SENA_LIB_URL))()
-			end)
-		Sena = ok and type(lib) == "table" and lib or nil
-	end
-	if not Sena then
-		warn("[S2rHub] UI library failed to load")
-		return
-	end
+	local Sena = Boot:loadLibrary(SENA_LIB_URL, runtimeEnv.SenaLibOverride, function()
+		return createS2rNativeUI(Boot, HubHealth)
+	end)
+	if type(Sena) ~= "table" or type(Sena.Window) ~= "function" then error("No compatible GUI renderer is available", 0) end
+	Boot:stage("Building your controls", Sena.Native and "Opening the included S2r Hub interface." or "Opening the online S2r Hub interface.")
 	-- KEY GATE ON: donator/trial only (key required; no key -> Donate tab only). Set `true` for keyless/free (all open, no key check).
 	runtimeEnv.__SenaKeyless = true
 	if runtimeEnv.__SenaKeyless then
@@ -22294,6 +22852,7 @@ local function buildSenaHub()
 		Keyless = runtimeEnv.__SenaKeyless == true,
 		CompactSidebar = false,
 		})
+	Boot.window = Window
 	guardUiFactory(Window)
 	appearance:Attach(Window)
 	local waypointOptions = { "Respawn Point" }
@@ -24186,6 +24745,8 @@ local function buildSenaHub()
 		shutdownDone = true
 		runtimeEnv.__SenaV4HubSession = nil
 		HubHealth.onChanged = nil
+		if type(Window) == "table" and type(Window.DestroyGui) == "function" then pcall(Window.DestroyGui, Window) end
+		if Boot.env.__S2rStartup == Boot then Boot:cancel() end
 		pcall(appearance.Destroy, appearance)
 		for _, key in ipairs({ "AutoSteal", "AutoPlace", "AutoHatch", "AutoMutation", "AutoRingEvent", "AutoSell", "AutoSellEgg", "StealPlayers",
 			"StarAutoCatch", "ButterflyAutoCatch", "ButterflyAutoNet", "ButterflyAutoTrade", "ButterflyAutoCraft", "SnipeDroppedEggs",
@@ -24231,5 +24792,10 @@ local function buildSenaHub()
 		UI_LOADED = false
 	end
 	UI_LOADED = true
+	Boot:ready()
 end
 buildSenaHub()
+
+end
+local boot = S2rBoot.new()
+boot:run(startS2rHub)
